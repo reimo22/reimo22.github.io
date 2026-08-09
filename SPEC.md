@@ -87,7 +87,9 @@ Blog and writeups are separate sections/collections — not merged under shared 
 - Contrast targets: **≥4.5:1** body text, **≥3:1** large text/UI borders —
   verified by Lighthouse a11y assertion (must score 100).
 - ASCII-art banners are decorative: `<pre aria-hidden="true">` next to a real
-  `<h1>` carrying the actual text. Never read aloud by a screen reader.
+  `<h1>` carrying the site's actual title (`site.title`) as text — the art
+  itself may be a stylized handle/wordmark rather than a literal rendering of
+  the title. Never read aloud by a screen reader.
 - Light/dark themes both defined as CSS custom properties on `:root`, with a
   `prefers-color-scheme` override — never defined only inside a media query.
 - Motion (cursor blink, etc.) gated behind `prefers-reduced-motion: no-preference`.

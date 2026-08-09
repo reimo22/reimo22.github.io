@@ -129,16 +129,23 @@ banner shortcode, mobile-first layout, and a `prefers-reduced-motion`-gated blin
 **Contrast was computed before writing any CSS, not tuned after a failing Lighthouse run.**
 The design doc flagged gray-on-dark monospace palettes as the likely trap, so the token
 values were picked by running the WCAG relative-luminance formula against candidate hex pairs
-first — light and dark border tokens both needed nudging lighter than the first guess to clear
-the 3:1 UI-border target (2.69:1 → 3.83:1 for light, 2.69:1 → 3.46:1 for dark) before they ever
-reached a browser.
+first — both border tokens needed lightening from an initial guess to clear the 3:1
+UI-border target before they ever reached a browser.
 
 **The ASCII banner is real generated art, not hand-typed text.** `pyfiglet`'s "small" and
 "mini" fonts produced the wide and narrow variants; both are committed as static `.txt` files
-read at build time via a `{% raw %}{% ascii "name" %}{% endraw %}` shortcode — `pyfiglet` itself never becomes a
+read at build time via an `{% raw %}{% ascii "name" %}{% endraw %}` shortcode — `pyfiglet` itself never becomes a
 runtime or npm dependency. The wide/narrow swap at the ~40rem breakpoint is pure CSS
 (`display: none` on one `<pre>` or the other), so it degrades correctly with JS disabled,
 matching the progressive-enhancement contract from Phase 1.
+
+**Eleventy's Liquid preprocessor parsed the shortcode name inside this very file.** Writing
+the literal text `{% raw %}{% ascii "name" %}{% endraw %}` in a Markdown code span above was
+enough for Eleventy to try to invoke it as a real shortcode call, even inside the code span —
+Liquid preprocessing runs before Markdown rendering strips fenced/inline code from
+consideration. That broke the build with a shortcode-not-found error until the literal text
+was itself wrapped in `{% raw %}...{% endraw %}`, which is why that tag shows up verbatim in
+the prose above instead of being invisible markup.
 
 Next: Phase 4 adds the static pages (`/about/`, `/contact/`, `/resume/`) on top of this theme,
 plus taking over `/resume/` from the old redirect repo.

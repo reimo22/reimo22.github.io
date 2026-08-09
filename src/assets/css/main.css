@@ -134,12 +134,6 @@ footer {
   }
 }
 
-.banner h1 {
-  margin: 0;
-  border-top: 1px solid var(--color-border);
-  padding-top: 0.5rem;
-}
-
 .cursor {
   display: inline-block;
 }
