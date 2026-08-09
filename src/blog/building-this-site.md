@@ -120,3 +120,25 @@ first.
 Next: push, watch CI go green (or fix what it catches that this environment
 couldn't), and confirm the placeholder is actually live at
 `reimo22.github.io` before starting Phase 3's theme work.
+
+## Phase 3 — Theme
+
+Purple/gray TUI theme: CSS custom-property tokens for light and dark, a build-time ASCII
+banner shortcode, mobile-first layout, and a `prefers-reduced-motion`-gated blinking cursor.
+
+**Contrast was computed before writing any CSS, not tuned after a failing Lighthouse run.**
+The design doc flagged gray-on-dark monospace palettes as the likely trap, so the token
+values were picked by running the WCAG relative-luminance formula against candidate hex pairs
+first — light and dark border tokens both needed nudging lighter than the first guess to clear
+the 3:1 UI-border target (2.69:1 → 3.83:1 for light, 2.69:1 → 3.46:1 for dark) before they ever
+reached a browser.
+
+**The ASCII banner is real generated art, not hand-typed text.** `pyfiglet`'s "small" and
+"mini" fonts produced the wide and narrow variants; both are committed as static `.txt` files
+read at build time via a `{% raw %}{% ascii "name" %}{% endraw %}` shortcode — `pyfiglet` itself never becomes a
+runtime or npm dependency. The wide/narrow swap at the ~40rem breakpoint is pure CSS
+(`display: none` on one `<pre>` or the other), so it degrades correctly with JS disabled,
+matching the progressive-enhancement contract from Phase 1.
+
+Next: Phase 4 adds the static pages (`/about/`, `/contact/`, `/resume/`) on top of this theme,
+plus taking over `/resume/` from the old redirect repo.

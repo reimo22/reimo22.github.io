@@ -28,12 +28,12 @@ See [`SPEC.md`](SPEC.md) for the full rationale behind each decision below.
 
 ## Phase 3 — Theme
 
-- [ ] `src/assets/css/main.css`: custom-property tokens (light + dark), purple/gray palette
-- [ ] Verify contrast: ≥4.5:1 body text, ≥3:1 large text/UI borders
-- [ ] ASCII banner mechanism: `.txt` files in `src/assets/ascii/`, `<pre aria-hidden="true">` + real `<h1>`, narrow variant under ~40rem
-- [ ] Mobile-first layout: base = narrow, `min-width` queries add wide layout
-- [ ] `prefers-reduced-motion` gating for any motion effects
-- [ ] Append build-log entry
+- [x] `src/assets/css/main.css`: custom-property tokens (light + dark), purple/gray palette
+- [x] Verify contrast: ≥4.5:1 body text, ≥3:1 large text/UI borders
+- [x] ASCII banner mechanism: `.txt` files in `src/assets/ascii/`, `<pre aria-hidden="true">` + real `<h1>`, narrow variant under ~40rem
+- [x] Mobile-first layout: base = narrow, `min-width` queries add wide layout
+- [x] `prefers-reduced-motion` gating for any motion effects
+- [x] Append build-log entry
 
 ## Phase 4 — Static pages
 
