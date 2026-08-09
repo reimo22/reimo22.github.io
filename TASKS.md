@@ -23,8 +23,8 @@ See [`SPEC.md`](SPEC.md) for the full rationale behind each decision below.
 - [x] Lint configs: ESLint (flat), Stylelint, Prettier, markdownlint + `npm run lint` / `lint:fix`
 - [x] `.github/workflows/ci.yml`: lint → html-validate → lighthouse (assert) → lychee → deploy, checkout with `submodules: recursive`
 - [x] Set repo Pages source to **GitHub Actions** (not branch deploy)
-- [ ] Confirm CI goes green and the site is live at `reimo22.github.io`
-- [ ] Append build-log entry
+- [x] Confirm CI goes green and the site is live at `reimo22.github.io`
+- [x] Append build-log entry
 
 ## Phase 3 — Theme
 
