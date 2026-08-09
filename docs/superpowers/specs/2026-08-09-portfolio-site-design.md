@@ -4,7 +4,7 @@
 
 You need a personal portfolio at `https://reimo22.github.io/`, built with a trimmed-down
 version of the Chris Titus AI-assisted workflow: spec and task list approved before any
-code, a few *real* CI checkpoints (HTML validation, Lighthouse, link checking), and human
+code, a few _real_ CI checkpoints (HTML validation, Lighthouse, link checking), and human
 review of diffs before merge. Deliberately excluded: CodeRabbit, Dependabot/CodeQL,
 multi-phase roadmap docs, PM bots.
 
@@ -17,15 +17,15 @@ Starting from a blank slate, but not from zero content — two existing assets s
 
 Decisions already made in brainstorming:
 
-| Decision | Choice |
-|---|---|
-| Repo / URL | `reimo22/reimo22.github.io` → `https://reimo22.github.io/` (no base path) |
-| HTB writeups | Build-time pull from the existing repo; single source of truth, no drift |
-| Blog | Section at `/blog`, separate from writeups |
-| Build log | A per-phase "building this site" post in `/blog`, written as we go |
-| Resume | One variant (`_sec`) as committed PDF **plus** an HTML version; portfolio takes over `/resume/` from the existing repo |
-| Theme | Purple + gray, TUI aesthetic, **ASCII-art** banners (static art, not animation) |
-| Navigation | Works by clicking links **and** by keyboard, plus `/commands` to jump sections |
+| Decision     | Choice                                                                                                                 |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Repo / URL   | `reimo22/reimo22.github.io` → `https://reimo22.github.io/` (no base path)                                              |
+| HTB writeups | Build-time pull from the existing repo; single source of truth, no drift                                               |
+| Blog         | Section at `/blog`, separate from writeups                                                                             |
+| Build log    | A per-phase "building this site" post in `/blog`, written as we go                                                     |
+| Resume       | One variant (`_sec`) as committed PDF **plus** an HTML version; portfolio takes over `/resume/` from the existing repo |
+| Theme        | Purple + gray, TUI aesthetic, **ASCII-art** banners (static art, not animation)                                        |
+| Navigation   | Works by clicking links **and** by keyboard, plus `/commands` to jump sections                                         |
 
 Intended outcome: a fast, accessible, genuinely static site that reads as a terminal
 session, where the writeups section stays current just by pushing to `htb-writeups`.
@@ -77,7 +77,7 @@ reimo22.github.io/
 
 The submodule is mounted **inside** Eleventy's input directory at `src/writeups/boxes/`, so
 Eleventy discovers each `<slug>/README.md` as a template with no glue code. The submodule
-itself is never modified — instead `src/writeups/writeups.11tydata.js` sits one level *above*
+itself is never modified — instead `src/writeups/writeups.11tydata.js` sits one level _above_
 it and cascades `layout: writeup.njk` and a computed `permalink` of `/writeups/<slug>/` into
 every subdirectory.
 
@@ -129,7 +129,7 @@ Non-negotiable: **the site is fully usable with JavaScript disabled and with a s
    follows document order. A skip-to-content link is first in the DOM. With JS off, nothing
    is lost except the palette.
 2. **Layer 2 — command palette.** `commands.js` (vanilla, ~150 lines, no dependencies) builds
-   its command list from the *same* `site.json` nav registry, so links and commands can't
+   its command list from the _same_ `site.json` nav registry, so links and commands can't
    drift apart.
    - Opens on `/` or `Ctrl+K`; `Esc` closes; `↑`/`↓` select; `Enter` navigates.
    - **`/` must not fire while focus is in an input/textarea** — otherwise typing a slash
@@ -140,7 +140,7 @@ Non-negotiable: **the site is fully usable with JavaScript disabled and with a s
    - Implemented as `role="dialog"` + `aria-modal`, with results in a `listbox`/`option`
      pattern and `aria-activedescendant` — not a div soup.
 3. **Discoverability.** A persistent hint line in the footer/header — `press / for commands ·
-   ? for help` — plus a `?` overlay listing every shortcut. An undiscoverable palette is dead
+? for help` — plus a `?` overlay listing every shortcut. An undiscoverable palette is dead
    weight.
 4. **Reduced motion.** Any cursor blink or type-on effect is wrapped in
    `@media (prefers-reduced-motion: no-preference)`.
@@ -152,7 +152,7 @@ Non-negotiable: **the site is fully usable with JavaScript disabled and with a s
   borders**, verified by the Lighthouse a11y assertion. Purple accents are chosen to clear
   the bar rather than picked by eye.
 - Light and dark are both defined via CSS custom properties on `:root` with a
-  `prefers-color-scheme` override — no theme is defined *only* inside a media query.
+  `prefers-color-scheme` override — no theme is defined _only_ inside a media query.
 - **ASCII art is decorative and must not be read aloud.** Each banner block is
   `<pre aria-hidden="true">` immediately followed by a real `<h1>` carrying the text. Banners
   are plain `.txt` files included at build time, `overflow-x: auto` so they never force the
@@ -245,12 +245,12 @@ than taking the narrative's word for it.
 One workflow, `.github/workflows/ci.yml`, on PR and on push to `main`. Checkout uses
 `submodules: recursive` (the classic failure: an empty writeups section in CI).
 
-| Check | Tool | Pass condition |
-|---|---|---|
-| Lint | ESLint (flat config) + Stylelint + Prettier `--check` + markdownlint | zero errors |
-| HTML validation | `html-validate` over `_site/**/*.html` | zero errors |
-| Lighthouse | `treosh/lighthouse-ci-action` with `assert` | **accessibility = 100** (hard), performance / best-practices / SEO **≥ 90** |
-| Link checking | `lycheeverse/lychee-action` | zero broken internal links; external links warn only |
+| Check           | Tool                                                                 | Pass condition                                                              |
+| --------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Lint            | ESLint (flat config) + Stylelint + Prettier `--check` + markdownlint | zero errors                                                                 |
+| HTML validation | `html-validate` over `_site/**/*.html`                               | zero errors                                                                 |
+| Lighthouse      | `treosh/lighthouse-ci-action` with `assert`                          | **accessibility = 100** (hard), performance / best-practices / SEO **≥ 90** |
+| Link checking   | `lycheeverse/lychee-action`                                          | zero broken internal links; external links warn only                        |
 
 **Linting** runs first and fastest, so a formatting nit fails in seconds rather than after a
 full build and audit. Scope:
@@ -294,7 +294,7 @@ Each phase is a small reviewable PR against `main`, which is protected.
 1. **Spec & tasks.** Write `SPEC.md` and `TASKS.md`, plus the brainstorming design doc at
    `docs/superpowers/specs/2026-08-09-portfolio-site-design.md`, and create
    `src/blog/building-this-site.md` with its phase-1 entry. `git init`, first commit.
-   *No site code in this PR.*
+   _No site code in this PR._
 2. **Skeleton + CI.** Eleventy config, base layout, one placeholder page, lint configs, the
    full CI workflow, Pages deploy. Prove the pipeline goes green and the site is live before
    there is any content to debug alongside it.
@@ -329,7 +329,7 @@ in the same PR** — see below.
 - **Screen reader spot check** (Orca) on home + one writeup: banner silent, heading announced,
   palette announced as a dialog.
 - **Mobile pass:** load the deployed site on an actual phone, not just devtools. Every page
-  gets scrolled top to bottom checking for *any* horizontal scroll — home banner, writeups
+  gets scrolled top to bottom checking for _any_ horizontal scroll — home banner, writeups
   index table, and a writeup with long command output are the three likely offenders. Tap
   every nav link and confirm nothing needs a precise tap.
 - `npm run lint`, `npx html-validate _site`, and `npx lighthouse http://localhost:8080 --view`

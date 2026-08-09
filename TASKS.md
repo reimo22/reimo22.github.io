@@ -15,14 +15,14 @@ See [`SPEC.md`](SPEC.md) for the full rationale behind each decision below.
 
 ## Phase 2 — Skeleton + CI
 
-- [ ] `.eleventy.js`: input/output dirs, passthrough copy config, markdown settings
-- [ ] `src/_includes/base.njk`: skip-link, `<nav>`, ASCII banner slot, footer
-- [ ] `src/_data/site.json`: title, URLs, nav/command registry
-- [ ] One placeholder home page (`src/index.njk`) to prove the build
-- [ ] `.nvmrc` pinning Node version
-- [ ] Lint configs: ESLint (flat), Stylelint, Prettier, markdownlint + `npm run lint` / `lint:fix`
-- [ ] `.github/workflows/ci.yml`: lint → html-validate → lighthouse (assert) → lychee → deploy, checkout with `submodules: recursive`
-- [ ] Set repo Pages source to **GitHub Actions** (not branch deploy)
+- [x] `.eleventy.js`: input/output dirs, passthrough copy config, markdown settings
+- [x] `src/_includes/base.njk`: skip-link, `<nav>`, ASCII banner slot, footer
+- [x] `src/_data/site.json`: title, URLs, nav/command registry
+- [x] One placeholder home page (`src/index.njk`) to prove the build
+- [x] `.nvmrc` pinning Node version
+- [x] Lint configs: ESLint (flat), Stylelint, Prettier, markdownlint + `npm run lint` / `lint:fix`
+- [x] `.github/workflows/ci.yml`: lint → html-validate → lighthouse (assert) → lychee → deploy, checkout with `submodules: recursive`
+- [x] Set repo Pages source to **GitHub Actions** (not branch deploy)
 - [ ] Confirm CI goes green and the site is live at `reimo22.github.io`
 - [ ] Append build-log entry
 

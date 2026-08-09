@@ -3,6 +3,8 @@ title: Building this site
 date: 2026-08-09
 tags: [meta]
 draft: true
+permalink: false
+eleventyExcludeFromCollections: true
 ---
 
 <!--
@@ -41,7 +43,7 @@ slate — two live GitHub repos shape this build:
 - `resume`, a repo whose entire content is a one-line meta-refresh redirect to
   a PDF, currently serving `reimo22.github.io/resume/`. This wasn't mentioned
   in the plan until I caught it myself and told Claude directly — a project
-  repo named after a path this site wants will *silently* shadow that path.
+  repo named after a path this site wants will _silently_ shadow that path.
   Worth calling out as exactly the kind of thing a spec-first process is
   supposed to catch before code, not after a confusing deploy.
 
@@ -57,7 +59,7 @@ clear.
 The writeups pipeline went through a correction too, worth recording
 accurately rather than glossing over. The decision I'd actually made was
 "single source of truth, no drift" between this site and the separate
-`htb-writeups` repo — I never said the *upstream* repo couldn't change, only
+`htb-writeups` repo — I never said the _upstream_ repo couldn't change, only
 that writeup content shouldn't be duplicated. An early draft of the plan
 turned that into a stronger, unstated rule — "never touch `htb-writeups`" —
 and built a bespoke parser for the upstream root README's summary table to
@@ -73,3 +75,48 @@ fact.
 
 Next: Phase 2 stands up the Eleventy skeleton and the CI pipeline itself,
 before there's any real content to debug alongside it.
+
+## Phase 2 — Skeleton + CI
+
+Eleventy 3, a minimal `base.njk` shell (skip-link, nav from `site.json`, empty
+banner slot for Phase 3, footer), and a placeholder home page — plus the full
+five-tool lint suite and the six-job CI workflow from the SPEC, all wired
+before there's any real content to break them on.
+
+**This file almost broke its own build.** The moment `.eleventy.js` existed,
+Eleventy started treating this markdown file as a real page and wrote it to
+`_site/blog/building-this-site/index.html` — as a bare fragment with no
+`<html>`/`<head>`/`<body>`, since it has no layout yet. `html-validate` would
+have failed on it immediately. The SPEC already says this file "starts
+rendering as a real `/blog` post once the blog collection exists (Phase 6)",
+so the fix was to make the build match what was already decided:
+`permalink: false` and `eleventyExcludeFromCollections: true` in its front
+matter, both removed in Phase 6 alongside `draft: true`.
+
+**Prettier and html-validate disagreed on HTML style, not substance.**
+`html-validate:recommended` wants `<!DOCTYPE html>` uppercase and explicit
+self-closing `<meta />` tags expanded to omitted end tags; Prettier's own HTML
+conventions (and hand-written templates following them) do the opposite.
+Neither is a real defect, so `.htmlvalidate.json` turns off `doctype-style`,
+`void-style`, and `no-trailing-whitespace` — style-only rules — while leaving
+every substantive and accessibility rule from the recommended set enforced.
+
+**Lychee's `fail` input is all-or-nothing per step, not per link.** The SPEC
+wants broken internal links to fail the build and broken external links to
+only warn. The action itself doesn't distinguish the two in one run, so the
+`lychee` job runs it twice against the same build output: once with
+`--offline` (which only resolves local file links, so external URLs can't
+even be attempted) and `fail: true`, then again without `--offline` and
+`fail: false` for the external-link pass.
+
+**What I couldn't verify locally.** This sandboxed dev environment has no
+Chrome/Chromium binary and no way to install one, so `@lhci/cli`'s own
+healthcheck fails before it can launch anything — the Lighthouse assertions
+in `lighthouserc.json` are unverified until the `lighthouse` job actually
+runs in Actions, which does provision its own Chrome. Everything else — the
+Eleventy build, all four lint tools, and `html-validate` — passed locally
+first.
+
+Next: push, watch CI go green (or fix what it catches that this environment
+couldn't), and confirm the placeholder is actually live at
+`reimo22.github.io` before starting Phase 3's theme work.

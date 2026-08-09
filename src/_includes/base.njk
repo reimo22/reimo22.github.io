@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% if title %}{{ title }} · {% endif %}{{ site.title }}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header>
+      <nav aria-label="Primary">
+        <ul>
+          {% for item in site.nav %}
+            <li><a href="{{ item.url }}">{{ item.label }}</a></li>
+          {% endfor %}
+        </ul>
+      </nav>
+      {% block banner %}{% endblock %}
+    </header>
+    <main id="main">
+      {% block content %}{% endblock %}
+    </main>
+    <footer>
+      <p>&copy; {{ currentYear }} {{ site.title }}</p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "name": "reimo22.github.io",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Personal portfolio site — Eleventy static build.",
+  "type": "module",
+  "scripts": {
+    "build": "eleventy",
+    "serve": "eleventy --serve",
+    "lint:eslint": "eslint .",
+    "lint:stylelint": "stylelint \"src/**/*.css\" --allow-empty-input",
+    "lint:prettier": "prettier --check .",
+    "lint:markdown": "markdownlint-cli2 \"src/blog/**/*.md\" \"SPEC.md\" \"TASKS.md\"",
+    "lint": "npm run lint:eslint && npm run lint:stylelint && npm run lint:prettier && npm run lint:markdown",
+    "lint:fix": "eslint . --fix && stylelint \"src/**/*.css\" --fix --allow-empty-input && prettier --write . && markdownlint-cli2 --fix \"src/blog/**/*.md\" \"SPEC.md\" \"TASKS.md\""
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.6",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "globals": "^17.9.0",
+    "html-validate": "^11.6.2",
+    "markdown-it": "^15.0.0",
+    "markdownlint-cli2": "^0.23.2",
+    "prettier": "^3.9.6",
+    "stylelint": "^17.14.1",
+    "stylelint-config-standard": "^40.0.0"
+  }
+}

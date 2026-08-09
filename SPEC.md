@@ -25,16 +25,16 @@ multi-phase roadmap docs, PM/PR-readiness bots — overkill for a solo static si
 
 ## Pages / sections
 
-| Path | Content |
-|---|---|
-| `/` | Home — ASCII banner, short intro, entry points to the other sections |
-| `/about/` | Bio |
-| `/resume/` | HTML resume; links to committed PDF at `/resume/Kenji_Pinlac_Resume.pdf` |
-| `/contact/` | Contact info — mailto to `reimo14@proton.me`, GitHub, LinkedIn |
-| `/writeups/` | Index of HTB writeups, split into two sections — retired boxes (box, OS, difficulty, technique) and CTF challenges (event, category, difficulty, technique) — pulled at build time from `github.com/reimo22/htb-writeups` |
-| `/writeups/<box>/` | One page per writeup, rendered from that repo's `README.md` |
-| `/blog/` | Blog index, including a build log for this site itself |
-| `/blog/building-this-site/` | Per-phase log of this project: decisions, what CI caught, what the spec got wrong, where AI helped vs. where human review caught something |
+| Path                        | Content                                                                                                                                                                                                                   |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                         | Home — ASCII banner, short intro, entry points to the other sections                                                                                                                                                      |
+| `/about/`                   | Bio                                                                                                                                                                                                                       |
+| `/resume/`                  | HTML resume; links to committed PDF at `/resume/Kenji_Pinlac_Resume.pdf`                                                                                                                                                  |
+| `/contact/`                 | Contact info — mailto to `reimo14@proton.me`, GitHub, LinkedIn                                                                                                                                                            |
+| `/writeups/`                | Index of HTB writeups, split into two sections — retired boxes (box, OS, difficulty, technique) and CTF challenges (event, category, difficulty, technique) — pulled at build time from `github.com/reimo22/htb-writeups` |
+| `/writeups/<box>/`          | One page per writeup, rendered from that repo's `README.md`                                                                                                                                                               |
+| `/blog/`                    | Blog index, including a build log for this site itself                                                                                                                                                                    |
+| `/blog/building-this-site/` | Per-phase log of this project: decisions, what CI caught, what the spec got wrong, where AI helped vs. where human review caught something                                                                                |
 
 Blog and writeups are separate sections/collections — not merged under shared tags.
 
@@ -125,12 +125,12 @@ A layer on top of the working link-based site, not a replacement for it.
 
 Checkout uses `submodules: recursive`.
 
-| Check | Tool | Pass condition |
-|---|---|---|
-| Lint | ESLint (flat config), Stylelint, Prettier `--check`, markdownlint | zero errors |
-| HTML validation | `html-validate` over built output | zero errors |
-| Lighthouse | `treosh/lighthouse-ci-action` with `assert` | accessibility **= 100** (hard); performance / best-practices / SEO **≥ 90** |
-| Link check | `lycheeverse/lychee-action` | zero broken internal links; external links warn-only |
+| Check           | Tool                                                              | Pass condition                                                              |
+| --------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Lint            | ESLint (flat config), Stylelint, Prettier `--check`, markdownlint | zero errors                                                                 |
+| HTML validation | `html-validate` over built output                                 | zero errors                                                                 |
+| Lighthouse      | `treosh/lighthouse-ci-action` with `assert`                       | accessibility **= 100** (hard); performance / best-practices / SEO **≥ 90** |
+| Link check      | `lycheeverse/lychee-action`                                       | zero broken internal links; external links warn-only                        |
 
 Lint scope: ESLint on `commands.js`/`.eleventy.js` only; Stylelint on our CSS;
 Prettier `--check` on CSS/JS/JSON/Nunjucks (submodule excluded via
