@@ -47,13 +47,27 @@ See [`SPEC.md`](SPEC.md) for the full rationale behind each decision below.
 
 ## Phase 5 — Writeups
 
-- [ ] Add `htb-writeups` as a git submodule at `src/writeups/boxes/` (HTTPS URL)
-- [ ] `src/writeups/writeups.11tydata.js`: cascade layout, `tags: "writeups"`, computed permalink
+- [ ] Add `htb-writeups` as a git submodule at `src/writeups/boxes/` (HTTPS URL) — pull the
+      commit with frontmatter already added upstream (currently: 7 boxes have it, 4 CTF
+      challenges — gatery, jailbreak, massagold, timekorp — still don't)
+- [ ] Get CTF-challenge frontmatter added upstream too (`title`/`event`/`category`/
+      `difficulty`/`technique`/`date`, per `TEMPLATE-ctf.md`'s field set) before wiring the
+      build check below, or those 4 directories will fail the build on first run
+- [ ] `src/writeups/writeups.11tydata.js`: cascade layout, computed permalink, and a per-item
+      `tags` (`"writeups-box"` vs `"writeups-ctf"`, derived from which frontmatter shape the
+      item has) — building two collections, not one
 - [ ] `addPassthroughCopy` for `src/writeups/boxes/**/images/**`
-- [ ] README-table parser in `.eleventy.js`: box/OS/difficulty/technique → global data; **fail build** on directory/row-count mismatch
-- [ ] `/writeups/` generated index page
-- [ ] Verify all 7 boxes render with images intact
-- [ ] No changes made to the `htb-writeups` repo itself
+- [ ] Build check in `.eleventy.js`: **fail build** if any box README is missing
+      `title`/`os`/`difficulty`/`technique`/`date`, or any CTF README is missing
+      `title`/`event`/`category`/`difficulty`/`technique`/`date`
+- [ ] `/writeups/` generated index page — two sections (boxes, CTF challenges), each reading
+      its own frontmatter via `collections["writeups-box"]` / `collections["writeups-ctf"]`,
+      each sorted by `date` (no separate parser/global data object; the same per-item data
+      also feeds each writeup's header in `writeup.njk`)
+- [ ] Verify all 11 writeups render with images intact, correct metadata,
+      `collections["writeups-box"].length === 7`, `collections["writeups-ctf"].length === 4`
+- [ ] No writeup content duplicated between the two repos
+- [ ] Weekly Action bumps the submodule pointer via PR; merge is a manual human step
 - [ ] Append build-log entry
 
 ## Phase 6 — Blog

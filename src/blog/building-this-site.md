@@ -16,9 +16,10 @@ I'm building this portfolio using a trimmed-down version of
 [Chris Titus's AI-assisted dev workflow](https://christitus.com/my-ai-workflow/):
 agree a spec and task list before any code gets written, run a few CI checks
 that can genuinely fail, and review every diff by hand before it merges. Full
-docs: [`SPEC.md`](/SPEC.md), [`TASKS.md`](/TASKS.md), and the
-[design doc](/docs/superpowers/specs/2026-08-09-portfolio-site-design.md) this
-was built from.
+docs: [`SPEC.md`](https://github.com/reimo22/reimo22.github.io/blob/main/SPEC.md),
+[`TASKS.md`](https://github.com/reimo22/reimo22.github.io/blob/main/TASKS.md), and the
+[design doc](https://github.com/reimo22/reimo22.github.io/blob/main/docs/superpowers/specs/2026-08-09-portfolio-site-design.md)
+this was built from.
 
 ## Phase 1 — Spec & tasks
 
@@ -46,22 +47,29 @@ slate — two live GitHub repos shape this build:
 
 **Where AI helped, and where I had to redirect it.** The initial plan drafted
 a Lighthouse gate with all four categories (accessibility, performance,
-best-practices, SEO) hard-asserted at ≥95. An advisor pass caught that this is
+best-practices, SEO) hard-asserted at ≥95. A review pass caught that this is
 close to useless on shared CI runners — performance/SEO scores wobble a few
 points run to run, and a gate that fails randomly gets ignored, which is the
 same as not having a gate. Revised to: accessibility hard-locked at 100,
 everything else at ≥90 with real margin for a static, near-zero-JS site to
-clear. Also caught and fixed before this phase closed: the writeups index was
-originally going to require adding YAML front matter to the *upstream*
-`htb-writeups` repo — which contradicted the "keep writing writeups exactly as
-now, single source of truth" decision I'd already made. Fixed by parsing the
-existing `README.md` table instead, with the build failing loudly on a
-mismatch rather than degrading silently.
+clear.
 
-I also asked, separately, for this build-log to demonstrate the AI-assisted
-workflow itself, spec-before-code discipline, and what CI actually catches —
-not a general accessibility/mobile essay (those stay as SPEC.md requirements
-and only show up here when a phase actually collides with them).
+The writeups pipeline went through a correction too, worth recording
+accurately rather than glossing over. The decision I'd actually made was
+"single source of truth, no drift" between this site and the separate
+`htb-writeups` repo — I never said the *upstream* repo couldn't change, only
+that writeup content shouldn't be duplicated. An early draft of the plan
+turned that into a stronger, unstated rule — "never touch `htb-writeups`" —
+and built a bespoke parser for the upstream root README's summary table to
+work around it. On review that constraint didn't hold up: adding YAML
+frontmatter to each box's `README.md` isn't duplicating its content, and it's
+strictly less code than a parser that has to fail the build on every table
+mismatch. So the plan changed — frontmatter now lives on each writeup
+upstream and is the site's one metadata source, the summary table stays as
+plain GitHub navigation nobody parses, and the parser came out of the design
+entirely. Recording the correction here rather than quietly redoing it, since
+that's the whole point of writing this log as I go rather than after the
+fact.
 
 Next: Phase 2 stands up the Eleventy skeleton and the CI pipeline itself,
 before there's any real content to debug alongside it.
