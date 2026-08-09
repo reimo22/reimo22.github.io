@@ -1,0 +1,105 @@
+:root {
+  --color-bg: #f5f3fa;
+  --color-fg: #211c33;
+  --color-muted: #544d68;
+  --color-accent: #6b3fa0;
+  --color-border: #8074a8;
+  --font-mono:
+    ui-monospace, "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono",
+    monospace;
+  --content-max: 75ch;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #14111c;
+    --color-fg: #e8e3f5;
+    --color-muted: #b3aac9;
+    --color-accent: #c9a6ff;
+    --color-border: #6d6494;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-mono);
+  line-height: 1.5;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  border: 1px solid var(--color-border);
+  padding: 0.5rem 1rem;
+  z-index: 10;
+}
+
+.skip-link:focus {
+  left: 0.5rem;
+  top: 0.5rem;
+}
+
+header {
+  border-bottom: 1px solid var(--color-border);
+  padding: 1rem;
+}
+
+nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+nav a {
+  color: var(--color-accent);
+  text-decoration: none;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+}
+
+nav a:hover,
+nav a:focus {
+  text-decoration: underline;
+}
+
+main {
+  padding: 1rem;
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+footer {
+  border-top: 1px solid var(--color-border);
+  padding: 1rem;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+@media (width >= 40rem) {
+  main {
+    padding: 2rem;
+  }
+
+  header {
+    padding: 1.5rem 2rem;
+  }
+
+  footer {
+    padding: 1.5rem 2rem;
+  }
+}
