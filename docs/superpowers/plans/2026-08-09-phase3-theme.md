@@ -52,13 +52,13 @@ src/
 
 Color tokens (precomputed against WCAG 2.1 relative luminance, values below):
 
-| Token             | Light           | Dark            |
-| ------------------ | --------------- | --------------- |
-| `--color-bg`        | `#f5f3fa`       | `#14111c`       |
-| `--color-fg`        | `#211c33`       | `#e8e3f5`       |
-| `--color-muted`     | `#544d68`       | `#b3aac9`       |
-| `--color-accent`    | `#6b3fa0`       | `#c9a6ff`       |
-| `--color-border`    | `#8074a8`       | `#6d6494`       |
+| Token            | Light     | Dark      |
+| ---------------- | --------- | --------- |
+| `--color-bg`     | `#f5f3fa` | `#14111c` |
+| `--color-fg`     | `#211c33` | `#e8e3f5` |
+| `--color-muted`  | `#544d68` | `#b3aac9` |
+| `--color-accent` | `#6b3fa0` | `#c9a6ff` |
+| `--color-border` | `#8074a8` | `#6d6494` |
 
 Verified contrast ratios (fg/bg and accent/bg against 4.5:1; border/bg against 3:1):
 
@@ -93,7 +93,8 @@ All clear their targets with margin, so no `--color-border` mid-run drift risk o
   --color-accent: #6b3fa0;
   --color-border: #8074a8;
   --font-mono:
-    ui-monospace, "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", monospace;
+    ui-monospace, "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono",
+    monospace;
   --content-max: 75ch;
 }
 
@@ -255,19 +256,19 @@ git commit -m "Phase 3: theme tokens and mobile-first layout"
 `src/assets/ascii/home.txt` (figlet "small" font, 29 cols x 5 rows):
 
 ```
-         _           ___ ___ 
+         _           ___ ___
  _ _ ___(_)_ __  ___|_  )_  )
-| '_/ -_) | '  \/ _ \/ / / / 
+| '_/ -_) | '  \/ _ \/ / / /
 |_| \___|_|_|_|_\___/___/___|
-                             
+
 ```
 
 `src/assets/ascii/home-narrow.txt` (figlet "mini" font, 18 cols x 3 rows):
 
 ```
-             _ _  
-.__ o._ _  _  ) ) 
-|(/_|| | |(_)/_/_ 
+             _ _
+.__ o._ _  _  ) )
+|(/_|| | |(_)/_/_
 ```
 
 - [ ] **Step 2: Add the `ascii` shortcode in `.eleventy.js`**
@@ -278,10 +279,7 @@ import path from "node:path";
 
 // inside the exported function, alongside setLibrary:
 eleventyConfig.addShortcode("ascii", function (name) {
-  return fs.readFileSync(
-    path.join("src/assets/ascii", `${name}.txt`),
-    "utf8",
-  );
+  return fs.readFileSync(path.join("src/assets/ascii", `${name}.txt`), "utf8");
 });
 ```
 
@@ -427,7 +425,6 @@ alternative, where the spec/design doc turned out right or wrong in practice, wh
 verification actually caught):
 
 ```markdown
-
 ## Phase 3 — Theme
 
 Purple/gray TUI theme: CSS custom-property tokens for light and dark, a build-time ASCII
