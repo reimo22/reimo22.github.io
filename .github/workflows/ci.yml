@@ -72,6 +72,7 @@ jobs:
       - uses: treosh/lighthouse-ci-action@v12
         with:
           configPath: ./lighthouserc.json
+          runs: 3
 
   lychee:
     needs: build
