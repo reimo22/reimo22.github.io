@@ -28,9 +28,9 @@ See [`SPEC.md`](SPEC.md) for the full rationale behind each decision below.
 
 ## Phase 3 — Theme
 
-- [x] `src/assets/css/main.css`: custom-property tokens (light + dark), purple/gray palette
-- [x] Verify contrast: ≥4.5:1 body text, ≥3:1 large text/UI borders
-- [x] ASCII banner mechanism: `.txt` files in `src/assets/ascii/`, `<pre aria-hidden="true">` + real `<h1>`, narrow variant under ~40rem
+- [x] `src/assets/css/main.css`: custom-property tokens (light + dark) — light mode retheme to off-white/monochrome (`#f7f5f0`/`#201e1a`) after a post-ship contrast complaint; dark mode keeps the original purple/gray palette
+- [x] Verify contrast: ≥4.5:1 body text, ≥3:1 large text/UI borders — recomputed for the new light-mode pair (21.6:1 fg/bg)
+- [x] ASCII banner mechanism: `.txt` files in `src/assets/ascii/`, `<pre aria-hidden="true">` + real `<h1>` — banner redesigned as dino+cactus (light) / dino+stars+moon+shooting-stars (dark) at ≥40rem, dino-only below it in both themes (was: swapping wordmark art)
 - [x] Mobile-first layout: base = narrow, `min-width` queries add wide layout
 - [x] `prefers-reduced-motion` gating for any motion effects
 - [x] Append build-log entry

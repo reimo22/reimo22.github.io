@@ -1,9 +1,9 @@
 :root {
-  --color-bg: #f5f3fa;
-  --color-fg: #211c33;
-  --color-muted: #544d68;
-  --color-accent: #6b3fa0;
-  --color-border: #8074a8;
+  --color-bg: #f7f5f0;
+  --color-fg: #201e1a;
+  --color-muted: #5a554a;
+  --color-accent: #201e1a;
+  --color-border: #847c6e;
   --font-mono:
     ui-monospace, "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono",
     monospace;
@@ -64,7 +64,7 @@ nav ul {
 
 nav a {
   color: var(--color-accent);
-  text-decoration: none;
+  text-decoration: underline;
   min-height: 44px;
   min-width: 44px;
   display: inline-flex;
@@ -75,6 +75,12 @@ nav a {
 nav a:hover,
 nav a:focus {
   text-decoration: underline;
+}
+
+@media (prefers-color-scheme: dark) {
+  nav a {
+    text-decoration: none;
+  }
 }
 
 main {
@@ -116,21 +122,155 @@ footer {
   line-height: 1.1;
 }
 
-.banner-narrow {
-  display: block;
+.banner-dark {
+  position: relative;
+  display: none;
 }
 
-.banner-wide {
+@media (prefers-color-scheme: dark) {
+  .banner-light {
+    display: none;
+  }
+
+  .banner-dark {
+    display: block;
+  }
+}
+
+.banner-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.banner-row > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.banner-extra {
   display: none;
 }
 
 @media (width >= 40rem) {
-  .banner-narrow {
-    display: none;
+  .banner-row {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+
+    /* Matches the dark banner's rendered height (moon.txt, its tallest
+       asset) so light and dark reserve the same banner height. */
+    min-height: 19.2rem;
   }
 
-  .banner-wide {
+  .banner-extra {
     display: block;
+  }
+
+  span.banner-extra {
+    display: inline-block;
+  }
+}
+
+.banner pre.cactus,
+.banner pre.stargap {
+  color: var(--color-muted);
+}
+
+.moon {
+  margin-right: 1.75rem;
+}
+
+.shooting-star {
+  position: absolute;
+  font-size: 0.7rem;
+  color: var(--color-accent);
+  opacity: 0;
+}
+
+.shooting-star::before {
+  content: "";
+  position: absolute;
+  top: 0.45em;
+  right: 100%;
+  width: 5rem;
+  height: 1px;
+  background: linear-gradient(to left, currentcolor, transparent);
+  transform-origin: right center;
+  transform: rotate(24deg);
+}
+
+.shooting-star:nth-of-type(1) {
+  top: -0.5rem;
+  left: -1.5rem;
+
+  --dx: 18rem;
+  --dy: 6rem;
+  --dur: 4.5s;
+  --delay: 0s;
+}
+
+.shooting-star:nth-of-type(2) {
+  top: -1rem;
+  left: 20%;
+
+  --dx: 14rem;
+  --dy: 5rem;
+  --dur: 5.2s;
+  --delay: 3.1s;
+}
+
+.shooting-star:nth-of-type(3) {
+  top: 0.5rem;
+  left: 45%;
+
+  --dx: 16rem;
+  --dy: 5.5rem;
+  --dur: 6s;
+  --delay: 1.8s;
+}
+
+.shooting-star:nth-of-type(4) {
+  top: -0.3rem;
+  left: 68%;
+
+  --dx: 15rem;
+  --dy: 5.2rem;
+  --dur: 7s;
+  --delay: 0.9s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shooting-star {
+    animation-name: shoot;
+    animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+    animation-iteration-count: infinite;
+    animation-duration: var(--dur);
+    animation-delay: var(--delay);
+  }
+}
+
+@keyframes shoot {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+
+  4% {
+    opacity: 1;
+  }
+
+  28% {
+    transform: translate(var(--dx), var(--dy));
+    opacity: 0;
+  }
+
+  100% {
+    transform: translate(var(--dx), var(--dy));
+    opacity: 0;
   }
 }
 

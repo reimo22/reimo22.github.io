@@ -1,16 +1,29 @@
----
-title: Home
----
-
 {% extends "base.njk" %}
-
 {% block banner %}
   <div class="banner">
-    <pre class="banner-wide" aria-hidden="true">{% ascii "home" %}</pre>
-    <pre class="banner-narrow" aria-hidden="true">{% ascii "home-narrow" %}</pre>
+    <div class="banner-light" aria-hidden="true">
+      <div class="banner-row">
+        <pre>{% ascii "dino" %}</pre>
+        <!-- Cactus ASCII art credited to "Blac...@wsb.freinet.de" -->
+        <pre class="cactus banner-extra">{% ascii "cactus" %}</pre>
+      </div>
+    </div>
+    <div class="banner-dark" aria-hidden="true">
+      <div class="banner-row">
+        <pre>{% ascii "dino" %}</pre>
+        <pre class="stargap banner-extra">{% ascii "stars" %}</pre>
+        <!-- Moon ASCII derived from a NASA/JPL/USGS Galileo spacecraft photo
+             (public domain), Dec 7 1992:
+             https://upload.wikimedia.org/wikipedia/commons/b/b3/Full_moon.jpeg -->
+        <pre class="moon banner-extra">{% ascii "moon" %}</pre>
+      </div>
+      <span class="shooting-star banner-extra">✦</span>
+      <span class="shooting-star banner-extra">✦</span>
+      <span class="shooting-star banner-extra">✦</span>
+      <span class="shooting-star banner-extra">✦</span>
+    </div>
   </div>
 {% endblock %}
-
 {% block content %}
   <h1>{{ site.title }}<span class="cursor" aria-hidden="true">_</span></h1>
   <p>Portfolio, HTB writeups, and build log.</p>

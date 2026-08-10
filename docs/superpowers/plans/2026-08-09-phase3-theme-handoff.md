@@ -188,10 +188,26 @@ it's layout-dependent):**
 `prefers-reduced-motion`:**
 
 ```html
-<span class="shooting-star" style="top: -0.5rem; left: -1.5rem; --dx: 18rem; --dy: 6rem; --dur: 4.5s; --delay: 0s">✦</span>
-<span class="shooting-star" style="top: -1rem; left: 20%; --dx: 14rem; --dy: 5rem; --dur: 5.2s; --delay: 3.1s">✦</span>
-<span class="shooting-star" style="top: 0.5rem; left: 45%; --dx: 16rem; --dy: 5.5rem; --dur: 6s; --delay: 1.8s">✦</span>
-<span class="shooting-star" style="top: -0.3rem; left: 68%; --dx: 15rem; --dy: 5.2rem; --dur: 7s; --delay: 0.9s">✦</span>
+<span
+  class="shooting-star"
+  style="top: -0.5rem; left: -1.5rem; --dx: 18rem; --dy: 6rem; --dur: 4.5s; --delay: 0s"
+  >✦</span
+>
+<span
+  class="shooting-star"
+  style="top: -1rem; left: 20%; --dx: 14rem; --dy: 5rem; --dur: 5.2s; --delay: 3.1s"
+  >✦</span
+>
+<span
+  class="shooting-star"
+  style="top: 0.5rem; left: 45%; --dx: 16rem; --dy: 5.5rem; --dur: 6s; --delay: 1.8s"
+  >✦</span
+>
+<span
+  class="shooting-star"
+  style="top: -0.3rem; left: 68%; --dx: 15rem; --dy: 5.2rem; --dur: 7s; --delay: 0.9s"
+  >✦</span
+>
 ```
 
 ```css
@@ -304,7 +320,7 @@ narrow/wide breakpoint (`width >= 40rem`) once this is in `main.css`.
    this banner rework).
 10. Re-check the two Phase 3 checklist boxes this touches in `TASKS.md`
     (`main.css` tokens, contrast) — they're currently checked from the
-    *original* implementation; confirm they still hold after these changes
+    _original_ implementation; confirm they still hold after these changes
     or leave a note if scope grew beyond what was originally checked off.
 11. Resume the paused `finishing-a-development-branch` menu (merge
     locally / push+PR / keep-as-is) once all of the above is green.
@@ -322,3 +338,72 @@ narrow/wide breakpoint (`width >= 40rem`) once this is in `main.css`.
   connecting it next session before final visual sign-off, since exact
   spacing/sizing has only been eyeballed at mockup scale, not the real
   site's banner container.
+
+## Resolved (implementation session, same date)
+
+- **Cactus:** confirmed still out of scope — not built.
+- **Star field color:** reused `--color-muted` rather than adding a new
+  token, since the field is decorative (`aria-hidden`) and one fewer
+  token is one fewer thing to keep in sync across light/dark.
+- **Shooting-star color:** `--color-accent` as this doc already suggested,
+  not the mockup's hardcoded hex.
+- **Narrow-viewport fallback:** `.banner-row` stacks
+  (`flex-direction: column`) below the existing 40rem breakpoint and goes
+  horizontal (`space-between`, `align-items: flex-end`) at/above it — no
+  new breakpoint, no hidden content.
+- **Moon narrow variant:** not needed — the 34-column moon art wraps into
+  the existing `overflow-x: auto` on `.banner pre` the same way the old
+  `home.txt`/`home-narrow.txt` pair did; no second `.txt` file.
+- **Inline styles removed:** the four shooting stars' per-instance
+  `style="..."` attributes (as sketched in this doc) tripped
+  `html-validate`'s `no-inline-style` rule. Moved to four
+  `.shooting-star:nth-of-type(n)` CSS rules instead; markup is four
+  identical `<span class="shooting-star">✦</span>` tags.
+- **Attribution:** added as an HTML comment above the moon `<pre>` in
+  `index.njk` citing the NASA/JPL/USGS source — no separate credits page
+  exists on the site to check a convention against.
+- **`home.txt`/`home-narrow.txt`:** confirmed unreferenced anywhere else
+  and deleted, since the dino art supersedes the figlet wordmark per the
+  "ASCII dino... kept instead" decision above.
+- **Live browser preview:** still not available in this sandbox (no
+  Chrome/Chromium binary, and `playwright install` needs a network fetch
+  this environment doesn't have staged). Verification ceiling this
+  session was `npm run build` + full lint suite + `html-validate` +
+  recomputed WCAG contrast — same limitation noted in the Phase 2
+  build-log entry. Real rendered layout (stacking, animation, moon/star
+  sizing against the actual `.banner pre` styles) is unconfirmed until
+  checked in a real browser or CI's Lighthouse run.
+
+## Resolved (follow-up session — real browser + cactus + mobile scope)
+
+- **Live browser preview:** Chromium became installable this session via
+  Playwright. Real-browser verification (both color schemes, 1280px and
+  375px viewports) caught three bugs the lint/build/`html-validate`
+  ceiling above could not: a stray `.banner-row` class on `.banner-light`
+  that made the light dino render underneath the dark banner regardless
+  of theme; a flex min-width/cross-axis sizing issue that pushed real
+  page-level horizontal scroll at narrow viewports instead of scrolling
+  inside the star field's own `<pre>`; and `.stargap`/`.cactus`'s muted
+  color never applying because `.banner pre` outranks a bare class on
+  specificity. All three fixed — see the Phase 3 follow-up build-log
+  entry for detail. `prefers-reduced-motion: reduce` was also confirmed
+  to zero out `document.getAnimations()`, not just parse without error.
+- **Cactus:** built. `src/assets/ascii/cactus.txt`, paired with the dino
+  in light mode's `.banner-row`, colored `--color-muted`. Its source art
+  had the artist credit baked into the last line of the `.txt` file
+  itself (rendered visibly in the banner on the first pass) — moved to
+  an HTML comment above the `<pre>` in `index.njk`, matching the moon
+  photo's attribution pattern, so the credit stays in source only.
+- **Mobile scope:** below the ~40rem breakpoint both themes now show
+  dino-only — star field, moon, and shooting stars were adding height
+  the narrow layout doesn't have room for. New `.banner-extra` class
+  (hidden by default, shown from the existing wide breakpoint) rather
+  than a second breakpoint.
+- **Banner height parity:** light mode's row (dino + 12-line cactus) and
+  dark mode's row (dino + stars + 17-line moon) rendered at different
+  heights since `.banner-row`'s height follows its tallest child. Gave
+  `.banner-row` a `min-height` at the wide breakpoint matched to dark
+  mode's rendered height (confirmed via computed
+  `getBoundingClientRect().height`, not eyeballed), so both themes
+  reserve identical vertical space and page content below the banner
+  lines up at the same y-position either way.
