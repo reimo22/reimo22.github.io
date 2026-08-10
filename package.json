@@ -12,7 +12,8 @@
     "lint:prettier": "prettier --check .",
     "lint:markdown": "markdownlint-cli2 \"src/blog/**/*.md\" \"SPEC.md\" \"TASKS.md\"",
     "lint": "npm run lint:eslint && npm run lint:stylelint && npm run lint:prettier && npm run lint:markdown",
-    "lint:fix": "eslint . --fix && stylelint \"src/**/*.css\" --fix --allow-empty-input && prettier --write . && markdownlint-cli2 --fix \"src/blog/**/*.md\" \"SPEC.md\" \"TASKS.md\""
+    "lint:fix": "eslint . --fix && stylelint \"src/**/*.css\" --fix --allow-empty-input && prettier --write . && markdownlint-cli2 --fix \"src/blog/**/*.md\" \"SPEC.md\" \"TASKS.md\"",
+    "audit:lighthouse": "mkdir -p .lighthouseci && env -u LD_PRELOAD lighthouse --chrome-flags=\"--no-sandbox\" --output html --output-path .lighthouseci/report.html --view http://localhost:8080"
   },
   "engines": {
     "node": ">=20"
@@ -23,6 +24,7 @@
     "eslint": "^10.8.1",
     "globals": "^17.9.0",
     "html-validate": "^11.6.2",
+    "lighthouse": "^13.4.1",
     "markdown-it": "^15.0.0",
     "markdownlint-cli2": "^0.23.2",
     "prettier": "^3.9.6",

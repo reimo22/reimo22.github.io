@@ -16,6 +16,12 @@ points to — don't expect them echoed here.
 
 - One small, human-reviewed PR per phase, against `main`. Brainstorm first
   (one clarifying question at a time); spec + tasks approved before code.
+- Review `git diff` before every commit and push — confirm only intended
+  changes ship, spot secrets or stray files.
+- **Before pushing to `main`** (which triggers CI and deploys): start the
+  local server (`npm run serve`), hand it to the human for a manual check of
+  the site in a browser, and don't proceed until they confirm. Only then
+  commit and wrap up the phase.
 - Every phase appends a build-log entry to `src/blog/building-this-site.md`
   **in the same PR** as the work — never retrospectively.
 - Each build-log entry records what CI actually caught and the AI-vs-human

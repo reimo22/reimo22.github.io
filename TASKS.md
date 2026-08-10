@@ -94,5 +94,6 @@ See [`SPEC.md`](SPEC.md) for the full rationale behind each decision below.
 - [ ] `npx @11ty/eleventy --serve` full click-through, all writeups + images
 - [ ] Keyboard pass: `/`, `Ctrl+K`, `Esc`, arrows, `Enter`; confirm `/` still types a literal slash in real inputs
 - [ ] Screen reader spot check (Orca) on home + one writeup
-- [ ] `npm run lint`, `npx html-validate _site`, `npx lighthouse http://localhost:8080 --view` locally
+- [ ] `npm run lint`, `npx html-validate _site`; with the site served on :8080, `npm run audit:lighthouse` writes a local report to `.lighthouseci/report.html` and opens it (CI gates stay authoritative)
+- Local Lighthouse bootstrap (one-time, per machine): `npx @puppeteer/browsers install chrome-headless-shell@stable`, point `CHROME_PATH` at the binary in `.claude/settings.local.json`, and always audit via the npm script — it clears `LD_PRELOAD` (hardened_malloc on secureblue crashes Chromium's allocator) and passes `--no-sandbox` (the shell can't set up its sandbox here)
 - [ ] Post-deploy check of `https://reimo22.github.io/` incl. writeup images
