@@ -124,6 +124,7 @@ footer {
 
 .banner-dark {
   position: relative;
+  overflow: hidden;
   display: none;
 }
 
