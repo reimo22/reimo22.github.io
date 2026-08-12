@@ -92,6 +92,12 @@ Blog and writeups are separate sections/collections — not merged under shared 
   the title. Never read aloud by a screen reader.
 - Light/dark themes both defined as CSS custom properties on `:root`, with a
   `prefers-color-scheme` override — never defined only inside a media query.
+- A header theme toggle overrides the OS preference and persists in
+  `localStorage`. Precedence: stored choice → `prefers-color-scheme` → light.
+  The toggle is JS-only, so it must not render at all without JS (same
+  progressive-enhancement rule as the command palette), and the theme is
+  applied by a **blocking inline script** in `<head>` so there is no flash of
+  the wrong theme.
 - Motion (cursor blink, etc.) gated behind `prefers-reduced-motion: no-preference`.
 - System monospace font stack only — no webfont download.
 
@@ -115,9 +121,12 @@ A layer on top of the working link-based site, not a replacement for it.
 
 - Mobile-first CSS: base styles are the narrow layout; `min-width` queries add
   the wide layout.
-- No horizontal page scroll, ever. ASCII banners, the writeups index table, and
-  long command output in writeups each get their own `overflow-x: auto`
-  container — never on `body`.
+- No horizontal page scroll, ever — and no in-element scrollbar in the banner
+  either. The writeups index table and long command output in writeups each get
+  their own `overflow-x: auto` container, never on `body`. **The ASCII banner is
+  the exception:** it uses `overflow: hidden` and crops, because an
+  `overflow-x: auto` banner produced visible "sliders" at intermediate widths.
+  See the continuous-crop design doc.
 - Touch targets ≥ 44×44px.
 - Content capped around 70–80ch.
 - Lighthouse CI uses its default **mobile emulation preset**.

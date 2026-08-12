@@ -35,6 +35,42 @@ See [`SPEC.md`](SPEC.md) for the full rationale behind each decision below.
 - [x] `prefers-reduced-motion` gating for any motion effects
 - [x] Append build-log entry
 
+## Phase 3.5 — Theme toggle + banner continuous crop
+
+Design approved 2026-08-12:
+[`docs/superpowers/specs/2026-08-12-theme-toggle-and-banner-crop-design.md`](docs/superpowers/specs/2026-08-12-theme-toggle-and-banner-crop-design.md).
+Supersedes `docs/superpowers/plans/2026-08-10-banner-responsive-nits.md`.
+Numbered 3.5 because it reworks Phase 3's banner rather than adding a section.
+
+- [ ] Blocking inline script in `<head>`: `.js` class on `<html>` + `data-theme`
+      from `localStorage` before first paint (no flash of wrong theme)
+- [ ] Restructure theme tokens: `[data-theme]` overrides the bare
+      `prefers-color-scheme` block, which applies only when `data-theme` is absent
+- [ ] Sun/moon toggle `<button>` top right in `<header>`, `aria-label` updated on
+      toggle, icon `aria-hidden`, hidden entirely without JS
+- [ ] Same treatment for the `.banner-light` / `.banner-dark` swap (currently
+      driven by the same media query)
+- [ ] Build-time cactus strip from `cactus.txt`: trim col 15 → repeat ×2
+      contiguous (concatenated per line, one `<pre>`) → cut at `CUT_RIGHT = 104`;
+      generated, never committed as a second art file
+- [ ] Crop zone: `flex:1 1 auto; min-width:0; overflow:hidden;
+      justify-content:flex-end` — `min-width:0` is the actual slider fix
+- [ ] Delete `.banner-extra` (5 usages in `index.njk` + `main.css` rules),
+      `.moon { margin-right }`, and change `.banner pre` `overflow-x: auto` →
+      `hidden`
+- [ ] Moon pinned right, hidden below a **measured** threshold (do not copy the
+      harness's 602px — production padding differs)
+- [ ] Banner `min-height` 18.7rem, outside any media query, identical in both
+      themes so toggling never moves the page
+- [ ] Shooting stars at every width, count 4 / 3 / 2, travel distance scaled with
+      count; keep the `prefers-reduced-motion` gate
+- [ ] Port the width sweep into the repo as a script (see the design doc's
+      Verification section for the assertions that can actually fail — **not**
+      `scrollWidth <= clientWidth`, which passes unconditionally here)
+- [ ] Contrast re-check in both themes, now that both are reachable on one machine
+- [ ] JS-off pass: toggle absent, site still themes from `prefers-color-scheme`
+- [ ] Append build-log entry (same PR as the work)
+
 ## Phase 4 — Static pages
 
 - [ ] `/about/`

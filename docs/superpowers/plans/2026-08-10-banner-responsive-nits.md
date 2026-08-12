@@ -1,5 +1,12 @@
 # Banner Responsive Nitpicks — Definition (no solution yet)
 
+> **SUPERSEDED 2026-08-12** by
+> `docs/superpowers/specs/2026-08-12-theme-toggle-and-banner-crop-design.md`.
+> All three open decisions below are closed there, and the staged-collapse
+> approach in Nitpick 2 was replaced by a continuous crop. In particular the
+> "finally only the dino remains" narrowest state was **overruled by the
+> human**. Kept for the requirements and the record of what was observed.
+
 **Status:** Requirements only. Three nitpicks from visual review of the shipped
 Phase 3 banner. This doc records what was observed and what is wanted.
 Solution design (breakpoint values, how to stage the collapse, how to extend
