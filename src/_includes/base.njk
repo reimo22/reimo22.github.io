@@ -5,17 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% if title %}{{ title }} · {% endif %}{{ site.title }}</title>
     <link rel="stylesheet" href="/assets/css/main.css" />
+    <!-- Must stay inline and blocking: a deferred or external script paints the
+         wrong theme first and then corrects it, which is a visible flash. The
+         .js class is what reveals JS-only affordances (theme toggle), so they
+         never render as dead controls without JS. -->
+    <script>
+      (function () {
+        var root = document.documentElement;
+        root.classList.add("js");
+        try {
+          var stored = localStorage.getItem("theme");
+          if (stored === "light" || stored === "dark") {
+            root.setAttribute("data-theme", stored);
+          }
+        } catch {
+          /* private mode / storage disabled: fall back to prefers-color-scheme */
+        }
+      })();
+    </script>
+    <script src="/assets/js/theme.js" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <header>
-      <nav aria-label="Primary">
-        <ul>
-          {% for item in site.nav %}
-            <li><a href="{{ item.url }}">{{ item.label }}</a></li>
-          {% endfor %}
-        </ul>
-      </nav>
+      <div class="header-bar">
+        <nav aria-label="Primary">
+          <ul>
+            {% for item in site.nav %}
+              <li><a href="{{ item.url }}">{{ item.label }}</a></li>
+            {% endfor %}
+          </ul>
+        </nav>
+        <!-- Hidden unless html.js — theme.js narrows the label to the theme it
+             would switch to; this generic one is correct in either state. -->
+        <button
+          type="button"
+          class="theme-toggle"
+          id="theme-toggle"
+          aria-label="Toggle color theme"
+        >
+          <span class="theme-toggle-icon" aria-hidden="true"></span>
+        </button>
+      </div>
       {% block banner %}{% endblock %}
     </header>
     <main id="main">

@@ -1,3 +1,10 @@
+/* Theme tokens. Everything that varies by theme lives in these two blocks —
+   including the banner swap, the nav underline and the toggle glyph, which are
+   expressed as custom properties so no rule below needs a theme selector.
+
+   There is deliberately no `[data-theme="light"]` block: :root already holds
+   the light values, and the dark media query is scoped to :not([data-theme]),
+   so a stored light choice on a dark-OS machine correctly keeps light. */
 :root {
   --color-bg: #f7f5f0;
   --color-fg: #201e1a;
@@ -8,16 +15,38 @@
     ui-monospace, "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono",
     monospace;
   --content-max: 75ch;
+  --banner-light-display: block;
+  --banner-dark-display: none;
+  --nav-underline: underline;
+  --theme-toggle-icon: "\263e"; /* moon — the theme this switches *to* */
 }
 
+/* No stored choice: the OS preference is authoritative. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --color-bg: #14111c;
     --color-fg: #e8e3f5;
     --color-muted: #b3aac9;
     --color-accent: #c9a6ff;
     --color-border: #6d6494;
+    --banner-light-display: none;
+    --banner-dark-display: block;
+    --nav-underline: none;
+    --theme-toggle-icon: "\2600"; /* sun */
   }
+}
+
+/* Stored choice: overrides the OS preference. */
+:root[data-theme="dark"] {
+  --color-bg: #14111c;
+  --color-fg: #e8e3f5;
+  --color-muted: #b3aac9;
+  --color-accent: #c9a6ff;
+  --color-border: #6d6494;
+  --banner-light-display: none;
+  --banner-dark-display: block;
+  --nav-underline: none;
+  --theme-toggle-icon: "\2600"; /* sun */
 }
 
 * {
@@ -53,6 +82,41 @@ header {
   padding: 1rem;
 }
 
+.header-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.theme-toggle {
+  display: none;
+  flex: 0 0 auto;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* JS-only affordance: without JS this button can't do anything, so it must
+   not render at all (same rule the command palette follows). */
+.js .theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle-icon::before {
+  content: var(--theme-toggle-icon);
+}
+
 nav ul {
   display: flex;
   flex-wrap: wrap;
@@ -64,7 +128,7 @@ nav ul {
 
 nav a {
   color: var(--color-accent);
-  text-decoration: underline;
+  text-decoration: var(--nav-underline);
   min-height: 44px;
   min-width: 44px;
   display: inline-flex;
@@ -75,12 +139,6 @@ nav a {
 nav a:hover,
 nav a:focus {
   text-decoration: underline;
-}
-
-@media (prefers-color-scheme: dark) {
-  nav a {
-    text-decoration: none;
-  }
 }
 
 main {
@@ -111,39 +169,47 @@ footer {
 }
 
 .banner {
-  padding: 1rem 0 0;
+  /* Bottom breathing room lives here, not on the <pre> — a margin on the art
+     joins the flex row's cross size and would break height normalization. */
+  padding: 1rem 0 0.5rem;
+  container: banner / inline-size;
 }
 
 .banner pre {
-  margin: 0 0 0.5rem;
-  overflow-x: auto;
+  /* Never `overflow-x: auto`: under the crop model that turns every crop into
+     a per-element scrollbar, which is the bug this replaced. */
+  margin: 0;
+  overflow: hidden;
   color: var(--color-accent);
   font-family: var(--font-mono);
   line-height: 1.1;
 }
 
-.banner-dark {
+.banner-light {
+  display: var(--banner-light-display);
   position: relative;
   overflow: hidden;
-  display: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  .banner-light {
-    display: none;
-  }
-
-  .banner-dark {
-    display: block;
-  }
+.banner-dark {
+  display: var(--banner-dark-display);
+  position: relative;
+  overflow: hidden;
 }
 
 .banner-row {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1rem;
+  align-items: flex-end;
+  gap: 1.5rem;
   min-width: 0;
+
+  /* Outside every media query, and identical in both themes: 18.7rem is the
+     rendered height of moon.txt (17 lines x 1.1 line-height), the tallest
+     asset in either scene. Light carries the difference as dead space at all
+     widths — the accepted trade for a banner that never changes height, on
+     resize or on theme toggle. Inside a media query this reintroduces the
+     jump the crop model exists to remove. */
+  min-height: 18.7rem;
 }
 
 .banner-row > * {
@@ -151,29 +217,37 @@ footer {
   max-width: 100%;
 }
 
-.banner-extra {
-  display: none;
+.dino,
+.moon {
+  flex: 0 0 auto;
 }
 
-@media (width >= 40rem) {
-  .banner-row {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1.5rem;
+/* The crop zone: the only elastic element in the row.
 
-    /* Matches the dark banner's rendered height (moon.txt, its tallest
-       asset) so light and dark reserve the same banner height. */
-    min-height: 19.2rem;
-  }
+   `min-width: 0` is the load-bearing line — flex items default to
+   `min-width: auto`, which refuses to shrink below content width, and that is
+   what forced the overflow ("sliders") at intermediate widths. With it set,
+   overflow is impossible by construction rather than by picking correct
+   breakpoints.
 
-  .banner-extra {
-    display: block;
-  }
+   `justify-content: flex-end` pins the art right, so an over-wide child
+   overflows *leftward* and gets clipped there — which is what keeps the light
+   strip's ground line welded to the row's right edge. (Not `direction: rtl`
+   with an inline-block: an inline-block sits on the parent's text baseline,
+   reserving descender space that lifts the art off the row's bottom edge.) */
+.banner-crop {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
 
-  span.banner-extra {
-    display: inline-block;
-  }
+/* Must not shrink: a shrinking <pre> would clip its own *right* edge, which
+   inverts the crop direction and detaches the ground line. */
+.banner-crop > pre {
+  flex: 0 0 auto;
 }
 
 .banner pre.cactus,
@@ -181,15 +255,53 @@ footer {
   color: var(--color-muted);
 }
 
-.moon {
-  margin-right: 1.75rem;
+/* The moon can't crop — a sliced moon reads as broken rather than off-frame —
+   so it pops instead. Queried against the banner's own inline size, not the
+   viewport: the header's padding changes at 40rem, right next to this
+   threshold, so a single viewport value would be wrong on one side of it.
+   The value is dino (17ch) + two 1.5rem gaps + moon (34ch) + a minimum sliver
+   of star field; in `ch` so it tracks the font's actual advance width.
+   The row's height is held either way, so the pop costs no reflow. */
+@container banner (width < 66ch) {
+  .moon {
+    display: none;
+  }
 }
 
+/* Present at every width — never tied to the moon or the star field. Only the
+   count varies (2 / 3 / 4), and travel scales with it so they don't spend the
+   animation off-screen at phone width. */
 .shooting-star {
   position: absolute;
   font-size: 0.7rem;
   color: var(--color-accent);
   opacity: 0;
+
+  --travel: 0.55;
+}
+
+.shooting-star:nth-of-type(n + 3) {
+  display: none;
+}
+
+@media (width >= 40rem) {
+  .shooting-star {
+    --travel: 0.8;
+  }
+
+  .shooting-star:nth-of-type(3) {
+    display: inline;
+  }
+}
+
+@media (width >= 64rem) {
+  .shooting-star {
+    --travel: 1;
+  }
+
+  .shooting-star:nth-of-type(4) {
+    display: inline;
+  }
 }
 
 .shooting-star::before {
@@ -208,8 +320,8 @@ footer {
   top: -0.5rem;
   left: -1.5rem;
 
-  --dx: 18rem;
-  --dy: 6rem;
+  --dx: calc(18rem * var(--travel));
+  --dy: calc(6rem * var(--travel));
   --dur: 4.5s;
   --delay: 0s;
 }
@@ -218,8 +330,8 @@ footer {
   top: -1rem;
   left: 20%;
 
-  --dx: 14rem;
-  --dy: 5rem;
+  --dx: calc(14rem * var(--travel));
+  --dy: calc(5rem * var(--travel));
   --dur: 5.2s;
   --delay: 3.1s;
 }
@@ -228,8 +340,8 @@ footer {
   top: 0.5rem;
   left: 45%;
 
-  --dx: 16rem;
-  --dy: 5.5rem;
+  --dx: calc(16rem * var(--travel));
+  --dy: calc(5.5rem * var(--travel));
   --dur: 6s;
   --delay: 1.8s;
 }
@@ -238,8 +350,8 @@ footer {
   top: -0.3rem;
   left: 68%;
 
-  --dx: 15rem;
-  --dy: 5.2rem;
+  --dx: calc(15rem * var(--travel));
+  --dy: calc(5.2rem * var(--travel));
   --dur: 7s;
   --delay: 0.9s;
 }

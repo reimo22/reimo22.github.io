@@ -248,3 +248,108 @@ plus real Chromium screenshots via Playwright at both color schemes and both the
 (1280px) and narrow (375px) breakpoints, `document.getAnimations().length === 0` under
 `prefers-reduced-motion: reduce`, and computed-style checks confirming the color/display/
 overflow fixes above actually took effect in a rendered page rather than just parsing clean.
+
+## Phase 3.5 — Theme toggle + continuous-crop banner
+
+Two changes shipped together because they depend on each other: a header theme toggle, and a
+banner that crops continuously instead of collapsing at a breakpoint. The toggle is what makes
+the banner work reviewable — before it, the light-mode scene was only visible to someone whose
+OS was set to light, so light-mode regressions were effectively invisible during review.
+
+**The banner's "sliders" were never a breakpoint problem.** Phase 3 gave `.banner pre` an
+`overflow-x: auto` and hid everything below 40rem, which meant intermediate widths showed
+horizontal scrollbars inside the banner. The actual cause is that flex items default to
+`min-width: auto` and refuse to shrink below their content width. Setting `min-width: 0` on a
+crop zone with `overflow: hidden` makes overflow **impossible by construction** rather than by
+choosing correct breakpoints — so the whole staged-collapse design from the earlier nitpicks
+doc became moot, and the narrowest state is no longer dino-only. `justify-content: flex-end`
+pins the art right so it overflows leftward and clips there, which is what keeps the light
+scene's ground line welded to the row's right edge.
+
+**A `direction: rtl` + `display: inline-block` crop was tried first and rejected.** An
+inline-block sits on its parent's text baseline, which reserves descender space beneath it and
+lifts the art a few pixels off the row's bottom edge, misaligning it against the dino. Flex
+alignment has no baseline to sit on.
+
+**The verification I wrote first proved nothing, twice.** The obvious assertion —
+`row.scrollWidth <= row.clientWidth` — passes unconditionally under this design, for two
+compounding reasons: content clipped by `overflow: hidden` never reaches an ancestor's
+`scrollWidth` at all, and `scrollWidth` only measures overflow in the _end_ direction while
+this layout overflows leftward by construction. It reported a clean green while measuring
+nothing. The replacement sums the row's non-absolute children's widths against
+`row.clientWidth`, and adds a **negative control** — `crop.left - art.left > 0` — without which
+the whole suite would pass on content that simply fits and never crops. That control is what
+makes the other assertions mean anything; it holds from 280px to 1248px in light and 1312px in
+dark.
+
+**Human review caught a rewritten asset.** An early mockup embedded the ASCII art as JavaScript
+string literals, hand-transcribed rather than read from `src/assets/ascii/*.txt`. It looked
+plausible and was wrong; the human spotted it immediately ("i can tell you rewrote the ascii
+because its botched"). The fix was to generate the mockup's data from the real files and assert
+byte equality. That rule carried into production: `cactus.txt` stays the single source of truth
+and the wide strip is derived at build time by a `cactusStrip` shortcode (trim at column 15,
+repeat twice concatenated _per line_, cut at column 104), never committed as a second art file.
+Concatenating per line rather than butting two `<pre>` elements together is what keeps the
+ground line an unbroken character run across the join — two elements are two independent text
+layouts.
+
+**A misalignment I "fixed" wasn't mine to fix.** Chasing a reported nitpick I found and
+corrected a real baseline bug in the harness — but the human then checked the source and
+corrected me: the cactus trunk and branches genuinely aren't aligned in `cactus.txt`, and that
+is simply how the art looks. Recorded in the design doc as _must not be fixed_, so a future
+round doesn't "correct" the artwork.
+
+**Design review by a stronger model caught three bugs the build couldn't see**, all of which
+would have passed `npm run build` and `html-validate` cleanly:
+
+- `.banner pre { margin: 0 0 0.5rem }` — in a flex row a child's cross size is its _margin_
+  box, so the moon's 8px bottom margin would have made the dark row 307.2px against a 299.2px
+  `min-height`. That is an 8px shift on theme toggle and an 8px reflow exactly at the moon-pop
+  threshold: the specific jump this phase exists to remove. The margin went to zero and the
+  breathing room moved to `.banner`'s padding.
+- `.banner-light` had no `overflow: hidden` while `.banner-dark` did — an asymmetry inherited
+  from Phase 3, and page-level horizontal scroll waiting to happen.
+- `.banner-crop > pre` needed `flex: 0 0 auto`. Paired with `overflow: hidden` on the `<pre>`,
+  a shrinkable art element clips its own _right_ edge, inverting the crop direction.
+
+**The moon-pop threshold is a container query, and that isn't cosmetic.** The moon can't crop —
+a sliced moon reads as broken rather than off-frame — so it's hidden below a threshold instead,
+with the row holding its height either way so the pop costs no reflow. The threshold is
+`@container banner (width < 66ch)`: `ch` because both art widths are character-defined, and a
+container query because the header's padding grows from 1rem to 2rem at a 40rem viewport, which
+shrinks the banner's inline size by 32px right where this threshold sits. A viewport-based
+value near the mockup's 602px would have made the moon appear at ~608px, **vanish again** at
+640px when the padding grew, and reappear at ~672px. The sweep script now asserts the moon
+changes visibility at most once across the whole range.
+
+**Theme tokens restructured so nothing outside them carries a theme selector.** Dark values
+live in two blocks — `@media (prefers-color-scheme: dark) :root:not([data-theme])` for the
+no-choice path, and `:root[data-theme="dark"]` for a stored choice. There is deliberately no
+`[data-theme="light"]` block: `:root` already holds the light values, and scoping the media
+query to `:not([data-theme])` is what makes a stored _light_ choice stick on a dark-OS machine.
+Everything that varies by theme — the banner swap, the nav underline, the toggle's glyph — is
+expressed as a custom property, so the rules that consume them are written once.
+
+**The toggle is gated on JS twice over.** An inline blocking script in `<head>` adds a `.js`
+class and applies the stored theme before first paint; without it a deferred script paints the
+wrong theme and then corrects it, which is a visible flash. CSS hides the button unless
+`html.js`, following the command-palette precedent — a dead control is worse than no control.
+The glyph comes from CSS `::before` keyed to the same token, so it's correct before the
+handler script runs; only the `aria-label` is narrowed by JS, from a generic "Toggle color
+theme" that is accurate in either state.
+
+**Height normalized across themes at the human's explicit instruction.** 18.7rem in both, at
+every width, outside any media query — light carries 5.5rem of dead space unconditionally. That
+was the accepted trade: a banner that changes height when you hit the toggle would undercut the
+point of the toggle, which is comparing the two scenes at one viewport width.
+
+Verification this round: `npm run lint` and `npx html-validate _site` clean; the new
+`npm run audit:banner` sweep (280→1500px, 2px steps, both themes) reporting a single height of
+299.19px in both, zero page overflow, zero right-edge gap, the crop genuinely engaging, and one
+moon transition; plus headless checks that the toggle persists across reload, that page content
+below the banner doesn't move on toggle, that shooting stars render 2/3/4 by band, that
+`document.getAnimations().length === 0` under `prefers-reduced-motion: reduce`, and that with
+JS disabled the toggle is hidden while the site still themes from `prefers-color-scheme`.
+Contrast recomputed for the new toggle's border in both themes (3.79:1 light, 3.46:1 dark
+against a 3:1 UI target). Everything above was done unattended — the browser check is the
+human's, on the PR.

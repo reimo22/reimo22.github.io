@@ -3,24 +3,28 @@
   <div class="banner">
     <div class="banner-light" aria-hidden="true">
       <div class="banner-row">
-        <pre>{% ascii "dino" %}</pre>
+        <pre class="dino">{% ascii "dino" %}</pre>
         <!-- Cactus ASCII art credited to "Blac...@wsb.freinet.de" -->
-        <pre class="cactus banner-extra">{% ascii "cactus" %}</pre>
+        <div class="banner-crop">
+          <pre class="cactus">{% cactusStrip %}</pre>
+        </div>
       </div>
     </div>
     <div class="banner-dark" aria-hidden="true">
       <div class="banner-row">
-        <pre>{% ascii "dino" %}</pre>
-        <pre class="stargap banner-extra">{% ascii "stars" %}</pre>
+        <pre class="dino">{% ascii "dino" %}</pre>
+        <div class="banner-crop">
+          <pre class="stargap">{% ascii "stars" %}</pre>
+        </div>
         <!-- Moon ASCII derived from a NASA/JPL/USGS Galileo spacecraft photo
              (public domain), Dec 7 1992:
              https://upload.wikimedia.org/wikipedia/commons/b/b3/Full_moon.jpeg -->
-        <pre class="moon banner-extra">{% ascii "moon" %}</pre>
+        <pre class="moon">{% ascii "moon" %}</pre>
       </div>
-      <span class="shooting-star banner-extra">✦</span>
-      <span class="shooting-star banner-extra">✦</span>
-      <span class="shooting-star banner-extra">✦</span>
-      <span class="shooting-star banner-extra">✦</span>
+      <span class="shooting-star">✦</span>
+      <span class="shooting-star">✦</span>
+      <span class="shooting-star">✦</span>
+      <span class="shooting-star">✦</span>
     </div>
   </div>
 {% endblock %}

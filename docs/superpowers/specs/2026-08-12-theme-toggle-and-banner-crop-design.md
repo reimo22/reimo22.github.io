@@ -1,8 +1,10 @@
 # Theme toggle + continuous-crop banner — design
 
 **Status:** Design approved by human review in the brainstorming session of
-2026-08-12. No implementation code written yet. Not yet added to `TASKS.md` —
-the human explicitly deferred that.
+2026-08-12. Implemented in the Phase 3.5 PR; see `TASKS.md` for the checklist
+and `src/blog/building-this-site.md` for what the implementation changed. Three
+things this doc got wrong are corrected inline below, marked
+**Corrected at implementation**.
 
 **Supersedes:** `docs/superpowers/plans/2026-08-10-banner-responsive-nits.md`.
 That doc recorded requirements only and left three decisions open; this doc
@@ -129,7 +131,23 @@ Two of these lines are load-bearing and easy to lose in a refactor:
   fixed.
 - **`.moon { margin-right: 1.75rem }` — delete.** It fights
   `justify-content: flex-end` and the moon's pinned position.
-- **`.banner-extra` — delete the class entirely** (5 usages in `index.njk`,
+- **`.banner pre { margin: 0 0 0.5rem }` → `margin: 0`.**
+  **Corrected at implementation** — this doc originally missed it. In a flex
+  row a child's cross size is its _margin_ box, so the moon's 8px bottom margin
+  made the dark row 307.2px against a 299.2px `min-height`: an 8px shift on
+  theme toggle and an 8px reflow at the moon-pop threshold, i.e. exactly the
+  jump criteria 2 and 3 forbid. The bottom breathing room moved to
+  `.banner { padding: 1rem 0 0.5rem }`, where it can't feed the row's height.
+- **`.banner-light` needs `overflow: hidden` too.**
+  **Corrected at implementation** — only `.banner-dark` had it, and an
+  unclipped light scene means page-level horizontal scroll, the bug the Phase 3
+  follow-up already fixed once.
+- **`.banner-crop > pre` needs `flex: 0 0 auto`.**
+  **Corrected at implementation** — the doc's snippet omitted it. Paired with
+  `overflow: hidden` on the `<pre>`, a shrinkable art element clips its own
+  _right_ edge, inverting the crop direction and detaching the ground line
+  (criterion 5).
+- **`.banner-extra` — delete the class entirely** (7 usages in `index.njk`,
   plus its rules in `main.css`). It lumps star field, moon, shooting stars and
   cactus into one on/off switch, which is incoherent under this model: those
   four elements now have three different behaviors. An implementer who keeps
@@ -297,7 +315,16 @@ that subprocess. Record this next to the script or it fails on first run.
 Criteria 5–8 need human review at the browser, per the `CLAUDE.md` pre-push
 protocol.
 
-## Open items (non-blocking)
+## Open items — both closed at implementation
 
-1. The exact moon-pop threshold — to be measured against production padding.
-2. Container query vs. viewport media query for that threshold.
+1. **Moon-pop threshold: `@container banner (width < 66ch)`.** Measured against
+   production, not copied from the harness's 602px. 66ch = dino (17ch) + two
+   1.5rem gaps (~5ch) + moon (34ch) + a ~10ch minimum sliver of star field. In
+   the sweep the moon appears at a 698px viewport.
+2. **Container query, not a viewport media query** — and the threshold has to
+   be checked for _flicker_, not just placement. The header's padding grows
+   from 1rem to 2rem at a 40rem viewport, which shrinks the banner's inline
+   size by 32px right where this threshold sits. A viewport-based value near
+   602px would make the moon appear at ~608px, vanish again at 640px when the
+   padding grows, and reappear at ~672px. The sweep script now asserts the moon
+   changes visibility at most once across 280→1500px.

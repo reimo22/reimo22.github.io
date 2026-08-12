@@ -42,34 +42,44 @@ Design approved 2026-08-12:
 Supersedes `docs/superpowers/plans/2026-08-10-banner-responsive-nits.md`.
 Numbered 3.5 because it reworks Phase 3's banner rather than adding a section.
 
-- [ ] Blocking inline script in `<head>`: `.js` class on `<html>` + `data-theme`
+- [x] Blocking inline script in `<head>`: `.js` class on `<html>` + `data-theme`
       from `localStorage` before first paint (no flash of wrong theme)
-- [ ] Restructure theme tokens: `[data-theme]` overrides the bare
-      `prefers-color-scheme` block, which applies only when `data-theme` is absent
-- [ ] Sun/moon toggle `<button>` top right in `<header>`, `aria-label` updated on
+- [x] Restructure theme tokens: `[data-theme]` overrides the bare
+      `prefers-color-scheme` block, which applies only when `data-theme` is
+      absent — every theme-varying rule (banner swap, nav underline, toggle
+      glyph) is now a custom property, so no rule outside the two token blocks
+      carries a theme selector
+- [x] Sun/moon toggle `<button>` top right in `<header>`, `aria-label` updated on
       toggle, icon `aria-hidden`, hidden entirely without JS
-- [ ] Same treatment for the `.banner-light` / `.banner-dark` swap (currently
+- [x] Same treatment for the `.banner-light` / `.banner-dark` swap (currently
       driven by the same media query)
-- [ ] Build-time cactus strip from `cactus.txt`: trim col 15 → repeat ×2
+- [x] Build-time cactus strip from `cactus.txt`: trim col 15 → repeat ×2
       contiguous (concatenated per line, one `<pre>`) → cut at `CUT_RIGHT = 104`;
-      generated, never committed as a second art file
-- [ ] Crop zone: `flex:1 1 auto; min-width:0; overflow:hidden;
-      justify-content:flex-end` — `min-width:0` is the actual slider fix
-- [ ] Delete `.banner-extra` (5 usages in `index.njk` + `main.css` rules),
+      generated, never committed as a second art file — `cactusStrip` shortcode
+- [x] Crop zone: `flex:1 1 auto; min-width:0; overflow:hidden;
+justify-content:flex-end` — `min-width:0` is the actual slider fix
+- [x] Delete `.banner-extra` (7 usages in `index.njk` + `main.css` rules),
       `.moon { margin-right }`, and change `.banner pre` `overflow-x: auto` →
       `hidden`
-- [ ] Moon pinned right, hidden below a **measured** threshold (do not copy the
-      harness's 602px — production padding differs)
-- [ ] Banner `min-height` 18.7rem, outside any media query, identical in both
-      themes so toggling never moves the page
-- [ ] Shooting stars at every width, count 4 / 3 / 2, travel distance scaled with
+- [x] `.banner pre { margin: 0 }` — the old `0 0 0.5rem` joined the flex row's
+      cross size and would have broken height normalization by 8px; the
+      breathing room moved to `.banner`'s padding (not in the design doc — see
+      the build log)
+- [x] Moon pinned right, hidden below a **measured** threshold:
+      `@container banner (width < 66ch)`; the moon appears at a 698px viewport
+- [x] Banner `min-height` 18.7rem, outside any media query, identical in both
+      themes so toggling never moves the page — measured 299.19px, a single
+      value across 280→1500px in both themes
+- [x] Shooting stars at every width, count 4 / 3 / 2, travel distance scaled with
       count; keep the `prefers-reduced-motion` gate
-- [ ] Port the width sweep into the repo as a script (see the design doc's
+- [x] Port the width sweep into the repo as a script (see the design doc's
       Verification section for the assertions that can actually fail — **not**
-      `scrollWidth <= clientWidth`, which passes unconditionally here)
-- [ ] Contrast re-check in both themes, now that both are reachable on one machine
-- [ ] JS-off pass: toggle absent, site still themes from `prefers-color-scheme`
-- [ ] Append build-log entry (same PR as the work)
+      `scrollWidth <= clientWidth`, which passes unconditionally here) —
+      `scripts/sweep-banner.mjs`, `npm run audit:banner`
+- [x] Contrast re-check in both themes, now that both are reachable on one machine
+- [x] JS-off pass: toggle absent, site still themes from `prefers-color-scheme`
+- [x] Append build-log entry (same PR as the work)
+- [ ] Human browser check before merge (the one item CI can't cover)
 
 ## Phase 4 — Static pages
 
@@ -131,5 +141,8 @@ Numbered 3.5 because it reworks Phase 3's banner rather than adding a section.
 - [ ] Keyboard pass: `/`, `Ctrl+K`, `Esc`, arrows, `Enter`; confirm `/` still types a literal slash in real inputs
 - [ ] Screen reader spot check (Orca) on home + one writeup
 - [ ] `npm run lint`, `npx html-validate _site`; with the site served on :8080, `npm run audit:lighthouse` writes a local report to `.lighthouseci/report.html` and opens it (CI gates stay authoritative)
+- [ ] With the site served on :8080, `npm run audit:banner` runs the 280→1500px
+      banner sweep in both themes (see Phase 3.5); same `CHROME_PATH` +
+      `LD_PRELOAD` handling as the Lighthouse script
 - Local Lighthouse bootstrap (one-time, per machine): `npx @puppeteer/browsers install chrome-headless-shell@stable`, point `CHROME_PATH` at the binary in `.claude/settings.local.json`, and always audit via the npm script — it clears `LD_PRELOAD` (hardened_malloc on secureblue crashes Chromium's allocator) and passes `--no-sandbox` (the shell can't set up its sandbox here)
 - [ ] Post-deploy check of `https://reimo22.github.io/` incl. writeup images

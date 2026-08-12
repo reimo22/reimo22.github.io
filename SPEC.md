@@ -45,8 +45,10 @@ Blog and writeups are separate sections/collections — not merged under shared 
   site needs at most one small hand-written script (rules out Astro's island
   overhead for no benefit). Eleventy ships zero client JS by default.
 - No CSS framework — hand-written CSS with custom-property tokens.
-- No client JS beyond one command-palette script; everything else works with
-  JS disabled.
+- Client JS is limited to the command-palette script, the theme toggle's
+  handler, and the tiny inline blocking script in `<head>` that applies the
+  stored theme and marks the document as JS-capable. Everything else works
+  with JS disabled.
 
 ## HTB writeups pipeline
 
