@@ -53,11 +53,22 @@ Numbered 3.5 because it reworks Phase 3's banner rather than adding a section.
       toggle, icon `aria-hidden`, hidden entirely without JS
 - [x] Same treatment for the `.banner-light` / `.banner-dark` swap (currently
       driven by the same media query)
-- [x] Build-time cactus strip from `cactus.txt`: trim col 15 → repeat ×2
-      contiguous (concatenated per line, one `<pre>`) → cut at `CUT_RIGHT = 104`;
-      generated, never committed as a second art file — `cactusStrip` shortcode
-- [x] Crop zone: `flex:1 1 auto; min-width:0; overflow:hidden;
-justify-content:flex-end` — `min-width:0` is the actual slider fix
+- [x] Build-time cactus strip from `cactus.txt`: trim col 15 → repeat
+      contiguous (concatenated per line, one `<pre>`) → cut into the last tile
+      at column 45; generated, never committed as a second art file —
+      `cactusStrip` shortcode. Tiles grow the strip **leftward** (the cut is
+      measured into the last tile), so the right edge is byte-identical at any
+      tile count — load-bearing, because `moonAboveHorizon` composites against
+      that edge. Now 5 tiles (~2700px) so the ground line reaches the banner's
+      left edge on a 2560px display rather than starting mid-frame
+- [x] ~~Crop zone: `flex:1 1 auto; min-width:0; overflow:hidden;
+justify-content:flex-end` — `min-width:0` is the actual slider fix~~
+      — **superseded on human instruction:** there is no crop-zone element at
+      all. Both scenes are a stack of full-width absolutely-positioned layers
+      (`.banner-sky`, `.banner-ground`, and the dino) that overflow leftward and
+      clip; `.banner-row` / `.banner-crop` are gone. Reserving an elastic lane
+      for the art was what sliced the moon at narrow widths — it only ever got
+      the width left over after the dino
 - [x] Delete `.banner-extra` (7 usages in `index.njk` + `main.css` rules),
       `.moon { margin-right }`, and change `.banner pre` `overflow-x: auto` →
       `hidden`
@@ -65,8 +76,13 @@ justify-content:flex-end` — `min-width:0` is the actual slider fix
       cross size and would have broken height normalization by 8px; the
       breathing room moved to `.banner`'s padding (not in the design doc — see
       the build log)
-- [x] Moon pinned right, hidden below a **measured** threshold:
-      `@container banner (width < 66ch)`; the moon appears at a 698px viewport
+- [x] ~~Moon pinned right, hidden below a **measured** threshold:
+      `@container banner (width < 66ch)`; the moon appears at a 698px viewport~~
+      — **superseded on human instruction:** the moon no longer disappears at
+      any width, and the container query is gone. Under the layered model it
+      has the full banner width to sit in, so at 371px the whole disc fits;
+      only past that does it lose columns from the left, cut on a cell
+      boundary, like every other piece of art
 - [x] Banner `min-height` 18.7rem, outside any media query, identical in both
       themes so toggling never moves the page — measured 299.19px, a single
       value across 280→1500px in both themes
@@ -78,6 +94,35 @@ justify-content:flex-end` — `min-width:0` is the actual slider fix
       `scripts/sweep-banner.mjs`, `npm run audit:banner`
 - [x] Contrast re-check in both themes, now that both are reachable on one machine
 - [x] JS-off pass: toggle absent, site still themes from `prefers-color-scheme`
+- [x] Dark scene horizon: the moon rises **behind** the cactus ridge. Occlusion
+      is subtraction from the art at build time (`moonAboveHorizon` shortcode
+      blanks every moon cell at or below the strip's per-column silhouette), not
+      paint order — a `<pre>` has no background and hides nothing behind it.
+      Exact because the moon and the strip share the banner's right edge and its
+      bottom, so the offset is zero columns in any monospace font. `moon.txt`
+      stays unmodified source; an earlier hand-crop of it is recorded in the
+      build log
+- [x] `starField` shortcode holds the stars above the desert floor by a row-only
+      rule — the field sits a 1.5rem gap (~2.5 columns) off the moon, so its
+      column alignment is font-dependent and can't be composited
+- [x] ~~`.banner-ground` starts at `calc(17ch + 1.5rem)`, not the banner edge~~
+      — **superseded on human instruction:** every layer spans the full width,
+      so the desert floor reaches the banner's left edge at every width.
+      Reserving a column for the dino cut a full-height hole in the sky and
+      left the horizon stopping short
+- [x] Layers snap to whole character cells (`width: round(down, 100%, 1ch)`)
+      so the left-hand clip lands on a cell boundary instead of slicing glyphs
+      in half down the edge; asserted by the sweep, which fails at 4.76px off
+      grid without it
+- [x] Light scene restructured to the same layered model, so the two scenes
+      differ only in content and the toggle no longer changes composition
+- [x] The dino wears a background-coloured `text-shadow` halo (eight hard 3px
+      offsets, not a blur) and sits above the ground layer, so the cactus
+      behind it stays visible between its strokes instead of being knocked out
+      by a rectangle
+- [x] Repair `audit:banner`, which had been dead: it queried `.banner-row` in the
+      dark scene (renamed `.banner-sky`) and crashed, and its child-overflow sum
+      omitted the flex gaps that the over-wide moon was escaping through
 - [x] Append build-log entry (same PR as the work)
 - [ ] Human browser check before merge (the one item CI can't cover)
 

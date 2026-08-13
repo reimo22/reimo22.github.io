@@ -52,14 +52,13 @@ for (const theme of ["light", "dark"]) {
   }, theme);
 
   const heights = new Set();
-  let worstChildOverflow = -Infinity;
+  let worstGridRemainder = 0;
   let worstRightGap = 0;
+  let worstMoonEdgeGap = 0;
   let worstPageOverflow = -Infinity;
   let clipFrom = null;
   let clipTo = null;
-  let moonPop = null;
-  let moonFlips = 0;
-  let moonWasVisible = null;
+  let moonHiddenAt = null;
 
   for (let width = MIN_WIDTH; width <= MAX_WIDTH; width += STEP) {
     await page.setViewport({ width, height: 900 });
@@ -72,58 +71,86 @@ for (const theme of ["light", "dark"]) {
       const scene = document.querySelector(
         t === "dark" ? ".banner-dark" : ".banner-light",
       );
-      const row = scene.querySelector(".banner-row");
-      const crop = scene.querySelector(".banner-crop");
-      const art = crop.querySelector("pre");
+      // The ground layer carries the horizon in both themes and is the layer
+      // every other one is aligned against.
+      const ground = scene.querySelector(".banner-ground");
+      const art = ground.querySelector("pre.cactus");
 
-      let childrenSum = 0;
-      for (const child of row.children) {
-        const style = getComputedStyle(child);
-        if (style.position === "absolute" || style.display === "none") continue;
-        childrenSum += child.getBoundingClientRect().width;
-      }
+      // One character cell, measured from the art's own resolved font rather
+      // than assumed — the whole layout is expressed in `ch`.
+      const probe = document.createElement("span");
+      probe.style.font = getComputedStyle(art).font;
+      probe.style.position = "absolute";
+      probe.style.visibility = "hidden";
+      probe.textContent = "0".repeat(100);
+      document.body.append(probe);
+      const cell = probe.getBoundingClientRect().width / 100;
+      probe.remove();
 
       const moon = scene.querySelector(".moon");
+      const moonVisible = moon
+        ? getComputedStyle(moon).display !== "none"
+        : null;
       return {
-        childOverflow: childrenSum - row.clientWidth,
-        height: Math.round(row.getBoundingClientRect().height * 100) / 100,
+        // The `moonAboveHorizon` composite subtracts the ridge from the moon
+        // assuming the two share a right edge. If they drift, the moon is
+        // occluded against the wrong columns and the art quietly deforms.
+        moonEdgeGap: moonVisible
+          ? moon.getBoundingClientRect().right -
+            art.getBoundingClientRect().right
+          : 0,
+        // The layers are snapped to whole character cells so the left-hand
+        // clip lands on a cell boundary instead of slicing glyphs in half. If
+        // `round()` is unsupported the width silently falls back to the
+        // unsnapped value and the mangled column returns, so measure it.
+        gridRemainder: (() => {
+          // Sub-pixel width: `clientWidth` is integer-rounded, which alone
+          // shows up as ~0.5px of phantom drift and would mask the real thing.
+          const w = ground.getBoundingClientRect().width;
+          const rem = w % cell;
+          return Math.min(rem, cell - rem);
+        })(),
+        height: Math.round(scene.getBoundingClientRect().height * 100) / 100,
         rightGap:
-          crop.getBoundingClientRect().right -
+          ground.getBoundingClientRect().right -
           art.getBoundingClientRect().right,
         leftClip:
-          crop.getBoundingClientRect().left - art.getBoundingClientRect().left,
+          ground.getBoundingClientRect().left -
+          art.getBoundingClientRect().left,
         pageOverflow:
           document.documentElement.scrollWidth -
           document.documentElement.clientWidth,
-        moonVisible: moon ? getComputedStyle(moon).display !== "none" : null,
+        moonVisible,
       };
     }, theme);
 
     heights.add(sample.height);
-    worstChildOverflow = Math.max(worstChildOverflow, sample.childOverflow);
+    worstGridRemainder = Math.max(worstGridRemainder, sample.gridRemainder);
     worstRightGap = Math.max(worstRightGap, Math.abs(sample.rightGap));
+    worstMoonEdgeGap = Math.max(worstMoonEdgeGap, Math.abs(sample.moonEdgeGap));
     worstPageOverflow = Math.max(worstPageOverflow, sample.pageOverflow);
     if (sample.leftClip > 0) {
       if (clipFrom === null) clipFrom = width;
       clipTo = width;
     }
-    if (theme === "dark") {
-      if (moonPop === null && sample.moonVisible) moonPop = width;
-      if (moonWasVisible !== null && sample.moonVisible !== moonWasVisible)
-        moonFlips += 1;
-      moonWasVisible = sample.moonVisible;
-    }
+    // The moon is present at every width now — it crops instead of popping.
+    if (
+      theme === "dark" &&
+      moonHiddenAt === null &&
+      sample.moonVisible === false
+    )
+      moonHiddenAt = width;
   }
 
   results[theme] = {
     heights: [...heights],
-    worstChildOverflow,
+    worstGridRemainder,
     worstRightGap,
+    worstMoonEdgeGap,
     worstPageOverflow,
     clipFrom,
     clipTo,
-    moonPop,
-    moonFlips,
+    moonHiddenAt,
   };
 }
 
@@ -133,26 +160,41 @@ const failures = [];
 for (const [theme, r] of Object.entries(results)) {
   console.log(
     `${theme.padEnd(5)} | heights: ${r.heights.join(",")} | ` +
-      `max(children - rowInner): ${r.worstChildOverflow.toFixed(2)}px | ` +
+      `max off-grid clip: ${r.worstGridRemainder.toFixed(2)}px | ` +
       `max right-edge gap: ${r.worstRightGap.toFixed(2)}px | ` +
       `max page overflow: ${r.worstPageOverflow.toFixed(2)}px | ` +
       `crop engaged: ${r.clipFrom === null ? "NEVER" : `${r.clipFrom}-${r.clipTo}px`}` +
-      (r.moonPop === null ? "" : ` | moon appears at: ${r.moonPop}px`),
+      (theme === "dark"
+        ? ` | moon hidden at: ${r.moonHiddenAt === null ? "NEVER" : `${r.moonHiddenAt}px`}` +
+          ` | max moon-edge gap: ${r.worstMoonEdgeGap.toFixed(2)}px`
+        : ""),
   );
 
-  // The pop threshold sits near the header's 40rem padding change. If the two
-  // interact the wrong way the moon flickers in and out as the viewport grows,
-  // so require exactly one transition across the whole range.
-  if (theme === "dark" && r.moonFlips > 1)
+  // The composite in `moonAboveHorizon` subtracts the ridge from the moon on
+  // the assumption that the two blocks share a right edge. If they drift, the
+  // moon is occluded against the wrong columns and the art quietly deforms.
+  if (theme === "dark" && r.worstMoonEdgeGap > 0.5)
     failures.push(
-      `dark: the moon changes visibility ${r.moonFlips} times across the sweep`,
+      `dark: the moon and the cactus strip disagree on the right edge by ` +
+        `${r.worstMoonEdgeGap.toFixed(2)}px — the horizon composite assumes they share it`,
     );
 
-  // 1 — no horizontal scrollbar, in the banner or on the page.
-  if (r.worstChildOverflow > 0.5)
+  // The moon no longer pops. Every layer spans the full banner and overflows
+  // leftward, so the moon has the whole width to sit in rather than a share of
+  // it left over after the dino — which is what used to force the pop.
+  if (theme === "dark" && r.moonHiddenAt !== null)
     failures.push(
-      `${theme}: row children exceed the row by ${r.worstChildOverflow.toFixed(2)}px`,
+      `dark: the moon is hidden at ${r.moonHiddenAt}px — it should be present at every width`,
     );
+
+  // The layers are snapped to whole character cells. Unsnapped, the left-hand
+  // clip cuts glyphs down the middle and the art ends in a mangled column.
+  if (r.worstGridRemainder > 0.5)
+    failures.push(
+      `${theme}: art layer is ${r.worstGridRemainder.toFixed(2)}px off the character grid — ` +
+        "the left clip will slice glyphs in half",
+    );
+  // 1 — no horizontal scrollbar on the page.
   if (r.worstPageOverflow > 0.5)
     failures.push(
       `${theme}: page scrolls horizontally by ${r.worstPageOverflow.toFixed(2)}px`,

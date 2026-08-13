@@ -170,14 +170,14 @@ footer {
 
 .banner {
   /* Bottom breathing room lives here, not on the <pre> — a margin on the art
-     joins the flex row's cross size and would break height normalization. */
+     joins the layer's cross size and would break height normalization. */
   padding: 1rem 0 0.5rem;
-  container: banner / inline-size;
 }
 
 .banner pre {
-  /* Never `overflow-x: auto`: under the crop model that turns every crop into
-     a per-element scrollbar, which is the bug this replaced. */
+  /* Never `overflow-x: auto`: the art is deliberately wider than its layer, so
+     that turns every scene into a per-element scrollbar — the bug this
+     replaced. */
   margin: 0;
   overflow: hidden;
   color: var(--color-accent);
@@ -185,87 +185,122 @@ footer {
   line-height: 1.1;
 }
 
-.banner-light {
-  display: var(--banner-light-display);
-  position: relative;
-  overflow: hidden;
-}
+/* Both scenes are the same thing: a stack of full-width layers pinned to the
+   scene's bottom edge, so the cactus strip's ground line is the horizon for
+   whatever sits above it. There is no elastic "crop zone" element and no
+   reserved lane for the dino — every layer spans the full width and simply
+   overflows leftward, which is what lets the desert run edge to edge and lets
+   the moon use the whole banner instead of a share of it.
 
+   Depth is read off three separate mechanisms, none of them interchangeable:
+   the moon is subtracted from its own art at build time (paint order cannot
+   help — a <pre> has no background, so the ground layer draws glyphs over the
+   moon but hides nothing behind them), the dino wears a halo, and everything
+   else is plain paint order. */
+.banner-light,
 .banner-dark {
-  display: var(--banner-dark-display);
   position: relative;
   overflow: hidden;
-}
-
-.banner-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 1.5rem;
-  min-width: 0;
 
   /* Outside every media query, and identical in both themes: 18.7rem is the
      rendered height of moon.txt (17 lines x 1.1 line-height), the tallest
      asset in either scene. Light carries the difference as dead space at all
      widths — the accepted trade for a banner that never changes height, on
      resize or on theme toggle. Inside a media query this reintroduces the
-     jump the crop model exists to remove. */
+     jump the layered model exists to remove. */
   min-height: 18.7rem;
 }
 
-.banner-row > * {
-  min-width: 0;
-  max-width: 100%;
+.banner-light {
+  display: var(--banner-light-display);
 }
 
-.dino,
-.moon {
-  flex: 0 0 auto;
+.banner-dark {
+  display: var(--banner-dark-display);
 }
 
-/* The crop zone: the only elastic element in the row.
+/* The art layers. Right-anchored so the ground line stays welded to the
+   banner's right edge, and over-wide content spills off the *left*, where it
+   is clipped.
 
-   `min-width: 0` is the load-bearing line — flex items default to
-   `min-width: auto`, which refuses to shrink below content width, and that is
-   what forced the overflow ("sliders") at intermediate widths. With it set,
-   overflow is impossible by construction rather than by picking correct
-   breakpoints.
+   `width: round(down, 100%, 1ch)` is the reason the clip looks deliberate
+   rather than broken. Clipping at an arbitrary pixel cuts glyphs in half down
+   the left edge — the art ends in a column of mangled characters. Snapping the
+   layer to a whole number of character cells puts the cut on a cell boundary,
+   so the leftmost visible column is a whole glyph. The price is up to one
+   character cell of empty space at the far left; a sliver of background reads
+   as nothing, a column of half-characters reads as a rendering bug.
 
-   `justify-content: flex-end` pins the art right, so an over-wide child
-   overflows *leftward* and gets clipped there — which is what keeps the light
-   strip's ground line welded to the row's right edge. (Not `direction: rtl`
-   with an inline-block: an inline-block sits on the parent's text baseline,
-   reserving descender space that lifts the art off the row's bottom edge.) */
-.banner-crop {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
+   Both layers get the identical width and anchor, so they share one character
+   grid — which is what `moonAboveHorizon` composites against. */
+.banner-sky,
+.banner-ground {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: round(down, 100%, 1ch);
   display: flex;
-  justify-content: flex-end;
   align-items: flex-end;
+  justify-content: flex-end;
+  overflow: hidden;
+  column-gap: 1.5rem;
+}
+
+/* Above the sky, so the cactus paints over the moon and is silhouetted
+   against the disc. */
+.banner-ground {
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* Must not shrink: a shrinking <pre> would clip its own *right* edge, which
-   inverts the crop direction and detaches the ground line. */
-.banner-crop > pre {
+   inverts the overflow direction and detaches the ground line. */
+.banner-sky > pre,
+.banner-ground > pre {
   flex: 0 0 auto;
+}
+
+/* Pinned to the left edge and never clipped — the one fixed point in either
+   scene. It is a layer of its own rather than a flex sibling: as a sibling it
+   would either reserve a lane (cutting a full-height hole through the sky and
+   stopping the horizon short of the left edge) or be pushed off-screen by the
+   right-anchored art. */
+.dino {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+
+  /* The dino stands *in front of* the desert, which runs full width behind it.
+     A background colour here would knock out a rectangle — the whole box, sky
+     included. A text-shadow in the background colour instead knocks out only a
+     halo hugging each glyph's strokes, so the cactus behind stays visible in
+     the gaps and the dino still reads cleanly against it.
+
+     Eight hard 3px offsets, not a blur: a blurred shadow fades out across the
+     cell and leaves a cactus stroke crossing directly behind the dino still
+     showing through at half strength, which reads as a smudge. Hard offsets
+     cut a clean ring. The two blurred passes after them only soften its
+     corners. */
+  text-shadow:
+    3px 0 0 var(--color-bg),
+    -3px 0 0 var(--color-bg),
+    0 3px 0 var(--color-bg),
+    0 -3px 0 var(--color-bg),
+    3px 3px 0 var(--color-bg),
+    -3px 3px 0 var(--color-bg),
+    3px -3px 0 var(--color-bg),
+    -3px -3px 0 var(--color-bg),
+    0 0 4px var(--color-bg),
+    0 0 4px var(--color-bg);
+
+  /* Above `.banner-ground`, which is z-index 1. */
+  z-index: 2;
 }
 
 .banner pre.cactus,
 .banner pre.stargap {
   color: var(--color-muted);
-}
-
-/* The moon can't crop — a sliced moon reads as broken rather than off-frame —
-   so it pops instead. Queried against the banner's own inline size, not the
-   viewport: the header's padding changes at 40rem, right next to this
-   threshold, so a single viewport value would be wrong on one side of it.
-   The value is dino (17ch) + two 1.5rem gaps + moon (34ch) + a minimum sliver
-   of star field; in `ch` so it tracks the font's actual advance width.
-   The row's height is held either way, so the pop costs no reflow. */
-@container banner (width < 66ch) {
-  .moon {
-    display: none;
-  }
 }
 
 /* Present at every width — never tied to the moon or the star field. Only the
