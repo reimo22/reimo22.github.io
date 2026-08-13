@@ -105,6 +105,12 @@ justify-content:flex-end` — `min-width:0` is the actual slider fix~~
 - [x] `starField` shortcode holds the stars above the desert floor by a row-only
       rule — the field sits a 1.5rem gap (~2.5 columns) off the moon, so its
       column alignment is font-dependent and can't be composited
+- [x] `starField` tiles to the cactus strip's full width through the same
+      pad → repeat → cut pipeline, so stars reach the banner's left edge instead
+      of leaving the left third of the sky empty (verified to 2560px). Padding
+      before tiling is load-bearing: right-trimming first shears the field, each
+      row by a different amount. Each tile rotates the band's rows one step, so
+      the pattern repeats every `tiles × skyRows` columns rather than every tile
 - [x] ~~`.banner-ground` starts at `calc(17ch + 1.5rem)`, not the banner edge~~
       — **superseded on human instruction:** every layer spans the full width,
       so the desert floor reaches the banner's left edge at every width.
@@ -116,15 +122,38 @@ justify-content:flex-end` — `min-width:0` is the actual slider fix~~
       grid without it
 - [x] Light scene restructured to the same layered model, so the two scenes
       differ only in content and the toggle no longer changes composition
-- [x] The dino wears a background-coloured `text-shadow` halo (eight hard 3px
+- [x] ~~The dino wears a background-coloured `text-shadow` halo (eight hard 3px
       offsets, not a blur) and sits above the ground layer, so the cactus
       behind it stays visible between its strokes instead of being knocked out
-      by a rectangle
+      by a rectangle~~ — **superseded on human instruction:** the halo hugs
+      strokes and so does nothing about cactus landing in the dino's _hollow_,
+      which read as a tangled mesh at some widths. Occlusion is now an opaque
+      `::before` patch, and the halo has been **deleted** — the patch is opaque
+      across his whole box and a cell beyond it, so no cactus reached him to be
+      haloed against. Removal verified at 320/440/853/1060/1100/1140/1180/2560
+      in both themes (the widths where a cactus sits nearest him): no change
+- [x] Dino knockout: `.dino::before`, the 7 sub-horizon scene rows (10-16), so
+      it erases cactus trunks and touches neither the ground line nor the sky.
+      7 rows not the dino's 5, or a cut trunk leaves its crown floating.
+      Requires `.banner pre.dino { overflow: visible }` — the plain `.dino`
+      selector loses specificity to `.banner pre`, and that rule's
+      `overflow: hidden` silently clips the overhang away
+- [x] The knockout's right edge fades over six cells rather than ending hard.
+      A hard edge bisects whatever cactus straddles it (amputated half at 440px,
+      trunk clipped against the dino's nose at 853px); snapping to a gap between
+      cacti needs the strip's phase, which is viewport-dependent and knowable
+      only at runtime. Verified across a full 58ch phase period (700→1260px)
+- [x] Rejected: build-time subtraction (`moonAboveHorizon`-style) for the dino.
+      Exact only for right-anchored art; the dino is left-anchored against a
+      right-anchored strip, so the offset is a function of viewport width. And
+      per-glyph subtraction would not read as depth anyway — area does, coverage
+      does not. Also rejected: a cut-out transparent PNG of the dino
 - [x] Repair `audit:banner`, which had been dead: it queried `.banner-row` in the
       dark scene (renamed `.banner-sky`) and crashed, and its child-overflow sum
       omitted the flex gaps that the over-wide moon was escaping through
 - [x] Append build-log entry (same PR as the work)
-- [ ] Human browser check before merge (the one item CI can't cover)
+- [x] Human browser check before merge (the one item CI can't cover) — confirmed
+      2026-08-13; the two failing widths CI missed (853, 440) came out of it
 
 ## Phase 4 — Static pages
 

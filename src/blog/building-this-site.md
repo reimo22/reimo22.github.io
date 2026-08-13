@@ -486,3 +486,112 @@ The light scene moved to the same model rather than being left on the old one. T
 on different layout mechanisms would drift, and the toggle exists precisely to compare them at
 one viewport width. The sweep simplified with them: `childOverflow` measured a crop model that
 no longer exists and was dropped in favour of the page-overflow check it was always a proxy for.
+
+**The stars now tile, and the dino stands on his own patch of ground.** The star field was a
+single 74-column block held at the right edge, so on anything wider than a phone the left third
+of the sky was empty while the desert below it ran edge to edge. It now goes through the same
+trim → pad → repeat → cut pipeline as the cactus strip, sized to the strip's full width — wider
+than the field's own lane, deliberately, because matching the strip is what guarantees stars
+reach the left edge at every viewport and the surplus overflows into `overflow: hidden` for
+free. Computing the exact lane would mean resolving `ch` and `rem` to pixels at build time,
+which nothing else in the generator does.
+
+The ordering inside that pipeline is the part that bites. The old shortcode right-trimmed its
+rows, which was harmless for one tile and wrong for five: ragged rows concatenate early, so
+every star after a join slides left by a different amount on each row and the field shears.
+Padding to a rectangle first and trimming last is the fix, and it is the same shape
+`cactusStripGrid` already had. Each tile also takes the band's rows rotated one step further,
+so the pattern repeats every `tiles × skyRows` columns rather than every tile — stars are
+sparse enough that a row shift is all it takes to hide the seam.
+
+**The halo was never going to be enough, and neither was the moon's trick.** The dino wears a
+knocked-out halo hugging each glyph's strokes, which handles a cactus stroke crossing his
+outline and does nothing at all about one landing in his hollow — between his legs, inside his
+body — where there are no strokes to hug. At some widths that read as one tangled mesh.
+
+The obvious reach is for `moonAboveHorizon`: subtract the strip from the dino's art at build
+time, per cell, the way the moon is subtracted from the ridge. It cannot be done, for a reason
+worth writing down because it will come up again. The moon composite is exact only because the
+moon and the strip are both welded to the banner's right edge — the offset between them is zero
+columns in any monospace font, at any width. The dino is welded to the _left_ edge while the
+strip is right-anchored and cut leftward, so the strip column standing under him is
+`stripWidth − floor(viewportWidth / ch)`, which changes with every pixel of resize. There is no
+fixed offset to subtract against. That is also exactly why the collision showed up at 853px and
+440px and not at 700px.
+
+And granting the impossible would not have helped. Per-glyph subtraction erases the back art
+where the front art's _glyphs_ are, not where its _shape_ is. That reads as depth for the moon
+because the moon is a solid disc. The dino is open line art: subtract his cells and cactus
+strokes still run through his hollows, tangle intact, edges tidier. What makes something read
+as in front is erasing an **area** — so the answer was an opaque area, not a smarter subtraction.
+
+**Sizing that area is all row arithmetic, and the rows are already fixed.** `.eleventy.js`
+bottom-aligns a 12-row cactus into a 17-row scene with its ground line on row 9, so scene rows
+10-16 below it are trunks and arms only. An opaque patch over those rows touches neither the
+horizon nor the sky — which retires the objection recorded in the last entry, that a background
+colour on the dino would knock out his whole box, sky included. That was true of the old
+model; under the layered one his box is five rows at the bottom of the scene.
+
+Seven rows, though, not five. A patch sized to the dino cuts a trunk and leaves its crown
+floating two rows above him, which is worse than the tangle it replaced. The two extra rows are
+`2.2em` at the 1.1 line-height on `.banner pre`, and 7, 5 and 1.1 are all downstream of
+`SCENE_ROWS` and `groundRow()` in the generator.
+
+Two things went wrong on the way and both were invisible in the rendered pixels until measured.
+The patch is a `::before`, and `.banner pre { overflow: hidden }` — there to clip art
+deliberately wider than its layer — clipped its overhang, silently shrinking it back to the
+dino's own box and leaving the floating crown the extra rows existed to prevent. The opt-out
+then had to be written as `.banner pre.dino`, because `.dino` alone loses the specificity
+contest to `.banner pre`. That is the second time in this project a `.banner pre` rule has
+quietly outranked a selector written against the art it applies to. Painting the patch red and
+screenshotting it is what found both; the computed style said `-35.2px` while the render
+started a clean two rows lower.
+
+**A hard edge on a character grid is a bug wherever it lands.** The rectangle fixed the tangle
+and introduced its own defect: its right edge falls wherever the leftward crop happens to put
+it, so at 440px it bisected a cactus and left an amputated half standing next to the dino, and
+at 853px it clipped a trunk off flush against his nose. Snapping the edge to a gap between
+cacti would be exact — the trimmed tile is empty for its first 13 columns on every sub-horizon
+row, so the gaps are real and generous — but _which_ gap is nearest is the same viewport-width
+function as before, knowable only at runtime. It could be done in JavaScript. It is a detail on
+a banner, and this site ships one small script on purpose.
+
+So the edge fades instead of ending, over the last six cells. That turns the cut from an
+amputation into a recession: the bisected cactus thins out behind the dino rather than stopping
+mid-stroke, and at 853px the debris on his nose is a ghost. The patch runs 7ch past the dino so
+the fade finishes clear of his own glyphs — a fade crossing them would let cactus surface at
+half strength _inside_ his outline, and half-strength art behind line art reads as a smudge
+rather than as depth. Solid through the dino, fading only beyond him.
+
+Which left the halo doing nothing, so the halo is gone. The patch is opaque across the dino's
+whole box and stays opaque for a cell past his rightmost glyph, so no cactus ever reaches him
+to be haloed against — ten `text-shadow` offsets were painting a ring against a background that
+had already erased everything the ring existed to hide. The first instinct was to keep it as a
+safety net and annotate it as redundant; that is how a codebase accumulates rules nobody dares
+delete, each with a comment explaining why it does nothing. It was deleted instead, and the
+knockout's comment now carries the one fact the halo used to imply: the fade's 7ch margin past
+the dino is load-bearing, because narrowing the box below his own width puts cactus straight
+back into his hollow with nothing behind it to catch them.
+
+Deleting it was verified rather than assumed — both themes at 320, 440, 853, 1060, 1100, 1140,
+1180 and 2560, the widths where the phase sweep puts a cactus nearest to him. No change at any
+of them, which is the evidence that the halo had genuinely stopped contributing.
+
+The alternative on the table was screenshotting the dino and cutting him out as a transparent
+PNG. It was rejected, and not narrowly: it trades text for an image that needs a light and a
+dark variant, stops scaling with font size and zoom, and still leaves a rectangular bounding box
+with the same edge problem. It solves nothing the patch does not.
+
+CI caught none of the visual defects. `audit:banner` passed before and after every one of these
+states,
+including both defective ones — it asserts scene height, grid snapping, right-edge weld and moon
+visibility, and none of those move when a cactus is sliced in half next to the dino. `stylelint`
+did catch one thing, `comment-empty-line-before`, and the attempted fix merged two comment blocks
+into one broken selector, which `stylelint` then also caught. Every real defect in this entry was
+found by rendering the page and looking at it.
+
+The AI drafted the tiling, the knockout and all of the above reasoning. Human review supplied
+the failing widths — 853 and 440, neither of which was in the 320/380/700/1400 set the AI was
+checking — and pushed back on the rectangle when the AI had already called it done, which is
+what produced the fade. The AI's first answer to "can we use the moon technique" was the right
+one; its first answer to "is the box good enough" was not.

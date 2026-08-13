@@ -170,19 +170,48 @@ export default function (eleventyConfig) {
     );
   });
 
-  // The star field, held above the desert floor.
+  // The star field, held above the desert floor and tiled out to the strip's
+  // full width.
   //
-  // Unlike the moon this is *not* column-composited. The field sits in the
-  // elastic crop zone, one 1.5rem gap away from the moon — an offset of
-  // ~2.5 columns that shifts with whatever monospace font the browser
-  // resolves, so per-column occlusion would be off by a fraction of a cell.
-  // Only the row grid is shared exactly. So the rule is row-only: keep the
-  // rows that clear the floor, and pad below to hold bottom alignment.
+  // Unlike the moon this is *not* column-composited. The field sits one
+  // 1.5rem `column-gap` away from the moon — an offset of ~2.5 columns that
+  // shifts with whatever monospace font the browser resolves, so per-column
+  // occlusion would be off by a fraction of a cell. Only the row grid is
+  // shared exactly. So the rule is row-only: keep the rows that clear the
+  // floor, and pad below to hold bottom alignment.
+  //
+  // Width is deliberately over-provisioned to the strip's, which is wider
+  // than the field's own lane by that gap plus the moon. Matching the strip
+  // is what guarantees stars reach the banner's left edge at every viewport;
+  // computing an exact lane width would have to resolve `ch` and `rem` to
+  // pixels at build time, which nothing else here does. The surplus overflows
+  // left into `overflow: hidden` and costs nothing.
   eleventyConfig.addShortcode("starField", function () {
     const strip = cactusStripGrid();
     const groundDepth = strip.length - groundRow(strip);
     const skyRows = SCENE_ROWS - groundDepth;
-    const stars = asciiLines("stars").slice(0, skyRows).map(rightTrim);
+
+    // Pad to a rectangle *before* tiling. Right-trimming first — as this did
+    // when the field was a single tile — would let short rows concatenate
+    // early and drag every star after the join left by a different amount on
+    // each row, shearing the field. Trimming is the last step, per row.
+    const band = toGrid(asciiLines("stars").slice(0, skyRows));
+    const width = strip[0].length;
+    const tiles = Math.ceil(width / band[0].length);
+
+    // Each tile takes the band's rows rotated one step further, so the field
+    // repeats every `tiles * skyRows` columns rather than every tile. Stars
+    // are sparse enough that a row shift is all it takes to hide the seam.
+    const stars = band.map((_, row) =>
+      rightTrim(
+        Array.from(
+          { length: tiles },
+          (__, tile) => band[(row + tile) % band.length],
+        )
+          .join("")
+          .slice(0, width),
+      ),
+    );
 
     return escapeHtml(
       stars.concat(Array(SCENE_ROWS - stars.length).fill("")).join("\n"),

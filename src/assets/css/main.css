@@ -195,8 +195,8 @@ footer {
    Depth is read off three separate mechanisms, none of them interchangeable:
    the moon is subtracted from its own art at build time (paint order cannot
    help — a <pre> has no background, so the ground layer draws glyphs over the
-   moon but hides nothing behind them), the dino wears a halo, and everything
-   else is plain paint order. */
+   moon but hides nothing behind them), the dino stands on an opaque knockout
+   patch, and everything else is plain paint order. */
 .banner-light,
 .banner-dark {
   position: relative;
@@ -265,37 +265,80 @@ footer {
    scene. It is a layer of its own rather than a flex sibling: as a sibling it
    would either reserve a lane (cutting a full-height hole through the sky and
    stopping the horizon short of the left edge) or be pushed off-screen by the
-   right-anchored art. */
-.dino {
+   right-anchored art.
+
+   Selector is `.banner pre.dino`, not `.dino`, only so `overflow` below can
+   win against `.banner pre` — same reason as `.banner pre.cactus`. */
+.banner pre.dino {
   position: absolute;
   left: 0;
   bottom: 0;
 
-  /* The dino stands *in front of* the desert, which runs full width behind it.
-     A background colour here would knock out a rectangle — the whole box, sky
-     included. A text-shadow in the background colour instead knocks out only a
-     halo hugging each glyph's strokes, so the cactus behind stays visible in
-     the gaps and the dino still reads cleanly against it.
-
-     Eight hard 3px offsets, not a blur: a blurred shadow fades out across the
-     cell and leaves a cactus stroke crossing directly behind the dino still
-     showing through at half strength, which reads as a smudge. Hard offsets
-     cut a clean ring. The two blurred passes after them only soften its
-     corners. */
-  text-shadow:
-    3px 0 0 var(--color-bg),
-    -3px 0 0 var(--color-bg),
-    0 3px 0 var(--color-bg),
-    0 -3px 0 var(--color-bg),
-    3px 3px 0 var(--color-bg),
-    -3px 3px 0 var(--color-bg),
-    3px -3px 0 var(--color-bg),
-    -3px -3px 0 var(--color-bg),
-    0 0 4px var(--color-bg),
-    0 0 4px var(--color-bg);
+  /* Opts out of the `overflow: hidden` every other `.banner pre` needs. That
+     rule exists to clip art deliberately wider than its layer; the dino is
+     never wider than the banner, so it clips nothing of its own — but it does
+     clip the knockout's two rows of overhang below, silently shrinking the
+     patch back to the dino's own box and leaving a cactus crown floating. */
+  overflow: visible;
 
   /* Above `.banner-ground`, which is z-index 1. */
   z-index: 2;
+}
+
+/* The knockout: an opaque patch of desert floor the dino stands on. It is the
+   only thing separating him from the desert — there is no halo under it.
+
+   A background-coloured `text-shadow` halo was the previous answer and is not
+   enough on its own. It knocks out a ring hugging each glyph's strokes, so
+   cactus landing in the dino's *hollow* — between his legs, inside his body
+   outline — is untouched, and the two read as one tangled mesh. Nor can the
+   moon's build-time subtraction be reused: that works only because the moon
+   and the strip share a right edge, so the column offset between them is zero
+   at every width. The dino is anchored left against a right-anchored strip, so
+   their offset is a function of viewport width — there is no fixed offset to
+   subtract against, which is why the collision appears at some widths and not
+   others.
+
+   What makes an opaque rectangle safe here is that it is entirely below the
+   horizon. `.eleventy.js` bottom-aligns a 12-row cactus into a 17-row scene
+   with its ground line on row 9; rows 10-16 below it are trunks and arms only.
+   So this knocks out trunks and touches neither the ground line nor the sky.
+
+   The height is those 7 sub-horizon rows, not the dino's 5. A box sized to the
+   dino would cut a trunk and leave its crown floating two rows above him —
+   worse than the tangle it fixed. The extra `2.2em` is (7 - 5) rows at the
+   1.1 line-height set on `.banner pre`; all three numbers are fixed by
+   `SCENE_ROWS` and `groundRow()` in `.eleventy.js` and must move together.
+
+   The right edge fades instead of ending. A hard edge is the one thing that
+   reads as a bug here: it lands wherever the leftward crop happens to put it,
+   so at some widths it bisects a cactus and leaves an amputated half standing
+   next to the dino, and at others it clips a trunk off flush against his nose.
+   Snapping it to a gap between cacti is not available — the strip's phase
+   against the dino is a function of viewport width (see above), so the nearest
+   gap is only knowable at runtime. Fading over the last six cells turns the
+   cut from an amputation into a recession: the bisected cactus thins out
+   behind the dino instead of stopping mid-stroke.
+
+   That is also why the box runs 7ch past the dino. The fade has to finish
+   clear of his own glyphs: a fade crossing them would let cactus surface at
+   half strength inside his outline, and half-strength art behind line art
+   reads as a smudge rather than as depth. Solid through the dino, fading only
+   beyond him. Nothing else is protecting him, so this margin is load-bearing —
+   narrowing the box below the dino's own width puts cactus back in his hollow.
+
+   `z-index: -1` stays inside the dino's own stacking context, so it lands
+   above `.banner-ground` (z-index 1) and behind the dino's glyphs. */
+.dino::before {
+  content: "";
+  position: absolute;
+  inset: -2.2em -7ch 0 0;
+  z-index: -1;
+  background: linear-gradient(
+    to right,
+    var(--color-bg) 0 calc(100% - 6ch),
+    transparent 100%
+  );
 }
 
 .banner pre.cactus,
