@@ -147,7 +147,7 @@ consideration. That broke the build with a shortcode-not-found error until the l
 was itself wrapped in `{% raw %}...{% endraw %}`, which is why that tag shows up verbatim in
 the prose above instead of being invisible markup.
 
-Next: Phase 4 adds the static pages (`/about/`, `/contact/`, `/resume/`) on top of this theme,
+Next: Phase 4 adds the profile/resume page on top of this theme,
 plus taking over `/resume/` from the old redirect repo.
 
 ## Phase 3 follow-up — Banner redesign
@@ -651,3 +651,36 @@ calling it done. The one place human review overrode the AI outright was the moo
 AI's read of "correct" and the human's read of "right" were different things, and the constant
 exists so that choice stays visible instead of getting re-litigated as a bug report next time
 someone reads the code.
+
+## Phase 4 — Static pages
+
+The site now has one combined profile/resume page. It extends the existing base
+layout rather than duplicating its navigation, theme toggle, skip link, or
+footer. Navigation remains in `site.json`, so the visible links have one source
+of truth for the command palette planned in Phase 7.
+
+The resume is available in two forms: a semantic HTML page for searchability and
+accessibility, and the `_sec` PDF copied to the exact legacy URL
+`/resume/Kenji_Pinlac_Resume.pdf`. The PDF is passed through from `src/resume/`
+instead of being embedded in the HTML page, keeping the page usable when a PDF
+viewer is unavailable. The shared footer exposes the contact mailto on every
+page, while the resume header links to GitHub. There is no LinkedIn account to
+link yet, so the site does not invent or reserve a placeholder URL.
+
+The local build, lint suite, and `html-validate` all passed. Stylelint initially
+caught a specificity-ordering issue in the new contact-link selector; increasing
+that selector's scope fixed the issue without changing the visual design. The
+remaining verification is deployment-specific: after the old `resume` Pages
+site is disabled, hard-refresh the live URLs and confirm the new HTML page and
+PDF are served instead of the cached redirect.
+
+The AI implemented the templates, shared navigation, PDF passthrough, and
+mobile-first styles. Human input supplied the decision to defer LinkedIn and the
+existing `_sec` resume source; the live takeover and mobile browser check remain
+human verification steps.
+
+**Human review caught a width problem after the first render.** The global
+`75ch` content cap made the resume look too narrow on a desktop and especially in
+a split tab. The page now opts into a `90ch` main width while the global cap stays
+in place for prose-oriented pages. This preserves readable profile paragraphs
+without making the resume feel like a centered excerpt.

@@ -1,5 +1,8 @@
 {
   "title": "Kenji Pinlac",
   "url": "https://reimo22.github.io",
-  "nav": [{ "label": "Home", "url": "/" }]
+  "nav": [
+    { "label": "Home", "url": "/" },
+    { "label": "Resume", "url": "/resume/" }
+  ]
 }

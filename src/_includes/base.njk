@@ -49,11 +49,14 @@
       </div>
       {% block banner %}{% endblock %}
     </header>
-    <main id="main">
+    <main id="main"{% if resume %} class="resume-main"{% endif %}>
       {% block content %}{% endblock %}
     </main>
     <footer>
-      <p>&copy; {{ currentYear }} {{ site.title }}</p>
+      <p>
+        &copy; {{ currentYear }} {{ site.title }} ·
+        <a href="mailto:kpinlac@keemail.me">kpinlac@keemail.me</a>
+      </p>
     </footer>
   </body>
 </html>

@@ -156,13 +156,11 @@ justify-content:flex-end` — `min-width:0` is the actual slider fix~~
 
 ## Phase 4 — Static pages
 
-- [ ] `/about/`
-- [ ] `/contact/` (mailto + GitHub/LinkedIn links)
-- [ ] `/resume/`: HTML resume page + commit `_sec` PDF as `/resume/Kenji_Pinlac_Resume.pdf` (same filename as the old repo, new content)
+- [x] `/resume/`: combined profile and HTML resume; shared footer email; commit `_sec` PDF as `/resume/Kenji_Pinlac_Resume.pdf` (same filename as the old repo, new content)
 - [ ] Disable Pages on `reimo22/resume` (archive, don't delete)
 - [ ] Verify `/resume/` serves the new page and the PDF URL still resolves (hard-refresh — old redirect caches aggressively)
 - [ ] Mobile pass on all pages so far: real phone viewport, no horizontal scroll, touch targets ≥44px
-- [ ] Append build-log entry
+- [x] Append build-log entry
 
 ## Phase 5 — Writeups
 

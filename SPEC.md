@@ -28,9 +28,7 @@ multi-phase roadmap docs, PM/PR-readiness bots — overkill for a solo static si
 | Path                        | Content                                                                                                                                                                                                                   |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/`                         | Home — ASCII banner, short intro, entry points to the other sections                                                                                                                                                      |
-| `/about/`                   | Bio                                                                                                                                                                                                                       |
-| `/resume/`                  | HTML resume; links to committed PDF at `/resume/Kenji_Pinlac_Resume.pdf`                                                                                                                                                  |
-| `/contact/`                 | Contact info — mailto to `reimo14@proton.me`, GitHub, LinkedIn                                                                                                                                                            |
+| `/resume/`                  | Combined profile and HTML resume; the shared footer contains the mailto contact, and the page links to the committed PDF at `/resume/Kenji_Pinlac_Resume.pdf`                                                             |
 | `/writeups/`                | Index of HTB writeups, split into two sections — retired boxes (box, OS, difficulty, technique) and CTF challenges (event, category, difficulty, technique) — pulled at build time from `github.com/reimo22/htb-writeups` |
 | `/writeups/<box>/`          | One page per writeup, rendered from that repo's `README.md`                                                                                                                                                               |
 | `/blog/`                    | Blog index, including a build log for this site itself                                                                                                                                                                    |
@@ -56,7 +54,7 @@ Blog and writeups are separate sections/collections — not merged under shared 
   `src/writeups/boxes/` (inside Eleventy's input dir, so pages are discovered
   with no glue code). The submodule root has two kinds of subdirectory —
   retired boxes and CTF event challenges — with genuinely different metadata
-  shapes (`TEMPLATE.md` vs `TEMPLATE-ctf.md` upstream), not one schema.
+  shapes (`TEMPLATE.md` vs. `TEMPLATE-ctf.md` upstream), not one schema.
 - `src/writeups/writeups.11tydata.js` cascades `layout` and a computed
   `/writeups/<slug>/` permalink into every submodule subdirectory, plus a
   `tags` value **derived per-item from that item's own frontmatter kind**
@@ -130,7 +128,8 @@ A layer on top of the working link-based site, not a replacement for it.
   `overflow-x: auto` banner produced visible "sliders" at intermediate widths.
   See the continuous-crop design doc.
 - Touch targets ≥ 44×44px.
-- Content capped around 70–80ch.
+- Prose content capped around 70–80ch; the combined resume page uses a 90ch cap
+  so its structured sections do not become too narrow on desktop.
 - Lighthouse CI uses its default **mobile emulation preset**.
 - Verified on a real phone viewport before the static-pages phase closes.
 
