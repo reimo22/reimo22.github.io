@@ -44,11 +44,10 @@ Numbered 3.5 because it reworks Phase 3's banner rather than adding a section.
 
 - [x] Blocking inline script in `<head>`: `.js` class on `<html>` + `data-theme`
       from `localStorage` before first paint (no flash of wrong theme)
-- [x] Restructure theme tokens: `[data-theme]` overrides the bare
-      `prefers-color-scheme` block, which applies only when `data-theme` is
-      absent — every theme-varying rule (banner swap, nav underline, toggle
-      glyph) is now a custom property, so no rule outside the two token blocks
-      carries a theme selector
+- [x] Restructure theme tokens: dark is the default on bare `:root`,
+      `[data-theme="light"]` is the only override — every theme-varying rule
+      (banner swap, nav underline, toggle glyph) is a custom property, so no
+      rule outside the two token blocks carries a theme selector
 - [x] Sun/moon toggle `<button>` top right in `<header>`, `aria-label` updated on
       toggle, icon `aria-hidden`, hidden entirely without JS
 - [x] Same treatment for the `.banner-light` / `.banner-dark` swap (currently
@@ -93,7 +92,7 @@ justify-content:flex-end` — `min-width:0` is the actual slider fix~~
       `scrollWidth <= clientWidth`, which passes unconditionally here) —
       `scripts/sweep-banner.mjs`, `npm run audit:banner`
 - [x] Contrast re-check in both themes, now that both are reachable on one machine
-- [x] JS-off pass: toggle absent, site still themes from `prefers-color-scheme`
+- [x] JS-off pass: toggle absent, site still themes dark (the CSS default)
 - [x] Dark scene horizon: the moon rises **behind** the cactus ridge. Occlusion
       is subtraction from the art at build time (`moonAboveHorizon` shortcode
       blanks every moon cell at or below the strip's per-column silhouette), not

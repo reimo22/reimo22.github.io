@@ -595,3 +595,59 @@ the failing widths — 853 and 440, neither of which was in the 320/380/700/1400
 checking — and pushed back on the rectangle when the AI had already called it done, which is
 what produced the fade. The AI's first answer to "can we use the moon technique" was the right
 one; its first answer to "is the box good enough" was not.
+
+## Phase 3.5 follow-up — Code review fixes, dark default, moon overlap
+
+A `/code-review` pass on the phase 3.5 diff found a real defect that the sweep script had never
+been able to see: the moon and star-field `<pre>`s were rendering one row short of `SCENE_ROWS`.
+A `<pre>` generates no line box for a truly empty final line, and both shortcodes' last emitted
+row was `""` — the moon's from occlusion blanking its lowest visible row, the star field's from
+the bottom-padding array. Both blocks are bottom-anchored by flexbox, so the missing row didn't
+move the bottom edge, it sank the top edge one row closer to the ground — which is exactly the
+"moon bleeding into the hills" and "stars on the desert floor" the review measured in a real
+render. The fix is a shared `withNonEmptyLastLine` helper that forces the final line to a single
+space instead of `""`, applied to all three shortcodes (`cactusStrip` was accidentally safe —
+its last row happens to be the non-blank desert floor).
+
+**The sweep script's blind spot was the more important find.** `audit:banner` asserted right-edge
+alignment, grid snapping, and total banner height, but nothing checked that the moon and star
+`<pre>`s actually rendered their full row count — so it passed clean on both defective states.
+Added an assertion that measures rendered height against `SCENE_ROWS * lineHeight` for both
+elements. Verified backwards, not just forwards: reverting the row fix and rebuilding made the
+new assertion fail with a 17.70px gap (one full line-height) on both the moon and the star field;
+restoring the fix brought it back to 0.11px of sub-pixel noise and a clean pass.
+
+**Dark is now the default theme, not `prefers-color-scheme`.** A direct request, not a bug —
+`:root` now holds the dark palette and `[data-theme="light"]` is the only override, persisted in
+`localStorage`. The OS-preference media query and its change listener in `theme.js` are gone;
+there's nothing left for them to react to. `color-scheme: dark` / `light` was added to both
+token blocks so native UA widgets (scrollbars, form controls, focus rings) track the toggle
+state instead of the OS's, which they had silently stopped doing the moment the toggle could
+diverge from `prefers-color-scheme`. `SPEC.md` and `TASKS.md` are updated to state the new
+precedence rather than the old one.
+
+**The moon-overlap correction.** Fixing the row math moved the moon's visible disc one row away
+from the ridge — geometrically correct, since the occlusion math had always assumed a full
+17-row render, but it also closed a gap that the old bug had, by accident, been rendering as a
+pleasant partial overlap between the moon and the hill. The AI's recommendation was a small
+positive `MOON_GROUND_OVERLAP` (a named, tunable constant added specifically for this) that
+brings the disc into clean contact with the ridge without letting the two layers' glyphs
+interleave; screenshots at both `-1`/`-2` showed real interleaving — cactus and hill strokes
+cutting through the moon's texture, in one case a whole cactus glyph stamped inside the disc —
+which is the same defect class the row-math fix had just removed, only reintroduced on purpose.
+Human review chose `-1` anyway, for how it looks, overriding the correctness-first
+recommendation. The constant and its comment now say so plainly, so the interleaving reads as a
+deliberate choice to the next person who finds it rather than as a bug nobody caught.
+
+Also fixed while in the area, none of it visible: `...globals.browser` had leaked from
+`scripts/**/*.mjs` into the shared Node ESLint block covering `.eleventy.js` and `src/**/*.js`,
+silently disabling `no-undef` for browser globals there too — split into its own scoped block.
+`readAscii` and `cactusStripGrid` read and re-tile the same fixed build-time assets on every
+call — up to four times per page render — and are now memoized. The `.banner-ground` markup was
+duplicated verbatim between the light and dark scenes in `index.njk`; it's now a Nunjucks macro.
+
+The AI drafted every fix and verified each one against a real render or a real assertion before
+calling it done. The one place human review overrode the AI outright was the moon overlap — the
+AI's read of "correct" and the human's read of "right" were different things, and the constant
+exists so that choice stays visible instead of getting re-litigated as a bug report next time
+someone reads the code.

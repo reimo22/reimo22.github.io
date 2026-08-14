@@ -2,51 +2,44 @@
    including the banner swap, the nav underline and the toggle glyph, which are
    expressed as custom properties so no rule below needs a theme selector.
 
-   There is deliberately no `[data-theme="light"]` block: :root already holds
-   the light values, and the dark media query is scoped to :not([data-theme]),
-   so a stored light choice on a dark-OS machine correctly keeps light. */
+   Dark is the default regardless of OS preference: :root already holds the
+   dark values, so a first-time visitor sees dark whatever their OS is set to.
+   `[data-theme="light"]` is the only override, set by the toggle and
+   persisted in `localStorage`. `color-scheme` is declared alongside the
+   color tokens in both blocks so native UA-drawn widgets (scrollbars, form
+   controls, focus rings) track the same state as the page instead of the
+   OS's. */
 :root {
-  --color-bg: #f7f5f0;
-  --color-fg: #201e1a;
-  --color-muted: #5a554a;
-  --color-accent: #201e1a;
-  --color-border: #847c6e;
-  --font-mono:
-    ui-monospace, "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono",
-    monospace;
-  --content-max: 75ch;
-  --banner-light-display: block;
-  --banner-dark-display: none;
-  --nav-underline: underline;
-  --theme-toggle-icon: "\263e"; /* moon — the theme this switches *to* */
-}
-
-/* No stored choice: the OS preference is authoritative. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    --color-bg: #14111c;
-    --color-fg: #e8e3f5;
-    --color-muted: #b3aac9;
-    --color-accent: #c9a6ff;
-    --color-border: #6d6494;
-    --banner-light-display: none;
-    --banner-dark-display: block;
-    --nav-underline: none;
-    --theme-toggle-icon: "\2600"; /* sun */
-  }
-}
-
-/* Stored choice: overrides the OS preference. */
-:root[data-theme="dark"] {
   --color-bg: #14111c;
   --color-fg: #e8e3f5;
   --color-muted: #b3aac9;
   --color-accent: #c9a6ff;
   --color-border: #6d6494;
+  --font-mono:
+    ui-monospace, "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono",
+    monospace;
+  --content-max: 75ch;
   --banner-light-display: none;
   --banner-dark-display: block;
   --nav-underline: none;
-  --theme-toggle-icon: "\2600"; /* sun */
+  --theme-toggle-icon: "\2600"; /* sun — the theme this switches *to* */
+
+  color-scheme: dark;
+}
+
+/* Stored choice: the only way to get light. */
+:root[data-theme="light"] {
+  --color-bg: #f7f5f0;
+  --color-fg: #201e1a;
+  --color-muted: #5a554a;
+  --color-accent: #201e1a;
+  --color-border: #847c6e;
+  --banner-light-display: block;
+  --banner-dark-display: none;
+  --nav-underline: underline;
+  --theme-toggle-icon: "\263e"; /* moon */
+
+  color-scheme: light;
 }
 
 * {

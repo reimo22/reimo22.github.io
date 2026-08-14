@@ -12,19 +12,24 @@ export default [
   },
   js.configs.recommended,
   {
-    files: [
-      ".eleventy.js",
-      "eslint.config.js",
-      "src/**/*.js",
-      "scripts/**/*.mjs",
-    ],
+    files: [".eleventy.js", "eslint.config.js", "src/**/*.js"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
       globals: {
         ...globals.node,
-        // scripts/*.mjs are Node, but their page.evaluate() callbacks are
-        // serialized and run in the browser.
+      },
+    },
+  },
+  {
+    // Node, but their page.evaluate() callbacks are serialized and run in
+    // the browser, so both global sets are legitimately in scope here.
+    files: ["scripts/**/*.mjs"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        ...globals.node,
         ...globals.browser,
       },
     },

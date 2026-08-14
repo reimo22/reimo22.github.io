@@ -25,20 +25,56 @@ const CACTUS_CUT_IN_LAST_TILE = 45; // keeps the hill's rise + plateau, drops it
 // inferred from whichever asset happens to be the tallest.
 const SCENE_ROWS = 17;
 
+// Shifts the ridge cutoff used to blank moon glyphs. Zero is the
+// geometrically exact composite — the disc's visible edge stops exactly at
+// the hill line — which reads as the moon floating disconnected from the
+// horizon wherever the hill isn't locally tall enough to reach it.
+//
+// Negative values render that many extra rows of the moon *past* the true
+// horizon: those glyphs are no longer hidden, so at columns where the hill
+// also has ink the two layers' strokes visibly interleave rather than one
+// sitting cleanly behind the other. That's a deliberate tradeoff here, kept
+// for how it looks — chosen over the geometrically clean gap at 0 — not an
+// oversight; a positive value would do the opposite and trim the disc back
+// from the ridge instead.
+const MOON_GROUND_OVERLAP = -1;
+
 function rightTrim(line) {
   return line.replace(/\s+$/, "");
+}
+
+// A <pre> generates no line box for a truly empty final line, so a block
+// whose last emitted line is "" renders one row short and every row-index
+// mapping composited against it (moonAboveHorizon's ridge subtraction,
+// starField's floor cutoff) is off by one. Forcing a single space keeps the
+// line box without being visible.
+function withNonEmptyLastLine(lines) {
+  if (lines[lines.length - 1] === "") {
+    return lines.slice(0, -1).concat(" ");
+  }
+  return lines;
 }
 
 function escapeHtml(raw) {
   return raw.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+// Memoized: every shortcode below reads the same fixed set of asset files,
+// several of them more than once per page, and none of it can change within
+// a build.
+const asciiCache = new Map();
+
 function readAscii(name) {
+  if (asciiCache.has(name)) {
+    return asciiCache.get(name);
+  }
   const filePath = path.join("src/assets/ascii", `${name}.txt`);
   if (!fs.existsSync(filePath)) {
     throw new Error(`ascii shortcode: no such file ${filePath}`);
   }
-  return fs.readFileSync(filePath, "utf8");
+  const contents = fs.readFileSync(filePath, "utf8");
+  asciiCache.set(name, contents);
+  return contents;
 }
 
 function asciiLines(name) {
@@ -54,16 +90,23 @@ function toGrid(lines) {
 
 // Trim -> repeat -> cut, as a grid. `cactusStrip` renders this; the dark
 // scene additionally reads its silhouette, so the two can't disagree about
-// where the horizon is.
+// where the horizon is. Memoized: `cactusStrip`, `moonAboveHorizon`, and
+// `starField` each call this at least once per page render.
+let cactusStripGridCache = null;
+
 function cactusStripGrid() {
+  if (cactusStripGridCache) {
+    return cactusStripGridCache;
+  }
   const trimmed = asciiLines("cactus").map((line) =>
     line.slice(CACTUS_TRIM_COL),
   );
   const tileWidth = Math.max(...trimmed.map((line) => line.length));
   const cut = (CACTUS_TILES - 1) * tileWidth + CACTUS_CUT_IN_LAST_TILE;
-  return trimmed.map((line) =>
+  cactusStripGridCache = trimmed.map((line) =>
     line.padEnd(tileWidth, " ").repeat(CACTUS_TILES).slice(0, cut),
   );
+  return cactusStripGridCache;
 }
 
 // The horizon, per column: the row index of the topmost non-space glyph, i.e.
@@ -129,7 +172,9 @@ export default function (eleventyConfig) {
   // layout is what keeps the ground line an unbroken character run across the
   // join.
   eleventyConfig.addShortcode("cactusStrip", function () {
-    return escapeHtml(cactusStripGrid().map(rightTrim).join("\n"));
+    return escapeHtml(
+      withNonEmptyLastLine(cactusStripGrid().map(rightTrim)).join("\n"),
+    );
   });
 
   // The moon, with everything at or below the hill silhouette subtracted, so
@@ -148,25 +193,26 @@ export default function (eleventyConfig) {
     const stripWidth = strip[0].length;
     const moonWidth = moon[0].length;
 
+    const rows = moon.map((line, row) => {
+      // Both blocks are anchored bottom-right, so a moon cell maps onto
+      // the strip by its distance from those two edges. Rows above the
+      // strip give a negative index, which matches no ridge — open sky.
+      const stripRow = strip.length - (moon.length - row);
+      return rightTrim(
+        Array.from(line, (glyph, col) => {
+          const stripCol = stripWidth - (moonWidth - col);
+          const ridge = horizon[stripCol];
+          const behindRidge =
+            ridge !== undefined && stripRow >= ridge - MOON_GROUND_OVERLAP;
+          return behindRidge ? " " : glyph;
+        }).join(""),
+      );
+    });
+
     return escapeHtml(
-      moon
-        .map((line, row) => {
-          // Both blocks are anchored bottom-right, so a moon cell maps onto
-          // the strip by its distance from those two edges. Rows above the
-          // strip give a negative index, which matches no ridge — open sky.
-          const stripRow = strip.length - (moon.length - row);
-          return rightTrim(
-            Array.from(line, (glyph, col) => {
-              const stripCol = stripWidth - (moonWidth - col);
-              const ridge = horizon[stripCol];
-              const behindRidge = ridge !== undefined && stripRow >= ridge;
-              return behindRidge ? " " : glyph;
-            }).join(""),
-          );
-        })
-        // Blanked rows stay as empty lines: they carry the moon's height, and
-        // dropping them would let the bottom-aligned disc sink into the hills.
-        .join("\n"),
+      // Blanked rows stay as lines: they carry the moon's height, and
+      // dropping them would let the bottom-aligned disc sink into the hills.
+      withNonEmptyLastLine(rows).join("\n"),
     );
   });
 
@@ -214,7 +260,9 @@ export default function (eleventyConfig) {
     );
 
     return escapeHtml(
-      stars.concat(Array(SCENE_ROWS - stars.length).fill("")).join("\n"),
+      withNonEmptyLastLine(
+        stars.concat(Array(SCENE_ROWS - stars.length).fill("")),
+      ).join("\n"),
     );
   });
 

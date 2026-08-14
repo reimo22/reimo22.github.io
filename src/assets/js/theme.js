@@ -13,9 +13,7 @@
   function currentTheme() {
     var explicit = root.getAttribute("data-theme");
     if (explicit === "light" || explicit === "dark") return explicit;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light";
+    return "dark";
   }
 
   function syncLabel() {
@@ -37,13 +35,6 @@
     }
     syncLabel();
   });
-
-  // With no stored choice the OS preference is authoritative, so track it.
-  window
-    .matchMedia("(prefers-color-scheme: dark)")
-    .addEventListener("change", function () {
-      if (!root.hasAttribute("data-theme")) syncLabel();
-    });
 
   syncLabel();
 })();

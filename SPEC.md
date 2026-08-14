@@ -93,10 +93,10 @@ Blog and writeups are separate sections/collections — not merged under shared 
   itself may be a stylized handle/wordmark rather than a literal rendering of
   the title. Never read aloud by a screen reader.
 - Light/dark themes both defined as CSS custom properties on `:root`, with a
-  `prefers-color-scheme` override — never defined only inside a media query.
-- A header theme toggle overrides the OS preference and persists in
-  `localStorage`. Precedence: stored choice → `prefers-color-scheme` → light.
-  The toggle is JS-only, so it must not render at all without JS (same
+  `[data-theme="light"]` override — never defined only inside a media query.
+- A header theme toggle persists its choice in `localStorage`. Precedence:
+  stored choice → dark (the default, regardless of OS preference). The
+  toggle is JS-only, so it must not render at all without JS (same
   progressive-enhancement rule as the command palette), and the theme is
   applied by a **blocking inline script** in `<head>` so there is no flash of
   the wrong theme.
