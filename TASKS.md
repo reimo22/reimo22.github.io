@@ -35,6 +35,125 @@ See [`SPEC.md`](SPEC.md) for the full rationale behind each decision below.
 - [x] `prefers-reduced-motion` gating for any motion effects
 - [x] Append build-log entry
 
+## Phase 3.5 — Theme toggle + banner continuous crop
+
+Design approved 2026-08-12:
+[`docs/superpowers/specs/2026-08-12-theme-toggle-and-banner-crop-design.md`](docs/superpowers/specs/2026-08-12-theme-toggle-and-banner-crop-design.md).
+Supersedes `docs/superpowers/plans/2026-08-10-banner-responsive-nits.md`.
+Numbered 3.5 because it reworks Phase 3's banner rather than adding a section.
+
+- [x] Blocking inline script in `<head>`: `.js` class on `<html>` + `data-theme`
+      from `localStorage` before first paint (no flash of wrong theme)
+- [x] Restructure theme tokens: dark is the default on bare `:root`,
+      `[data-theme="light"]` is the only override — every theme-varying rule
+      (banner swap, nav underline, toggle glyph) is a custom property, so no
+      rule outside the two token blocks carries a theme selector
+- [x] Sun/moon toggle `<button>` top right in `<header>`, `aria-label` updated on
+      toggle, icon `aria-hidden`, hidden entirely without JS
+- [x] Same treatment for the `.banner-light` / `.banner-dark` swap (currently
+      driven by the same media query)
+- [x] Build-time cactus strip from `cactus.txt`: trim col 15 → repeat
+      contiguous (concatenated per line, one `<pre>`) → cut into the last tile
+      at column 45; generated, never committed as a second art file —
+      `cactusStrip` shortcode. Tiles grow the strip **leftward** (the cut is
+      measured into the last tile), so the right edge is byte-identical at any
+      tile count — load-bearing, because `moonAboveHorizon` composites against
+      that edge. Now 5 tiles (~2700px) so the ground line reaches the banner's
+      left edge on a 2560px display rather than starting mid-frame
+- [x] ~~Crop zone: `flex:1 1 auto; min-width:0; overflow:hidden;
+justify-content:flex-end` — `min-width:0` is the actual slider fix~~
+      — **superseded on human instruction:** there is no crop-zone element at
+      all. Both scenes are a stack of full-width absolutely-positioned layers
+      (`.banner-sky`, `.banner-ground`, and the dino) that overflow leftward and
+      clip; `.banner-row` / `.banner-crop` are gone. Reserving an elastic lane
+      for the art was what sliced the moon at narrow widths — it only ever got
+      the width left over after the dino
+- [x] Delete `.banner-extra` (7 usages in `index.njk` + `main.css` rules),
+      `.moon { margin-right }`, and change `.banner pre` `overflow-x: auto` →
+      `hidden`
+- [x] `.banner pre { margin: 0 }` — the old `0 0 0.5rem` joined the flex row's
+      cross size and would have broken height normalization by 8px; the
+      breathing room moved to `.banner`'s padding (not in the design doc — see
+      the build log)
+- [x] ~~Moon pinned right, hidden below a **measured** threshold:
+      `@container banner (width < 66ch)`; the moon appears at a 698px viewport~~
+      — **superseded on human instruction:** the moon no longer disappears at
+      any width, and the container query is gone. Under the layered model it
+      has the full banner width to sit in, so at 371px the whole disc fits;
+      only past that does it lose columns from the left, cut on a cell
+      boundary, like every other piece of art
+- [x] Banner `min-height` 18.7rem, outside any media query, identical in both
+      themes so toggling never moves the page — measured 299.19px, a single
+      value across 280→1500px in both themes
+- [x] Shooting stars at every width, count 4 / 3 / 2, travel distance scaled with
+      count; keep the `prefers-reduced-motion` gate
+- [x] Port the width sweep into the repo as a script (see the design doc's
+      Verification section for the assertions that can actually fail — **not**
+      `scrollWidth <= clientWidth`, which passes unconditionally here) —
+      `scripts/sweep-banner.mjs`, `npm run audit:banner`
+- [x] Contrast re-check in both themes, now that both are reachable on one machine
+- [x] JS-off pass: toggle absent, site still themes dark (the CSS default)
+- [x] Dark scene horizon: the moon rises **behind** the cactus ridge. Occlusion
+      is subtraction from the art at build time (`moonAboveHorizon` shortcode
+      blanks every moon cell at or below the strip's per-column silhouette), not
+      paint order — a `<pre>` has no background and hides nothing behind it.
+      Exact because the moon and the strip share the banner's right edge and its
+      bottom, so the offset is zero columns in any monospace font. `moon.txt`
+      stays unmodified source; an earlier hand-crop of it is recorded in the
+      build log
+- [x] `starField` shortcode holds the stars above the desert floor by a row-only
+      rule — the field sits a 1.5rem gap (~2.5 columns) off the moon, so its
+      column alignment is font-dependent and can't be composited
+- [x] `starField` tiles to the cactus strip's full width through the same
+      pad → repeat → cut pipeline, so stars reach the banner's left edge instead
+      of leaving the left third of the sky empty (verified to 2560px). Padding
+      before tiling is load-bearing: right-trimming first shears the field, each
+      row by a different amount. Each tile rotates the band's rows one step, so
+      the pattern repeats every `tiles × skyRows` columns rather than every tile
+- [x] ~~`.banner-ground` starts at `calc(17ch + 1.5rem)`, not the banner edge~~
+      — **superseded on human instruction:** every layer spans the full width,
+      so the desert floor reaches the banner's left edge at every width.
+      Reserving a column for the dino cut a full-height hole in the sky and
+      left the horizon stopping short
+- [x] Layers snap to whole character cells (`width: round(down, 100%, 1ch)`)
+      so the left-hand clip lands on a cell boundary instead of slicing glyphs
+      in half down the edge; asserted by the sweep, which fails at 4.76px off
+      grid without it
+- [x] Light scene restructured to the same layered model, so the two scenes
+      differ only in content and the toggle no longer changes composition
+- [x] ~~The dino wears a background-coloured `text-shadow` halo (eight hard 3px
+      offsets, not a blur) and sits above the ground layer, so the cactus
+      behind it stays visible between its strokes instead of being knocked out
+      by a rectangle~~ — **superseded on human instruction:** the halo hugs
+      strokes and so does nothing about cactus landing in the dino's _hollow_,
+      which read as a tangled mesh at some widths. Occlusion is now an opaque
+      `::before` patch, and the halo has been **deleted** — the patch is opaque
+      across his whole box and a cell beyond it, so no cactus reached him to be
+      haloed against. Removal verified at 320/440/853/1060/1100/1140/1180/2560
+      in both themes (the widths where a cactus sits nearest him): no change
+- [x] Dino knockout: `.dino::before`, the 7 sub-horizon scene rows (10-16), so
+      it erases cactus trunks and touches neither the ground line nor the sky.
+      7 rows not the dino's 5, or a cut trunk leaves its crown floating.
+      Requires `.banner pre.dino { overflow: visible }` — the plain `.dino`
+      selector loses specificity to `.banner pre`, and that rule's
+      `overflow: hidden` silently clips the overhang away
+- [x] The knockout's right edge fades over six cells rather than ending hard.
+      A hard edge bisects whatever cactus straddles it (amputated half at 440px,
+      trunk clipped against the dino's nose at 853px); snapping to a gap between
+      cacti needs the strip's phase, which is viewport-dependent and knowable
+      only at runtime. Verified across a full 58ch phase period (700→1260px)
+- [x] Rejected: build-time subtraction (`moonAboveHorizon`-style) for the dino.
+      Exact only for right-anchored art; the dino is left-anchored against a
+      right-anchored strip, so the offset is a function of viewport width. And
+      per-glyph subtraction would not read as depth anyway — area does, coverage
+      does not. Also rejected: a cut-out transparent PNG of the dino
+- [x] Repair `audit:banner`, which had been dead: it queried `.banner-row` in the
+      dark scene (renamed `.banner-sky`) and crashed, and its child-overflow sum
+      omitted the flex gaps that the over-wide moon was escaping through
+- [x] Append build-log entry (same PR as the work)
+- [x] Human browser check before merge (the one item CI can't cover) — confirmed
+      2026-08-13; the two failing widths CI missed (853, 440) came out of it
+
 ## Phase 4 — Static pages
 
 - [ ] `/about/`
@@ -95,5 +214,8 @@ See [`SPEC.md`](SPEC.md) for the full rationale behind each decision below.
 - [ ] Keyboard pass: `/`, `Ctrl+K`, `Esc`, arrows, `Enter`; confirm `/` still types a literal slash in real inputs
 - [ ] Screen reader spot check (Orca) on home + one writeup
 - [ ] `npm run lint`, `npx html-validate _site`; with the site served on :8080, `npm run audit:lighthouse` writes a local report to `.lighthouseci/report.html` and opens it (CI gates stay authoritative)
+- [ ] With the site served on :8080, `npm run audit:banner` runs the 280→1500px
+      banner sweep in both themes (see Phase 3.5); same `CHROME_PATH` +
+      `LD_PRELOAD` handling as the Lighthouse script
 - Local Lighthouse bootstrap (one-time, per machine): `npx @puppeteer/browsers install chrome-headless-shell@stable`, point `CHROME_PATH` at the binary in `.claude/settings.local.json`, and always audit via the npm script — it clears `LD_PRELOAD` (hardened_malloc on secureblue crashes Chromium's allocator) and passes `--no-sandbox` (the shell can't set up its sandbox here)
 - [ ] Post-deploy check of `https://reimo22.github.io/` incl. writeup images

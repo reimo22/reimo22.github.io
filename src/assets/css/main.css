@@ -1,23 +1,45 @@
+/* Theme tokens. Everything that varies by theme lives in these two blocks —
+   including the banner swap, the nav underline and the toggle glyph, which are
+   expressed as custom properties so no rule below needs a theme selector.
+
+   Dark is the default regardless of OS preference: :root already holds the
+   dark values, so a first-time visitor sees dark whatever their OS is set to.
+   `[data-theme="light"]` is the only override, set by the toggle and
+   persisted in `localStorage`. `color-scheme` is declared alongside the
+   color tokens in both blocks so native UA-drawn widgets (scrollbars, form
+   controls, focus rings) track the same state as the page instead of the
+   OS's. */
 :root {
+  --color-bg: #14111c;
+  --color-fg: #e8e3f5;
+  --color-muted: #b3aac9;
+  --color-accent: #c9a6ff;
+  --color-border: #6d6494;
+  --font-mono:
+    ui-monospace, "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono",
+    monospace;
+  --content-max: 75ch;
+  --banner-light-display: none;
+  --banner-dark-display: block;
+  --nav-underline: none;
+  --theme-toggle-icon: "\2600"; /* sun — the theme this switches *to* */
+
+  color-scheme: dark;
+}
+
+/* Stored choice: the only way to get light. */
+:root[data-theme="light"] {
   --color-bg: #f7f5f0;
   --color-fg: #201e1a;
   --color-muted: #5a554a;
   --color-accent: #201e1a;
   --color-border: #847c6e;
-  --font-mono:
-    ui-monospace, "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono",
-    monospace;
-  --content-max: 75ch;
-}
+  --banner-light-display: block;
+  --banner-dark-display: none;
+  --nav-underline: underline;
+  --theme-toggle-icon: "\263e"; /* moon */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #14111c;
-    --color-fg: #e8e3f5;
-    --color-muted: #b3aac9;
-    --color-accent: #c9a6ff;
-    --color-border: #6d6494;
-  }
+  color-scheme: light;
 }
 
 * {
@@ -53,6 +75,41 @@ header {
   padding: 1rem;
 }
 
+.header-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.theme-toggle {
+  display: none;
+  flex: 0 0 auto;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* JS-only affordance: without JS this button can't do anything, so it must
+   not render at all (same rule the command palette follows). */
+.js .theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle-icon::before {
+  content: var(--theme-toggle-icon);
+}
+
 nav ul {
   display: flex;
   flex-wrap: wrap;
@@ -64,7 +121,7 @@ nav ul {
 
 nav a {
   color: var(--color-accent);
-  text-decoration: underline;
+  text-decoration: var(--nav-underline);
   min-height: 44px;
   min-width: 44px;
   display: inline-flex;
@@ -75,12 +132,6 @@ nav a {
 nav a:hover,
 nav a:focus {
   text-decoration: underline;
-}
-
-@media (prefers-color-scheme: dark) {
-  nav a {
-    text-decoration: none;
-  }
 }
 
 main {
@@ -111,69 +162,176 @@ footer {
 }
 
 .banner {
-  padding: 1rem 0 0;
+  /* Bottom breathing room lives here, not on the <pre> — a margin on the art
+     joins the layer's cross size and would break height normalization. */
+  padding: 1rem 0 0.5rem;
 }
 
 .banner pre {
-  margin: 0 0 0.5rem;
-  overflow-x: auto;
+  /* Never `overflow-x: auto`: the art is deliberately wider than its layer, so
+     that turns every scene into a per-element scrollbar — the bug this
+     replaced. */
+  margin: 0;
+  overflow: hidden;
   color: var(--color-accent);
   font-family: var(--font-mono);
   line-height: 1.1;
 }
 
+/* Both scenes are the same thing: a stack of full-width layers pinned to the
+   scene's bottom edge, so the cactus strip's ground line is the horizon for
+   whatever sits above it. There is no elastic "crop zone" element and no
+   reserved lane for the dino — every layer spans the full width and simply
+   overflows leftward, which is what lets the desert run edge to edge and lets
+   the moon use the whole banner instead of a share of it.
+
+   Depth is read off three separate mechanisms, none of them interchangeable:
+   the moon is subtracted from its own art at build time (paint order cannot
+   help — a <pre> has no background, so the ground layer draws glyphs over the
+   moon but hides nothing behind them), the dino stands on an opaque knockout
+   patch, and everything else is plain paint order. */
+.banner-light,
 .banner-dark {
   position: relative;
   overflow: hidden;
-  display: none;
+
+  /* Outside every media query, and identical in both themes: 18.7rem is the
+     rendered height of moon.txt (17 lines x 1.1 line-height), the tallest
+     asset in either scene. Light carries the difference as dead space at all
+     widths — the accepted trade for a banner that never changes height, on
+     resize or on theme toggle. Inside a media query this reintroduces the
+     jump the layered model exists to remove. */
+  min-height: 18.7rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .banner-light {
-    display: none;
-  }
-
-  .banner-dark {
-    display: block;
-  }
+.banner-light {
+  display: var(--banner-light-display);
 }
 
-.banner-row {
+.banner-dark {
+  display: var(--banner-dark-display);
+}
+
+/* The art layers. Right-anchored so the ground line stays welded to the
+   banner's right edge, and over-wide content spills off the *left*, where it
+   is clipped.
+
+   `width: round(down, 100%, 1ch)` is the reason the clip looks deliberate
+   rather than broken. Clipping at an arbitrary pixel cuts glyphs in half down
+   the left edge — the art ends in a column of mangled characters. Snapping the
+   layer to a whole number of character cells puts the cut on a cell boundary,
+   so the leftmost visible column is a whole glyph. The price is up to one
+   character cell of empty space at the far left; a sliver of background reads
+   as nothing, a column of half-characters reads as a rendering bug.
+
+   Both layers get the identical width and anchor, so they share one character
+   grid — which is what `moonAboveHorizon` composites against. */
+.banner-sky,
+.banner-ground {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: round(down, 100%, 1ch);
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1rem;
-  min-width: 0;
+  align-items: flex-end;
+  justify-content: flex-end;
+  overflow: hidden;
+  column-gap: 1.5rem;
 }
 
-.banner-row > * {
-  min-width: 0;
-  max-width: 100%;
+/* Above the sky, so the cactus paints over the moon and is silhouetted
+   against the disc. */
+.banner-ground {
+  pointer-events: none;
+  z-index: 1;
 }
 
-.banner-extra {
-  display: none;
+/* Must not shrink: a shrinking <pre> would clip its own *right* edge, which
+   inverts the overflow direction and detaches the ground line. */
+.banner-sky > pre,
+.banner-ground > pre {
+  flex: 0 0 auto;
 }
 
-@media (width >= 40rem) {
-  .banner-row {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1.5rem;
+/* Pinned to the left edge and never clipped — the one fixed point in either
+   scene. It is a layer of its own rather than a flex sibling: as a sibling it
+   would either reserve a lane (cutting a full-height hole through the sky and
+   stopping the horizon short of the left edge) or be pushed off-screen by the
+   right-anchored art.
 
-    /* Matches the dark banner's rendered height (moon.txt, its tallest
-       asset) so light and dark reserve the same banner height. */
-    min-height: 19.2rem;
-  }
+   Selector is `.banner pre.dino`, not `.dino`, only so `overflow` below can
+   win against `.banner pre` — same reason as `.banner pre.cactus`. */
+.banner pre.dino {
+  position: absolute;
+  left: 0;
+  bottom: 0;
 
-  .banner-extra {
-    display: block;
-  }
+  /* Opts out of the `overflow: hidden` every other `.banner pre` needs. That
+     rule exists to clip art deliberately wider than its layer; the dino is
+     never wider than the banner, so it clips nothing of its own — but it does
+     clip the knockout's two rows of overhang below, silently shrinking the
+     patch back to the dino's own box and leaving a cactus crown floating. */
+  overflow: visible;
 
-  span.banner-extra {
-    display: inline-block;
-  }
+  /* Above `.banner-ground`, which is z-index 1. */
+  z-index: 2;
+}
+
+/* The knockout: an opaque patch of desert floor the dino stands on. It is the
+   only thing separating him from the desert — there is no halo under it.
+
+   A background-coloured `text-shadow` halo was the previous answer and is not
+   enough on its own. It knocks out a ring hugging each glyph's strokes, so
+   cactus landing in the dino's *hollow* — between his legs, inside his body
+   outline — is untouched, and the two read as one tangled mesh. Nor can the
+   moon's build-time subtraction be reused: that works only because the moon
+   and the strip share a right edge, so the column offset between them is zero
+   at every width. The dino is anchored left against a right-anchored strip, so
+   their offset is a function of viewport width — there is no fixed offset to
+   subtract against, which is why the collision appears at some widths and not
+   others.
+
+   What makes an opaque rectangle safe here is that it is entirely below the
+   horizon. `.eleventy.js` bottom-aligns a 12-row cactus into a 17-row scene
+   with its ground line on row 9; rows 10-16 below it are trunks and arms only.
+   So this knocks out trunks and touches neither the ground line nor the sky.
+
+   The height is those 7 sub-horizon rows, not the dino's 5. A box sized to the
+   dino would cut a trunk and leave its crown floating two rows above him —
+   worse than the tangle it fixed. The extra `2.2em` is (7 - 5) rows at the
+   1.1 line-height set on `.banner pre`; all three numbers are fixed by
+   `SCENE_ROWS` and `groundRow()` in `.eleventy.js` and must move together.
+
+   The right edge fades instead of ending. A hard edge is the one thing that
+   reads as a bug here: it lands wherever the leftward crop happens to put it,
+   so at some widths it bisects a cactus and leaves an amputated half standing
+   next to the dino, and at others it clips a trunk off flush against his nose.
+   Snapping it to a gap between cacti is not available — the strip's phase
+   against the dino is a function of viewport width (see above), so the nearest
+   gap is only knowable at runtime. Fading over the last six cells turns the
+   cut from an amputation into a recession: the bisected cactus thins out
+   behind the dino instead of stopping mid-stroke.
+
+   That is also why the box runs 7ch past the dino. The fade has to finish
+   clear of his own glyphs: a fade crossing them would let cactus surface at
+   half strength inside his outline, and half-strength art behind line art
+   reads as a smudge rather than as depth. Solid through the dino, fading only
+   beyond him. Nothing else is protecting him, so this margin is load-bearing —
+   narrowing the box below the dino's own width puts cactus back in his hollow.
+
+   `z-index: -1` stays inside the dino's own stacking context, so it lands
+   above `.banner-ground` (z-index 1) and behind the dino's glyphs. */
+.dino::before {
+  content: "";
+  position: absolute;
+  inset: -2.2em -7ch 0 0;
+  z-index: -1;
+  background: linear-gradient(
+    to right,
+    var(--color-bg) 0 calc(100% - 6ch),
+    transparent 100%
+  );
 }
 
 .banner pre.cactus,
@@ -181,15 +339,40 @@ footer {
   color: var(--color-muted);
 }
 
-.moon {
-  margin-right: 1.75rem;
-}
-
+/* Present at every width — never tied to the moon or the star field. Only the
+   count varies (2 / 3 / 4), and travel scales with it so they don't spend the
+   animation off-screen at phone width. */
 .shooting-star {
   position: absolute;
   font-size: 0.7rem;
   color: var(--color-accent);
   opacity: 0;
+
+  --travel: 0.55;
+}
+
+.shooting-star:nth-of-type(n + 3) {
+  display: none;
+}
+
+@media (width >= 40rem) {
+  .shooting-star {
+    --travel: 0.8;
+  }
+
+  .shooting-star:nth-of-type(3) {
+    display: inline;
+  }
+}
+
+@media (width >= 64rem) {
+  .shooting-star {
+    --travel: 1;
+  }
+
+  .shooting-star:nth-of-type(4) {
+    display: inline;
+  }
 }
 
 .shooting-star::before {
@@ -208,8 +391,8 @@ footer {
   top: -0.5rem;
   left: -1.5rem;
 
-  --dx: 18rem;
-  --dy: 6rem;
+  --dx: calc(18rem * var(--travel));
+  --dy: calc(6rem * var(--travel));
   --dur: 4.5s;
   --delay: 0s;
 }
@@ -218,8 +401,8 @@ footer {
   top: -1rem;
   left: 20%;
 
-  --dx: 14rem;
-  --dy: 5rem;
+  --dx: calc(14rem * var(--travel));
+  --dy: calc(5rem * var(--travel));
   --dur: 5.2s;
   --delay: 3.1s;
 }
@@ -228,8 +411,8 @@ footer {
   top: 0.5rem;
   left: 45%;
 
-  --dx: 16rem;
-  --dy: 5.5rem;
+  --dx: calc(16rem * var(--travel));
+  --dy: calc(5.5rem * var(--travel));
   --dur: 6s;
   --delay: 1.8s;
 }
@@ -238,8 +421,8 @@ footer {
   top: -0.3rem;
   left: 68%;
 
-  --dx: 15rem;
-  --dy: 5.2rem;
+  --dx: calc(15rem * var(--travel));
+  --dy: calc(5.2rem * var(--travel));
   --dur: 7s;
   --delay: 0.9s;
 }

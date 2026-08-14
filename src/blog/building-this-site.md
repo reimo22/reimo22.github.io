@@ -248,3 +248,406 @@ plus real Chromium screenshots via Playwright at both color schemes and both the
 (1280px) and narrow (375px) breakpoints, `document.getAnimations().length === 0` under
 `prefers-reduced-motion: reduce`, and computed-style checks confirming the color/display/
 overflow fixes above actually took effect in a rendered page rather than just parsing clean.
+
+## Phase 3.5 — Theme toggle + continuous-crop banner
+
+Two changes shipped together because they depend on each other: a header theme toggle, and a
+banner that crops continuously instead of collapsing at a breakpoint. The toggle is what makes
+the banner work reviewable — before it, the light-mode scene was only visible to someone whose
+OS was set to light, so light-mode regressions were effectively invisible during review.
+
+**The banner's "sliders" were never a breakpoint problem.** Phase 3 gave `.banner pre` an
+`overflow-x: auto` and hid everything below 40rem, which meant intermediate widths showed
+horizontal scrollbars inside the banner. The actual cause is that flex items default to
+`min-width: auto` and refuse to shrink below their content width. Setting `min-width: 0` on a
+crop zone with `overflow: hidden` makes overflow **impossible by construction** rather than by
+choosing correct breakpoints — so the whole staged-collapse design from the earlier nitpicks
+doc became moot, and the narrowest state is no longer dino-only. `justify-content: flex-end`
+pins the art right so it overflows leftward and clips there, which is what keeps the light
+scene's ground line welded to the row's right edge.
+
+**A `direction: rtl` + `display: inline-block` crop was tried first and rejected.** An
+inline-block sits on its parent's text baseline, which reserves descender space beneath it and
+lifts the art a few pixels off the row's bottom edge, misaligning it against the dino. Flex
+alignment has no baseline to sit on.
+
+**The verification I wrote first proved nothing, twice.** The obvious assertion —
+`row.scrollWidth <= row.clientWidth` — passes unconditionally under this design, for two
+compounding reasons: content clipped by `overflow: hidden` never reaches an ancestor's
+`scrollWidth` at all, and `scrollWidth` only measures overflow in the _end_ direction while
+this layout overflows leftward by construction. It reported a clean green while measuring
+nothing. The replacement sums the row's non-absolute children's widths against
+`row.clientWidth`, and adds a **negative control** — `crop.left - art.left > 0` — without which
+the whole suite would pass on content that simply fits and never crops. That control is what
+makes the other assertions mean anything; it holds from 280px to 1248px in light and 1312px in
+dark.
+
+**Human review caught a rewritten asset.** An early mockup embedded the ASCII art as JavaScript
+string literals, hand-transcribed rather than read from `src/assets/ascii/*.txt`. It looked
+plausible and was wrong; the human spotted it immediately ("i can tell you rewrote the ascii
+because its botched"). The fix was to generate the mockup's data from the real files and assert
+byte equality. That rule carried into production: `cactus.txt` stays the single source of truth
+and the wide strip is derived at build time by a `cactusStrip` shortcode (trim at column 15,
+repeat twice concatenated _per line_, cut at column 104), never committed as a second art file.
+Concatenating per line rather than butting two `<pre>` elements together is what keeps the
+ground line an unbroken character run across the join — two elements are two independent text
+layouts.
+
+**A misalignment I "fixed" wasn't mine to fix.** Chasing a reported nitpick I found and
+corrected a real baseline bug in the harness — but the human then checked the source and
+corrected me: the cactus trunk and branches genuinely aren't aligned in `cactus.txt`, and that
+is simply how the art looks. Recorded in the design doc as _must not be fixed_, so a future
+round doesn't "correct" the artwork.
+
+**Design review by a stronger model caught three bugs the build couldn't see**, all of which
+would have passed `npm run build` and `html-validate` cleanly:
+
+- `.banner pre { margin: 0 0 0.5rem }` — in a flex row a child's cross size is its _margin_
+  box, so the moon's 8px bottom margin would have made the dark row 307.2px against a 299.2px
+  `min-height`. That is an 8px shift on theme toggle and an 8px reflow exactly at the moon-pop
+  threshold: the specific jump this phase exists to remove. The margin went to zero and the
+  breathing room moved to `.banner`'s padding.
+- `.banner-light` had no `overflow: hidden` while `.banner-dark` did — an asymmetry inherited
+  from Phase 3, and page-level horizontal scroll waiting to happen.
+- `.banner-crop > pre` needed `flex: 0 0 auto`. Paired with `overflow: hidden` on the `<pre>`,
+  a shrinkable art element clips its own _right_ edge, inverting the crop direction.
+
+**The moon-pop threshold is a container query, and that isn't cosmetic.** The moon can't crop —
+a sliced moon reads as broken rather than off-frame — so it's hidden below a threshold instead,
+with the row holding its height either way so the pop costs no reflow. The threshold is
+`@container banner (width < 66ch)`: `ch` because both art widths are character-defined, and a
+container query because the header's padding grows from 1rem to 2rem at a 40rem viewport, which
+shrinks the banner's inline size by 32px right where this threshold sits. A viewport-based
+value near the mockup's 602px would have made the moon appear at ~608px, **vanish again** at
+640px when the padding grew, and reappear at ~672px. The sweep script now asserts the moon
+changes visibility at most once across the whole range.
+
+**Theme tokens restructured so nothing outside them carries a theme selector.** Dark values
+live in two blocks — `@media (prefers-color-scheme: dark) :root:not([data-theme])` for the
+no-choice path, and `:root[data-theme="dark"]` for a stored choice. There is deliberately no
+`[data-theme="light"]` block: `:root` already holds the light values, and scoping the media
+query to `:not([data-theme])` is what makes a stored _light_ choice stick on a dark-OS machine.
+Everything that varies by theme — the banner swap, the nav underline, the toggle's glyph — is
+expressed as a custom property, so the rules that consume them are written once.
+
+**The toggle is gated on JS twice over.** An inline blocking script in `<head>` adds a `.js`
+class and applies the stored theme before first paint; without it a deferred script paints the
+wrong theme and then corrects it, which is a visible flash. CSS hides the button unless
+`html.js`, following the command-palette precedent — a dead control is worse than no control.
+The glyph comes from CSS `::before` keyed to the same token, so it's correct before the
+handler script runs; only the `aria-label` is narrowed by JS, from a generic "Toggle color
+theme" that is accurate in either state.
+
+**Height normalized across themes at the human's explicit instruction.** 18.7rem in both, at
+every width, outside any media query — light carries 5.5rem of dead space unconditionally. That
+was the accepted trade: a banner that changes height when you hit the toggle would undercut the
+point of the toggle, which is comparing the two scenes at one viewport width.
+
+Verification this round: `npm run lint` and `npx html-validate _site` clean; the new
+`npm run audit:banner` sweep (280→1500px, 2px steps, both themes) reporting a single height of
+299.19px in both, zero page overflow, zero right-edge gap, the crop genuinely engaging, and one
+moon transition; plus headless checks that the toggle persists across reload, that page content
+below the banner doesn't move on toggle, that shooting stars render 2/3/4 by band, that
+`document.getAnimations().length === 0` under `prefers-reduced-motion: reduce`, and that with
+JS disabled the toggle is hidden while the site still themes from `prefers-color-scheme`.
+Contrast recomputed for the new toggle's border in both themes (3.79:1 light, 3.46:1 dark
+against a 3:1 UI target). Everything above was done unattended — the browser check is the
+human's, on the PR.
+
+**Correction — the moon was never behind the hills, and CSS could not put it there.** The
+first pass at the dark scene tried to make the cactus ridge a horizon that the moon rises
+behind. It stacked a `.banner-ground` layer over `.banner-sky` at `z-index: 1` and a comment
+claimed the ground "hides the moon's clipped lower half." It does not, and cannot: a `<pre>`
+has no background, so the ground layer paints its glyphs on top of the moon and hides nothing
+behind them. Occlusion between two text layers is not a paint-order problem.
+
+The workaround at the time was to hand-crop `moon.txt` — delete its bottom nine rows and pad
+the rest with trailing spaces. That is the failure mode the `cactusStrip` rule already exists
+to prevent: a derived asset committed as a second source of truth. It also had a second-order
+cost that made the botch obvious on screen. The padding widened the moon from 34 columns to
+49, which pushed the sky row's fixed items past the banner below ~900px, so the moon hung off
+the right edge and the dino collided with a cactus.
+
+**The fix is subtraction from the art, computed at build time.** A `moonAboveHorizon`
+shortcode reads the cactus strip's silhouette — the topmost non-space row per column — and
+blanks every moon cell at or below it. What makes this exact rather than approximate is that
+the moon `<pre>` and the strip `<pre>` share an edge: both are flush right and both
+bottom-aligned, at the same font size and line-height. A browser probe confirmed it before
+any of it was written — `0.000` columns of right-edge offset and `0.0px` of bottom offset at
+900/1200/1500px. Sharing an edge means the offset is zero columns in _any_ monospace font, so
+nothing depends on resolving `ch` to pixels. `moon.txt` went back to being unmodified source.
+
+The star field deliberately does _not_ get the same treatment. It sits in the elastic crop
+zone, one 1.5rem gap from the moon — an offset of ~2.5 columns that moves with whichever
+monospace font the browser resolves, so per-column occlusion would land a fraction of a cell
+off. Only the row grid is shared exactly, so `starField` uses a row-only rule: keep the rows
+that clear the desert floor, pad below to hold bottom alignment. Both shortcodes derive the
+floor and the silhouette from `cactus.txt`, so no constant records where the horizon is.
+
+**Screenshots caught a bug the sweep structurally could not.** Comparing dark against light at
+380px showed the cactus strip running underneath the dino in dark only. `.banner-ground` is
+its own absolutely-positioned layer, so it spanned the full banner width instead of starting
+after the dino the way light's strip does inside `.banner-row` — fixed with
+`left: calc(17ch + 1.5rem)`.
+
+**The acceptance gate had been silently dead.** `audit:banner` still queried `.banner-row`
+inside the dark scene, which this phase renamed to `.banner-sky`, so the sweep crashed on a
+null rather than reporting anything. Worse, its child-overflow sum omitted the flex gaps —
+48px unaccounted for in the dark row — which is exactly the margin by which the over-wide moon
+was escaping. Both were repaired in the same change: select the height-setting row per theme,
+select the crop under test by its content (`.banner-crop:has(pre.cactus)`) so it measures the
+ground line in both themes, and count the gaps. It now passes honestly: 299.19px in both
+themes across 280→1500px, zero overflow, moon appearing at 698px — the 66ch container-query
+threshold, restored after the first pass deleted it.
+
+The AI split this round: the AI diagnosed the transparent-`<pre>` cause, verified the shared-edge
+assumption by measurement instead of assuming it, and wrote the shortcodes and the sweep repair.
+The human supplied the design intent the first pass had failed to reach, and chose to ship the
+moon at its natural bottom-alignment and adjust from what the browser showed.
+
+**Then the pop was removed entirely, on human instruction.** With the moon finally sitting
+behind the ridge, the reason it vanished below 66ch stopped being persuasive — "a sliced moon
+reads as broken" was a judgement made about a moon that floated free in the sky. The fix was
+structural rather than a threshold tweak: the moon moved _inside_ the crop zone, next to the
+star field, instead of being a fixed item in the sky row. That single move is what makes it
+safe. A fixed item cannot shrink, so below a threshold the row overflowed rightward and pushed
+the moon off the banner — which is what the container query was really papering over. A crop
+zone child loses columns from its left like every other piece of art, so no width overflows.
+The right edge is untouched, so the horizon composite still lines up.
+
+The sweep changed with it, rather than being left asserting a rule that no longer exists: the
+`moonPop` / `moonFlips` pair went, replaced by the new invariant — the moon is never hidden, at
+any width — plus a moon-right-edge check that now runs across the whole 280→1500px range
+instead of only where the moon happened to be visible. That check was itself given a negative
+control before being trusted: perturbing the moon by `3ch` produces `FAIL — 28.80px`, exactly
+3 × 9.602. The first attempt at that control asserted nothing, because `.banner pre { margin: 0 }`
+outranked the `.moon` selector it was written against — the third time in this project's history
+that a green result turned out to be measuring nothing.
+
+The cost is honest and visible at phone widths: below ~480px the moon is cut by a hard vertical
+line, and by 320px it is a sliver of half-glyphs. That is the trade the pop used to buy, now
+taken deliberately rather than by default.
+
+**The desert now runs edge to edge, and the dino stands in front of it.** Reserving a
+full-height column for the dino — `left: calc(17ch + 1.5rem)` on the ground layer — kept the
+two from colliding, but it bought that by cutting a hole through the entire sky and leaving the
+horizon stopping short of the banner's left edge. The horizon is the one line in the scene that
+should be unbroken, so the layer went back to full width and the collision got solved where it
+actually lives: at the dino.
+
+A `background-color` on the dino would knock out its whole box, sky included — the same
+rectangle problem one level down. A `text-shadow` in the background colour knocks out only a
+halo hugging each glyph's strokes, so the cactus behind stays visible in the gaps. The shape of
+that shadow matters more than its presence: a blurred halo fades across the cell and leaves a
+cactus stroke passing directly behind the dino showing through at half strength, which reads as
+a smudge rather than as depth. Eight hard 3px offsets cut a clean ring that visibly breaks the
+cactus trunk where it crosses. Only the dino is lifted above the ground layer, not the whole
+sky — the cactus painting over the moon silhouettes it against the disc, which is worth keeping.
+
+Three different mechanisms now carry depth in one scene, and they are not interchangeable: the
+moon is subtracted from the art at build time (paint order can't help — no backgrounds), the
+dino is haloed at render time (a build-time composite can't help — the strip crops leftward, so
+the dino's column offset against it changes with viewport width), and everything else is plain
+paint order. Each is the only option available at its layer.
+
+**Removing the dino's reserved column only fixed half of it.** The horizon still hung in empty
+sky above ~1060px, because the strip was two tiles wide — 104 columns, about 1000px — so any
+banner wider than that left the desert starting mid-frame. The tiling was reworked to grow
+_leftward_: tiles are added on the left and the cut is measured into the last one rather than
+as an absolute column, so the strip now reaches ~2700px while its right edge stays
+byte-identical at any tile count. That last property is load-bearing rather than tidy —
+`moonAboveHorizon` composites against the strip's right edge, so a retile that moved it would
+silently deform the moon. It was checked rather than assumed: the generated moon block is
+identical before and after, byte for byte. The cost is a hill that repeats more visibly on a
+wide display.
+
+**The crop zone turned out to be the thing causing the damage.** Every fix so far had been
+working around a constraint the crop zone imposed: the moon popped because a fixed sibling
+couldn't shrink, then it got sliced because as a crop-zone child it only ever received the
+width left over after the dino, and the ground layer needed a reserved lane carved out of the
+sky so the strip wouldn't run under the dino. Removing the crop zone dissolved all three at
+once. There is no `.banner-row` and no `.banner-crop` now — each scene is a stack of
+full-width absolutely-positioned layers (`.banner-sky`, `.banner-ground`, the dino) pinned to
+the same bottom edge, right-anchored, overflowing leftward and clipped by the scene. At 371px
+the entire moon fits, because it has the whole banner rather than a share of it. The dino
+stops being a flex sibling and becomes its own left-pinned layer; the halo already handles the
+overlap that the reserved lane used to prevent.
+
+**A clip on a character grid has to land on a cell boundary.** Clipping at an arbitrary pixel
+cuts glyphs down the middle, and the art ends in a column of mangled half-characters that reads
+as a rendering bug rather than as a frame edge. `width: round(down, 100%, 1ch)` on each layer
+snaps it to a whole number of character cells, so the leftmost visible column is always a whole
+glyph. The price is up to one cell of empty background at the far left — a sliver of nothing,
+against a column of broken characters. The sweep asserts it, because if `round()` is ever
+unsupported the width silently falls back and the mangled column returns with no other symptom:
+off-grid measures 0.01px with the snap and 4.76px — half a cell, the worst case — without it.
+
+The light scene moved to the same model rather than being left on the old one. Two scenes built
+on different layout mechanisms would drift, and the toggle exists precisely to compare them at
+one viewport width. The sweep simplified with them: `childOverflow` measured a crop model that
+no longer exists and was dropped in favour of the page-overflow check it was always a proxy for.
+
+**The stars now tile, and the dino stands on his own patch of ground.** The star field was a
+single 74-column block held at the right edge, so on anything wider than a phone the left third
+of the sky was empty while the desert below it ran edge to edge. It now goes through the same
+trim → pad → repeat → cut pipeline as the cactus strip, sized to the strip's full width — wider
+than the field's own lane, deliberately, because matching the strip is what guarantees stars
+reach the left edge at every viewport and the surplus overflows into `overflow: hidden` for
+free. Computing the exact lane would mean resolving `ch` and `rem` to pixels at build time,
+which nothing else in the generator does.
+
+The ordering inside that pipeline is the part that bites. The old shortcode right-trimmed its
+rows, which was harmless for one tile and wrong for five: ragged rows concatenate early, so
+every star after a join slides left by a different amount on each row and the field shears.
+Padding to a rectangle first and trimming last is the fix, and it is the same shape
+`cactusStripGrid` already had. Each tile also takes the band's rows rotated one step further,
+so the pattern repeats every `tiles × skyRows` columns rather than every tile — stars are
+sparse enough that a row shift is all it takes to hide the seam.
+
+**The halo was never going to be enough, and neither was the moon's trick.** The dino wears a
+knocked-out halo hugging each glyph's strokes, which handles a cactus stroke crossing his
+outline and does nothing at all about one landing in his hollow — between his legs, inside his
+body — where there are no strokes to hug. At some widths that read as one tangled mesh.
+
+The obvious reach is for `moonAboveHorizon`: subtract the strip from the dino's art at build
+time, per cell, the way the moon is subtracted from the ridge. It cannot be done, for a reason
+worth writing down because it will come up again. The moon composite is exact only because the
+moon and the strip are both welded to the banner's right edge — the offset between them is zero
+columns in any monospace font, at any width. The dino is welded to the _left_ edge while the
+strip is right-anchored and cut leftward, so the strip column standing under him is
+`stripWidth − floor(viewportWidth / ch)`, which changes with every pixel of resize. There is no
+fixed offset to subtract against. That is also exactly why the collision showed up at 853px and
+440px and not at 700px.
+
+And granting the impossible would not have helped. Per-glyph subtraction erases the back art
+where the front art's _glyphs_ are, not where its _shape_ is. That reads as depth for the moon
+because the moon is a solid disc. The dino is open line art: subtract his cells and cactus
+strokes still run through his hollows, tangle intact, edges tidier. What makes something read
+as in front is erasing an **area** — so the answer was an opaque area, not a smarter subtraction.
+
+**Sizing that area is all row arithmetic, and the rows are already fixed.** `.eleventy.js`
+bottom-aligns a 12-row cactus into a 17-row scene with its ground line on row 9, so scene rows
+10-16 below it are trunks and arms only. An opaque patch over those rows touches neither the
+horizon nor the sky — which retires the objection recorded in the last entry, that a background
+colour on the dino would knock out his whole box, sky included. That was true of the old
+model; under the layered one his box is five rows at the bottom of the scene.
+
+Seven rows, though, not five. A patch sized to the dino cuts a trunk and leaves its crown
+floating two rows above him, which is worse than the tangle it replaced. The two extra rows are
+`2.2em` at the 1.1 line-height on `.banner pre`, and 7, 5 and 1.1 are all downstream of
+`SCENE_ROWS` and `groundRow()` in the generator.
+
+Two things went wrong on the way and both were invisible in the rendered pixels until measured.
+The patch is a `::before`, and `.banner pre { overflow: hidden }` — there to clip art
+deliberately wider than its layer — clipped its overhang, silently shrinking it back to the
+dino's own box and leaving the floating crown the extra rows existed to prevent. The opt-out
+then had to be written as `.banner pre.dino`, because `.dino` alone loses the specificity
+contest to `.banner pre`. That is the second time in this project a `.banner pre` rule has
+quietly outranked a selector written against the art it applies to. Painting the patch red and
+screenshotting it is what found both; the computed style said `-35.2px` while the render
+started a clean two rows lower.
+
+**A hard edge on a character grid is a bug wherever it lands.** The rectangle fixed the tangle
+and introduced its own defect: its right edge falls wherever the leftward crop happens to put
+it, so at 440px it bisected a cactus and left an amputated half standing next to the dino, and
+at 853px it clipped a trunk off flush against his nose. Snapping the edge to a gap between
+cacti would be exact — the trimmed tile is empty for its first 13 columns on every sub-horizon
+row, so the gaps are real and generous — but _which_ gap is nearest is the same viewport-width
+function as before, knowable only at runtime. It could be done in JavaScript. It is a detail on
+a banner, and this site ships one small script on purpose.
+
+So the edge fades instead of ending, over the last six cells. That turns the cut from an
+amputation into a recession: the bisected cactus thins out behind the dino rather than stopping
+mid-stroke, and at 853px the debris on his nose is a ghost. The patch runs 7ch past the dino so
+the fade finishes clear of his own glyphs — a fade crossing them would let cactus surface at
+half strength _inside_ his outline, and half-strength art behind line art reads as a smudge
+rather than as depth. Solid through the dino, fading only beyond him.
+
+Which left the halo doing nothing, so the halo is gone. The patch is opaque across the dino's
+whole box and stays opaque for a cell past his rightmost glyph, so no cactus ever reaches him
+to be haloed against — ten `text-shadow` offsets were painting a ring against a background that
+had already erased everything the ring existed to hide. The first instinct was to keep it as a
+safety net and annotate it as redundant; that is how a codebase accumulates rules nobody dares
+delete, each with a comment explaining why it does nothing. It was deleted instead, and the
+knockout's comment now carries the one fact the halo used to imply: the fade's 7ch margin past
+the dino is load-bearing, because narrowing the box below his own width puts cactus straight
+back into his hollow with nothing behind it to catch them.
+
+Deleting it was verified rather than assumed — both themes at 320, 440, 853, 1060, 1100, 1140,
+1180 and 2560, the widths where the phase sweep puts a cactus nearest to him. No change at any
+of them, which is the evidence that the halo had genuinely stopped contributing.
+
+The alternative on the table was screenshotting the dino and cutting him out as a transparent
+PNG. It was rejected, and not narrowly: it trades text for an image that needs a light and a
+dark variant, stops scaling with font size and zoom, and still leaves a rectangular bounding box
+with the same edge problem. It solves nothing the patch does not.
+
+CI caught none of the visual defects. `audit:banner` passed before and after every one of these
+states,
+including both defective ones — it asserts scene height, grid snapping, right-edge weld and moon
+visibility, and none of those move when a cactus is sliced in half next to the dino. `stylelint`
+did catch one thing, `comment-empty-line-before`, and the attempted fix merged two comment blocks
+into one broken selector, which `stylelint` then also caught. Every real defect in this entry was
+found by rendering the page and looking at it.
+
+The AI drafted the tiling, the knockout and all of the above reasoning. Human review supplied
+the failing widths — 853 and 440, neither of which was in the 320/380/700/1400 set the AI was
+checking — and pushed back on the rectangle when the AI had already called it done, which is
+what produced the fade. The AI's first answer to "can we use the moon technique" was the right
+one; its first answer to "is the box good enough" was not.
+
+## Phase 3.5 follow-up — Code review fixes, dark default, moon overlap
+
+A `/code-review` pass on the phase 3.5 diff found a real defect that the sweep script had never
+been able to see: the moon and star-field `<pre>`s were rendering one row short of `SCENE_ROWS`.
+A `<pre>` generates no line box for a truly empty final line, and both shortcodes' last emitted
+row was `""` — the moon's from occlusion blanking its lowest visible row, the star field's from
+the bottom-padding array. Both blocks are bottom-anchored by flexbox, so the missing row didn't
+move the bottom edge, it sank the top edge one row closer to the ground — which is exactly the
+"moon bleeding into the hills" and "stars on the desert floor" the review measured in a real
+render. The fix is a shared `withNonEmptyLastLine` helper that forces the final line to a single
+space instead of `""`, applied to all three shortcodes (`cactusStrip` was accidentally safe —
+its last row happens to be the non-blank desert floor).
+
+**The sweep script's blind spot was the more important find.** `audit:banner` asserted right-edge
+alignment, grid snapping, and total banner height, but nothing checked that the moon and star
+`<pre>`s actually rendered their full row count — so it passed clean on both defective states.
+Added an assertion that measures rendered height against `SCENE_ROWS * lineHeight` for both
+elements. Verified backwards, not just forwards: reverting the row fix and rebuilding made the
+new assertion fail with a 17.70px gap (one full line-height) on both the moon and the star field;
+restoring the fix brought it back to 0.11px of sub-pixel noise and a clean pass.
+
+**Dark is now the default theme, not `prefers-color-scheme`.** A direct request, not a bug —
+`:root` now holds the dark palette and `[data-theme="light"]` is the only override, persisted in
+`localStorage`. The OS-preference media query and its change listener in `theme.js` are gone;
+there's nothing left for them to react to. `color-scheme: dark` / `light` was added to both
+token blocks so native UA widgets (scrollbars, form controls, focus rings) track the toggle
+state instead of the OS's, which they had silently stopped doing the moment the toggle could
+diverge from `prefers-color-scheme`. `SPEC.md` and `TASKS.md` are updated to state the new
+precedence rather than the old one.
+
+**The moon-overlap correction.** Fixing the row math moved the moon's visible disc one row away
+from the ridge — geometrically correct, since the occlusion math had always assumed a full
+17-row render, but it also closed a gap that the old bug had, by accident, been rendering as a
+pleasant partial overlap between the moon and the hill. The AI's recommendation was a small
+positive `MOON_GROUND_OVERLAP` (a named, tunable constant added specifically for this) that
+brings the disc into clean contact with the ridge without letting the two layers' glyphs
+interleave; screenshots at both `-1`/`-2` showed real interleaving — cactus and hill strokes
+cutting through the moon's texture, in one case a whole cactus glyph stamped inside the disc —
+which is the same defect class the row-math fix had just removed, only reintroduced on purpose.
+Human review chose `-1` anyway, for how it looks, overriding the correctness-first
+recommendation. The constant and its comment now say so plainly, so the interleaving reads as a
+deliberate choice to the next person who finds it rather than as a bug nobody caught.
+
+Also fixed while in the area, none of it visible: `...globals.browser` had leaked from
+`scripts/**/*.mjs` into the shared Node ESLint block covering `.eleventy.js` and `src/**/*.js`,
+silently disabling `no-undef` for browser globals there too — split into its own scoped block.
+`readAscii` and `cactusStripGrid` read and re-tile the same fixed build-time assets on every
+call — up to four times per page render — and are now memoized. The `.banner-ground` markup was
+duplicated verbatim between the light and dark scenes in `index.njk`; it's now a Nunjucks macro.
+
+The AI drafted every fix and verified each one against a real render or a real assertion before
+calling it done. The one place human review overrode the AI outright was the moon overlap — the
+AI's read of "correct" and the human's read of "right" were different things, and the constant
+exists so that choice stays visible instead of getting re-litigated as a bug report next time
+someone reads the code.

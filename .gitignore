@@ -4,3 +4,4 @@ _site/
 .lighthouseci/
 chrome-headless-shell/
 .DS_Store
+.superpowers/
