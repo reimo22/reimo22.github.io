@@ -61,10 +61,8 @@ reimo22.github.io/
 │   │   ├── js/commands.js       # command palette + keyboard nav (progressive enhancement)
 │   │   └── ascii/*.txt          # ASCII-art banners, included as text
 │   ├── index.njk                # home: banner + short intro + entry points
-│   ├── about.njk
 │   ├── resume.njk               # HTML resume + link to committed PDF
 │   ├── resume/kenji-pinlac-security.pdf
-│   ├── contact.njk
 │   ├── blog/                    # one .md per post, incl. the build log
 │   └── writeups/
 │       ├── writeups.11tydata.js # cascades layout/permalink/tags into the submodule
@@ -197,7 +195,8 @@ phone is the most likely first visit, and TUI aesthetics are exactly where mobil
 - The command palette is a keyboard affordance and is **hidden on touch-primary devices** —
   the `press / for commands` hint is pointless without a keyboard. Nav links remain the
   full-capability path, which the progressive-enhancement contract already guarantees.
-- Content is capped around 70–80ch for readability rather than filling ultrawide screens.
+- Prose content is capped around 70–80ch for readability rather than filling ultrawide
+  screens; the combined resume page uses a 90ch cap for its structured sections.
 - Lighthouse CI runs its **default mobile emulation preset** — so the asserted scores are
   mobile scores. A desktop-only audit would hide exactly the problems worth catching.
 - Verified on a real phone-width viewport, not just devtools, before phase 4 closes.
@@ -304,8 +303,9 @@ Each phase is a small reviewable PR against `main`, which is protected.
    needs no deploy key.
 3. **Theme.** CSS tokens, purple/gray palette with contrast verified, ASCII banner mechanism,
    mobile-first layout.
-4. **Static pages.** Home, About, Contact, Resume (HTML + `_sec` PDF committed as
-   `/resume/Kenji_Pinlac_Resume.pdf`). Includes disabling Pages on `reimo22/resume` — do this
+4. **Profile and resume.** Home plus one combined profile/resume page (HTML + `_sec` PDF
+   committed as `/resume/Kenji_Pinlac_Resume.pdf`). The shared footer carries the contact
+   email. Includes disabling Pages on `reimo22/resume` — do this
    at the same time the portfolio's `/resume/` ships, and verify the takeover immediately.
 5. **Writeups.** Add the submodule, the data cascade (two collections: boxes, CTF), image
    passthrough, frontmatter-key build check, generated two-section index. Requires the CTF
@@ -343,7 +343,5 @@ in the same PR** — see below.
 ## Open items (non-blocking, decide during implementation)
 
 - Exact purple/gray hex values — chosen in phase 3 against the stated contrast targets.
-- Contact method: mailto to `reimo14@proton.me` vs. a form service. Default is mailto plus
-  GitHub/LinkedIn links — no third-party JS, nothing to break.
 - Whether blog posts and writeups share a tag vocabulary. Default: they don't; keep them
   separate as decided.

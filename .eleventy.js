@@ -162,6 +162,7 @@ export default function (eleventyConfig) {
 
   eleventyConfig.addPassthroughCopy("src/assets/css");
   eleventyConfig.addPassthroughCopy("src/assets/js");
+  eleventyConfig.addPassthroughCopy("src/resume");
 
   eleventyConfig.addShortcode("ascii", function (name) {
     return escapeHtml(readAscii(name));
