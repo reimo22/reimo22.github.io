@@ -159,7 +159,11 @@ justify-content:flex-end` — `min-width:0` is the actual slider fix~~
 - [x] `/resume/`: combined profile and HTML resume; shared footer email; commit `_sec` PDF as `/resume/Kenji_Pinlac_Resume.pdf` (same filename as the old repo, new content)
 - [x] Disable Pages on `reimo22/resume`
 - [x] Verify `/resume/` serves the new page and the PDF URL still resolves (hard-refresh — old redirect caches aggressively)
-- [ ] Mobile pass on all pages so far: real phone viewport, no horizontal scroll, touch targets ≥44px
+- [x] Mobile pass on all pages so far: real phone viewport, no horizontal scroll, touch targets ≥44px —
+      swept `/`, `/about/`, `/resume/` at 360/390/430px in both themes via a headless-Chrome script
+      (same `puppeteer-core` + `CHROME_PATH` setup as `audit:banner`); found and fixed two touch-target
+      bugs: `.footer-contact .icon-link`'s `min-width/height: auto` override shrank the footer's email/
+      GitHub icons to 20×20, and `.skip-link` measured 42px tall against the 44px floor
 - [x] Append build-log entry
 
 ## Phase 4.1 — Rename `/resume/` to `/about/`
