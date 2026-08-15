@@ -150,6 +150,109 @@ export function toSceneGrid(lines) {
     .concat(grid);
 }
 
+export function asciiShortcode(name) {
+  return escapeHtml(readAscii(name));
+}
+
+// Trim -> repeat -> cut. The tiles are concatenated *per line* into one
+// contiguous block rather than emitted as two <pre> elements: a single text
+// layout is what keeps the ground line an unbroken character run across the
+// join.
+export function cactusStrip() {
+  return escapeHtml(
+    withNonEmptyLastLine(cactusStripGrid().map(rightTrim)).join("\n"),
+  );
+}
+
+// The moon, with everything at or below the hill silhouette subtracted, so
+// it reads as rising *behind* the ridge instead of floating in front of it.
+//
+// The alignment this relies on: the moon <pre> and the strip <pre> are both
+// flush to the banner's right edge and both bottom-aligned, at the same font
+// size and line-height. Sharing an edge is what makes this exact — the
+// offset is zero columns in any monospace font, so nothing here depends on
+// resolving `ch` to pixels. It holds at every width the moon is on screen;
+// below the container query in `main.css` the moon is gone anyway.
+export function moonAboveHorizon() {
+  const strip = cactusStripGrid();
+  const horizon = horizonByColumn(strip);
+  const moon = toSceneGrid(asciiLines("moon"));
+  const stripWidth = strip[0].length;
+  const moonWidth = moon[0].length;
+
+  const rows = moon.map((line, row) => {
+    // Both blocks are anchored bottom-right, so a moon cell maps onto
+    // the strip by its distance from those two edges. Rows above the
+    // strip give a negative index, which matches no ridge — open sky.
+    const stripRow = strip.length - (moon.length - row);
+    return rightTrim(
+      Array.from(line, (glyph, col) => {
+        const stripCol = stripWidth - (moonWidth - col);
+        const ridge = horizon[stripCol];
+        const behindRidge =
+          ridge !== undefined && stripRow >= ridge - MOON_GROUND_OVERLAP;
+        return behindRidge ? " " : glyph;
+      }).join(""),
+    );
+  });
+
+  return escapeHtml(
+    // Blanked rows stay as lines: they carry the moon's height, and
+    // dropping them would let the bottom-aligned disc sink into the hills.
+    withNonEmptyLastLine(rows).join("\n"),
+  );
+}
+
+// The star field, held above the desert floor and tiled out to the strip's
+// full width.
+//
+// Unlike the moon this is *not* column-composited. The field sits one
+// 1.5rem `column-gap` away from the moon — an offset of ~2.5 columns that
+// shifts with whatever monospace font the browser resolves, so per-column
+// occlusion would be off by a fraction of a cell. Only the row grid is
+// shared exactly. So the rule is row-only: keep the rows that clear the
+// floor, and pad below to hold bottom alignment.
+//
+// Width is deliberately over-provisioned to the strip's, which is wider
+// than the field's own lane by that gap plus the moon. Matching the strip
+// is what guarantees stars reach the banner's left edge at every viewport;
+// computing an exact lane width would have to resolve `ch` and `rem` to
+// pixels at build time, which nothing else here does. The surplus overflows
+// left into `overflow: hidden` and costs nothing.
+export function starField() {
+  const strip = cactusStripGrid();
+  const groundDepth = strip.length - groundRow(strip);
+  const skyRows = SCENE_ROWS - groundDepth;
+
+  // Pad to a rectangle *before* tiling. Right-trimming first — as this did
+  // when the field was a single tile — would let short rows concatenate
+  // early and drag every star after the join left by a different amount on
+  // each row, shearing the field. Trimming is the last step, per row.
+  const band = toGrid(asciiLines("stars").slice(0, skyRows));
+  const width = strip[0].length;
+  const tiles = Math.ceil(width / band[0].length);
+
+  // Each tile takes the band's rows rotated one step further, so the field
+  // repeats every `tiles * skyRows` columns rather than every tile. Stars
+  // are sparse enough that a row shift is all it takes to hide the seam.
+  const stars = band.map((_, row) =>
+    rightTrim(
+      Array.from(
+        { length: tiles },
+        (__, tile) => band[(row + tile) % band.length],
+      )
+        .join("")
+        .slice(0, width),
+    ),
+  );
+
+  return escapeHtml(
+    withNonEmptyLastLine(
+      stars.concat(Array(SCENE_ROWS - stars.length).fill("")),
+    ).join("\n"),
+  );
+}
+
 export default function (eleventyConfig) {
   eleventyConfig.setLibrary(
     "md",
@@ -165,108 +268,10 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/assets/img");
   eleventyConfig.addPassthroughCopy("src/about");
 
-  eleventyConfig.addShortcode("ascii", function (name) {
-    return escapeHtml(readAscii(name));
-  });
-
-  // Trim -> repeat -> cut. The tiles are concatenated *per line* into one
-  // contiguous block rather than emitted as two <pre> elements: a single text
-  // layout is what keeps the ground line an unbroken character run across the
-  // join.
-  eleventyConfig.addShortcode("cactusStrip", function () {
-    return escapeHtml(
-      withNonEmptyLastLine(cactusStripGrid().map(rightTrim)).join("\n"),
-    );
-  });
-
-  // The moon, with everything at or below the hill silhouette subtracted, so
-  // it reads as rising *behind* the ridge instead of floating in front of it.
-  //
-  // The alignment this relies on: the moon <pre> and the strip <pre> are both
-  // flush to the banner's right edge and both bottom-aligned, at the same font
-  // size and line-height. Sharing an edge is what makes this exact — the
-  // offset is zero columns in any monospace font, so nothing here depends on
-  // resolving `ch` to pixels. It holds at every width the moon is on screen;
-  // below the container query in `main.css` the moon is gone anyway.
-  eleventyConfig.addShortcode("moonAboveHorizon", function () {
-    const strip = cactusStripGrid();
-    const horizon = horizonByColumn(strip);
-    const moon = toSceneGrid(asciiLines("moon"));
-    const stripWidth = strip[0].length;
-    const moonWidth = moon[0].length;
-
-    const rows = moon.map((line, row) => {
-      // Both blocks are anchored bottom-right, so a moon cell maps onto
-      // the strip by its distance from those two edges. Rows above the
-      // strip give a negative index, which matches no ridge — open sky.
-      const stripRow = strip.length - (moon.length - row);
-      return rightTrim(
-        Array.from(line, (glyph, col) => {
-          const stripCol = stripWidth - (moonWidth - col);
-          const ridge = horizon[stripCol];
-          const behindRidge =
-            ridge !== undefined && stripRow >= ridge - MOON_GROUND_OVERLAP;
-          return behindRidge ? " " : glyph;
-        }).join(""),
-      );
-    });
-
-    return escapeHtml(
-      // Blanked rows stay as lines: they carry the moon's height, and
-      // dropping them would let the bottom-aligned disc sink into the hills.
-      withNonEmptyLastLine(rows).join("\n"),
-    );
-  });
-
-  // The star field, held above the desert floor and tiled out to the strip's
-  // full width.
-  //
-  // Unlike the moon this is *not* column-composited. The field sits one
-  // 1.5rem `column-gap` away from the moon — an offset of ~2.5 columns that
-  // shifts with whatever monospace font the browser resolves, so per-column
-  // occlusion would be off by a fraction of a cell. Only the row grid is
-  // shared exactly. So the rule is row-only: keep the rows that clear the
-  // floor, and pad below to hold bottom alignment.
-  //
-  // Width is deliberately over-provisioned to the strip's, which is wider
-  // than the field's own lane by that gap plus the moon. Matching the strip
-  // is what guarantees stars reach the banner's left edge at every viewport;
-  // computing an exact lane width would have to resolve `ch` and `rem` to
-  // pixels at build time, which nothing else here does. The surplus overflows
-  // left into `overflow: hidden` and costs nothing.
-  eleventyConfig.addShortcode("starField", function () {
-    const strip = cactusStripGrid();
-    const groundDepth = strip.length - groundRow(strip);
-    const skyRows = SCENE_ROWS - groundDepth;
-
-    // Pad to a rectangle *before* tiling. Right-trimming first — as this did
-    // when the field was a single tile — would let short rows concatenate
-    // early and drag every star after the join left by a different amount on
-    // each row, shearing the field. Trimming is the last step, per row.
-    const band = toGrid(asciiLines("stars").slice(0, skyRows));
-    const width = strip[0].length;
-    const tiles = Math.ceil(width / band[0].length);
-
-    // Each tile takes the band's rows rotated one step further, so the field
-    // repeats every `tiles * skyRows` columns rather than every tile. Stars
-    // are sparse enough that a row shift is all it takes to hide the seam.
-    const stars = band.map((_, row) =>
-      rightTrim(
-        Array.from(
-          { length: tiles },
-          (__, tile) => band[(row + tile) % band.length],
-        )
-          .join("")
-          .slice(0, width),
-      ),
-    );
-
-    return escapeHtml(
-      withNonEmptyLastLine(
-        stars.concat(Array(SCENE_ROWS - stars.length).fill("")),
-      ).join("\n"),
-    );
-  });
+  eleventyConfig.addShortcode("ascii", asciiShortcode);
+  eleventyConfig.addShortcode("cactusStrip", cactusStrip);
+  eleventyConfig.addShortcode("moonAboveHorizon", moonAboveHorizon);
+  eleventyConfig.addShortcode("starField", starField);
 
   return {
     dir: {
