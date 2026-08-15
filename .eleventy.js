@@ -39,7 +39,7 @@ const SCENE_ROWS = 17;
 // from the ridge instead.
 const MOON_GROUND_OVERLAP = -1;
 
-function rightTrim(line) {
+export function rightTrim(line) {
   return line.replace(/\s+$/, "");
 }
 
@@ -48,14 +48,14 @@ function rightTrim(line) {
 // mapping composited against it (moonAboveHorizon's ridge subtraction,
 // starField's floor cutoff) is off by one. Forcing a single space keeps the
 // line box without being visible.
-function withNonEmptyLastLine(lines) {
+export function withNonEmptyLastLine(lines) {
   if (lines[lines.length - 1] === "") {
     return lines.slice(0, -1).concat(" ");
   }
   return lines;
 }
 
-function escapeHtml(raw) {
+export function escapeHtml(raw) {
   return raw.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
@@ -83,7 +83,7 @@ function asciiLines(name) {
 
 // Every line padded to the block's full width. Ragged lines would make column
 // indexing meaningless, and the occlusion below is entirely column arithmetic.
-function toGrid(lines) {
+export function toGrid(lines) {
   const width = Math.max(...lines.map((line) => line.length));
   return lines.map((line) => line.padEnd(width, " "));
 }
@@ -115,7 +115,7 @@ function cactusStripGrid() {
 // This is what makes the moon sit *behind* the hills. Painting can't do it —
 // a <pre> has no background, so the ground layer draws glyphs over the moon
 // but never hides it. Occlusion has to be subtraction from the art itself.
-function horizonByColumn(grid) {
+export function horizonByColumn(grid) {
   const width = grid[0].length;
   return Array.from({ length: width }, (_, col) => {
     const row = grid.findIndex((line) => line[col] !== " ");
@@ -126,7 +126,7 @@ function horizonByColumn(grid) {
 // The row of the flat desert floor: the line with the longest unbroken run of
 // `_`. It is the horizon's lowest point, so anything drawn above it is sky at
 // every column.
-function groundRow(grid) {
+export function groundRow(grid) {
   const runLength = (line) =>
     Math.max(0, ...(line.match(/_+/g) || []).map((run) => run.length));
   const runs = grid.map(runLength);
@@ -136,7 +136,7 @@ function groundRow(grid) {
 // Bottom-align art into a grid `SCENE_ROWS` tall, padding above with empty sky.
 // Doing this before any row arithmetic is what lets the mapping below assume
 // the sky grid is at least as tall as the strip, whatever size the art is.
-function toSceneGrid(lines) {
+export function toSceneGrid(lines) {
   if (lines.length > SCENE_ROWS) {
     throw new Error(
       `ascii art is ${lines.length} rows but the banner is ${SCENE_ROWS}; ` +
