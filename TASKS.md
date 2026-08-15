@@ -157,10 +157,24 @@ justify-content:flex-end` — `min-width:0` is the actual slider fix~~
 ## Phase 4 — Static pages
 
 - [x] `/resume/`: combined profile and HTML resume; shared footer email; commit `_sec` PDF as `/resume/Kenji_Pinlac_Resume.pdf` (same filename as the old repo, new content)
-- [ ] Disable Pages on `reimo22/resume` (archive, don't delete)
-- [ ] Verify `/resume/` serves the new page and the PDF URL still resolves (hard-refresh — old redirect caches aggressively)
+- [x] Disable Pages on `reimo22/resume`
+- [x] Verify `/resume/` serves the new page and the PDF URL still resolves (hard-refresh — old redirect caches aggressively)
 - [ ] Mobile pass on all pages so far: real phone viewport, no horizontal scroll, touch targets ≥44px
 - [x] Append build-log entry
+
+## Phase 4.1 — Rename `/resume/` to `/about/`
+
+- [x] Discovered post-merge: `reimo22/resume`'s Pages was still live and public
+      despite the repo going private, shadowing this site's `/resume/` with a
+      stale 404 — `gh api -X DELETE repos/reimo22/resume/pages` unpublished it
+- [x] Move the combined profile/resume page from `/resume/` to `/about/`;
+      commit PDF now at `/about/Kenji_Pinlac_Resume.pdf`
+- [x] `/resume/` becomes a same-site meta-refresh stub to `/about/`, so old
+      links and bookmarks still land somewhere
+- [x] Update nav (`site.json`), `SPEC.md`, this file
+- [x] Append build-log entry
+- [ ] Human browser check before merge: `/about/`, `/resume/` redirect, PDF
+      link from both
 
 ## Phase 5 — Writeups
 

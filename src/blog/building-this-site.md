@@ -684,3 +684,31 @@ human verification steps.
 a split tab. The page now opts into a `90ch` main width while the global cap stays
 in place for prose-oriented pages. This preserves readable profile paragraphs
 without making the resume feel like a centered excerpt.
+
+## Phase 4.1 — Renaming `/resume/` to `/about/`
+
+Phase 4 shipped `/resume/` on the assumption that disabling Pages on the old
+`resume` repo (private, not archived) would fully unpublish it. It didn't: this
+GitHub account can keep a private repo's Pages site set to public visibility,
+which is a separate toggle from repo visibility, and that toggle was still on.
+The old site kept intercepting `/resume/*` at GitHub's edge — including the
+PDF — and serving its own cached 404, ahead of the new deployment. CI had no
+way to catch this: the shadowing only exists at GitHub's routing layer, outside
+anything `npm run build` or `html-validate` touches. `gh api -X DELETE
+repos/reimo22/resume/pages` unpublished it directly.
+
+Rather than re-verify the same `/resume/` URL and risk the same shadowing
+problem resurfacing on any future `resume` repo, the page moved to `/about/`
+permanently. `/resume/` is now a same-site meta-refresh stub this site owns
+outright, so old bookmarks and links still resolve without depending on a
+second repo's Pages state ever again. The PDF moved with the page, to
+`/about/Kenji_Pinlac_Resume.pdf`.
+
+The AI diagnosed the shadowing by comparing GitHub's Pages API response for
+each repo against a live `curl`, confirmed it wasn't a CDN cache (fresh
+`x-cache: MISS`, matching content-length across requests) before touching
+anything, and proposed the `/about/` rename with two options for the PDF URL
+once the shadowing was understood. The human picked the option that fully
+retires the old repo's URL surface rather than the one that mirrors the old
+SPEC wording exactly — confirming the PDF and stub should move together rather
+than leaving `/resume/` half-owned by the old repo's now-dead Pages config.

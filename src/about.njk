@@ -1,0 +1,153 @@
+---
+title: About
+permalink: /about/
+resume: true
+---
+{% extends "base.njk" %}
+{% block content %}
+  <article class="page resume">
+    <header class="resume-header">
+      <div>
+        <h1>Kenji Luis D. Pinlac</h1>
+        <p class="resume-meta">
+          <a href="https://github.com/reimo22">github.com/reimo22</a>
+        </p>
+      </div>
+      <a class="resume-download" href="/about/Kenji_Pinlac_Resume.pdf"
+      >Download PDF</a
+      >
+    </header>
+
+    <section>
+      <h2>Profile</h2>
+      <p>
+        I'm a computer science student interested in systems, infrastructure,
+        networking, and security.
+      </p>
+      <p>
+        My practical work spans remote homelab administration, virtualization,
+        Linux and Windows systems, and offensive security labs. I enjoy tracing a
+        problem from its symptoms through logs, network traffic, and system
+        configuration until the underlying cause is clear.
+      </p>
+      <p>
+        I also build software when automation is the right tool. My academic
+        capstone was a Django payroll system that reduced manual processing time
+        and was deployed with Docker on client hardware.
+      </p>
+    </section>
+
+    <section>
+      <h2>Experience</h2>
+      <div class="resume-item">
+        <h3>Operator | Ingrasys Technology Co., Ltd</h3>
+        <p class="resume-meta">Dec 2025 - Jun 2026</p>
+        <ul>
+          <li>
+            Demonstrated standard operating procedures and quality-control
+            checkpoints to international team members for NVIDIA GB300 and Vera
+            Rubin AI server assembly.
+          </li>
+        </ul>
+      </div>
+      <div class="resume-item">
+        <h3>Academic Capstone / Backend | Estained Cosmetics</h3>
+        <p class="resume-meta">May - Jun 2025</p>
+        <ul>
+          <li>
+            Reduced payroll processing time from 5 days to 3 days by developing
+            a Django system with a team of 6 to automate manual data entry.
+          </li>
+          <li>
+            Drafted ERDs and system schemas, then deployed the system with
+            Docker on client hardware.
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Projects</h2>
+      <div class="resume-item">
+        <h3>Homelab Infrastructure and Administration</h3>
+        <ul>
+          <li>
+            Managed remote homelab infrastructure from Taiwan via Tailscale,
+            including a Proxmox host and Windows workstation.
+          </li>
+          <li>
+            Hardened the infrastructure with BIOS passwords, disk encryption,
+            SSH public-key authentication, custom ports, disabled password
+            login, and network-wide telemetry and traffic filtering via NextDNS.
+          </li>
+          <li>
+            Migrated a bare-metal Windows environment to a KVM virtual machine
+            with Macrium Reflect, and performed block-level disk cloning and
+            system imaging with Clonezilla.
+          </li>
+          <li>
+            Configured VFIO GPU passthrough across Qubes OS and KVM/QEMU,
+            resolving driver and audio conflicts through journalctl and
+            systemctl log analysis.
+          </li>
+        </ul>
+      </div>
+      <div class="resume-item">
+        <h3>HackTheBox Academy and Labs</h3>
+        <ul>
+          <li>
+            Analyzed network traffic with Wireshark and tcpdump, using custom
+            filters to isolate hosts and protocols, decrypt TLS with provided
+            keys, and identify cleartext credentials.
+          </li>
+          <li>
+            Practiced reconnaissance, enumeration, exploitation,
+            post-exploitation, credential harvesting, offline hash cracking,
+            and privilege escalation through guided labs.
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Education</h2>
+      <div class="resume-item">
+        <h3>Adamson University</h3>
+        <p class="resume-meta">
+          Bachelor of Science in Computer Science (in progress) | Aug 2023 -
+          Jan 2028
+        </p>
+        <p>Manila, Philippines</p>
+      </div>
+      <div class="resume-item">
+        <h3>Minghsin University of Science and Technology</h3>
+        <p class="resume-meta">
+          Bachelor of Science in Computer Science and Information Engineering
+          (in progress) | Sep 2025 - Jun 2027
+        </p>
+        <p>Hsinchu County, Taiwan</p>
+      </div>
+      <p>
+        Relevant coursework: Computer Networks, Operating Systems, UNIX,
+        Computer Architecture, Data Structures and Algorithms, Discrete
+        Structures, and Databases.
+      </p>
+    </section>
+
+    <section>
+      <h2>Certifications and Skills</h2>
+      <dl class="resume-skills">
+        <dt>Certifications</dt>
+        <dd>HackTheBox CJCA (in progress), Certiport ITS Python, ITS Databases</dd>
+        <dt>Languages</dt>
+        <dd>English (fluent), Mandarin (A1/beginner)</dd>
+        <dt>Systems</dt>
+        <dd>Proxmox VE, KVM/QEMU, VFIO, Debian/Ubuntu, Arch, Fedora, Windows</dd>
+        <dt>Networking</dt>
+        <dd>Tailscale, NextDNS, Nmap</dd>
+        <dt>Tools</dt>
+        <dd>Python, Bash, SQL, Docker, Git, SSH, C#, llama.cpp</dd>
+      </dl>
+    </section>
+  </article>
+{% endblock %}

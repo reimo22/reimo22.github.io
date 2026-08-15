@@ -19,16 +19,18 @@ multi-phase roadmap docs, PM/PR-readiness bots — overkill for a solo static si
 - Pages source: **GitHub Actions** (not "deploy from branch" — required so the
   workflow's `submodules: recursive` checkout actually runs; branch-deploy would
   ship the writeups section empty)
-- `reimo22/resume` (currently a meta-refresh redirect to a PDF, serving `/resume/`)
-  has its Pages disabled once this site's `/resume/` ships. The old PDF filename
-  is preserved at the same URL so existing links keep working.
+- `reimo22/resume` (formerly a meta-refresh redirect to a PDF, serving
+  `/resume/`) has had its Pages disabled now that this site's `/about/` ships.
+  This site now owns `/resume/` too: it's a same-site meta-refresh stub to
+  `/about/`, so old links and bookmarks still land somewhere.
 
 ## Pages / sections
 
 | Path                        | Content                                                                                                                                                                                                                   |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/`                         | Home — ASCII banner, short intro, entry points to the other sections                                                                                                                                                      |
-| `/resume/`                  | Combined profile and HTML resume; the shared footer contains the mailto contact, and the page links to the committed PDF at `/resume/Kenji_Pinlac_Resume.pdf`                                                             |
+| `/about/`                   | Combined profile and HTML resume; the shared footer contains the mailto contact, and the page links to the committed PDF at `/about/Kenji_Pinlac_Resume.pdf`                                                              |
+| `/resume/`                  | Meta-refresh stub to `/about/`, for old links and bookmarks                                                                                                                                                               |
 | `/writeups/`                | Index of HTB writeups, split into two sections — retired boxes (box, OS, difficulty, technique) and CTF challenges (event, category, difficulty, technique) — pulled at build time from `github.com/reimo22/htb-writeups` |
 | `/writeups/<box>/`          | One page per writeup, rendered from that repo's `README.md`                                                                                                                                                               |
 | `/blog/`                    | Blog index, including a build log for this site itself                                                                                                                                                                    |
