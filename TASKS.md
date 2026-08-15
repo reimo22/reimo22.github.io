@@ -176,6 +176,14 @@ justify-content:flex-end` — `min-width:0` is the actual slider fix~~
 - [ ] Human browser check before merge: `/about/`, `/resume/` redirect, PDF
       link from both
 
+## Phase 4.2 — About page contact icons
+
+- [x] Move email (currently footer-only) to the top of `/about/`, alongside
+      the existing GitHub link
+- [x] Replace both the email and GitHub link with icons instead of raw text/URL
+- [x] Apply the same icon treatment to the shared footer (email and GitHub
+      links on every page)
+
 ## Phase 5 — Writeups
 
 - [ ] Add `htb-writeups` as a git submodule at `src/writeups/boxes/` (HTTPS URL) — pull the

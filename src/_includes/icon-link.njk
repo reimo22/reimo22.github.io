@@ -1,0 +1,22 @@
+{# Icon link with a dark-theme and light-theme PNG variant. Both <img> tags
+   render; main.css's --icon-dark-display/--icon-light-display pair (set
+   alongside every other theme token in the :root blocks) shows only the one
+   matching the active theme, same technique as the banner swap. #}
+{% macro iconLink(href, icon, label, class) %}
+  <a href="{{ href }}" class="icon-link{% if class %} {{ class }}{% endif %}">
+    <img
+      class="icon icon-dark"
+      src="/assets/img/icons/{{ icon }}_dark.png"
+      alt="{{ label }}"
+      width="20"
+      height="20"
+    />
+    <img
+      class="icon icon-light"
+      src="/assets/img/icons/{{ icon }}_light.png"
+      alt="{{ label }}"
+      width="20"
+      height="20"
+    />
+  </a>
+{% endmacro %}

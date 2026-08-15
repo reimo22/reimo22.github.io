@@ -712,3 +712,34 @@ once the shadowing was understood. The human picked the option that fully
 retires the old repo's URL surface rather than the one that mirrors the old
 SPEC wording exactly — confirming the PDF and stub should move together rather
 than leaving `/resume/` half-owned by the old repo's now-dead Pages config.
+
+## Phase 4.2 — About page contact icons
+
+The email and GitHub contacts moved from plain text/URL to icons, sourced as
+pre-colored PNG pairs (one tint per theme) rather than single-color SVGs. The
+site already had a dark/light asset-swap technique for the homepage banner —
+two elements rendered together, a `[data-theme]`-scoped CSS custom property
+picking which one displays — so the icon links reuse that same pattern instead
+of inventing a second one. A shared `icon-link.njk` macro keeps the pair-of-
+`<img>`-tags markup in one place rather than duplicated across `about.njk` and
+the shared footer.
+
+The same asset pack also carried a PDF-download icon and dedicated sun/moon
+PNGs, so the resume's "Download PDF" text link and the header's CSS-glyph
+theme-toggle button were switched to the icon treatment too, and the
+now-unused `--theme-toggle-icon` custom property and glyph rule were removed.
+
+The local build, lint suite, and `html-validate` all passed on each iteration.
+Stylelint's `no-descending-specificity` caught a selector-ordering issue when a
+footer-specific icon-sizing override was added below the general `.icon-link`
+rule in source order but not in specificity — moving the override immediately
+after the rule it narrows fixed it without changing the CSS's behavior.
+
+The AI proposed the dark/light PNG-pair technique and built the macro,
+passthrough copy, and every page's markup. Human browser review corrected the
+scope twice: it caught that the footer was missing the GitHub icon entirely
+(the earlier plan restated the footer as email-only, following an ambiguous
+line in the phase's task list) and confirmed adding it once asked. Both rounds
+of feedback were caught by looking at the rendered page, not by any local
+check — none of the tooling here validates icon _presence_, only that markup
+and CSS are well-formed.

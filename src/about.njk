@@ -4,18 +4,25 @@ permalink: /about/
 resume: true
 ---
 {% extends "base.njk" %}
+{% import "icon-link.njk" as icons %}
 {% block content %}
   <article class="page resume">
     <header class="resume-header">
       <div>
         <h1>Kenji Luis D. Pinlac</h1>
-        <p class="resume-meta">
-          <a href="https://github.com/reimo22">github.com/reimo22</a>
+        <p class="resume-meta resume-contact">
+          {{ icons.iconLink("mailto:kpinlac@keemail.me", "email", "Email") }}
+          {{ icons.iconLink("https://github.com/reimo22", "github", "GitHub") }}
         </p>
       </div>
-      <a class="resume-download" href="/about/Kenji_Pinlac_Resume.pdf"
-      >Download PDF</a
-      >
+      {{
+        icons.iconLink(
+          "/about/Kenji_Pinlac_Resume.pdf",
+          "export_pdf",
+          "Download PDF",
+          "resume-download"
+        )
+      }}
     </header>
 
     <section>
