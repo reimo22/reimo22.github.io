@@ -3,6 +3,6 @@
   "url": "https://reimo22.github.io",
   "nav": [
     { "label": "Home", "url": "/" },
-    { "label": "Resume", "url": "/resume/" }
+    { "label": "About", "url": "/about/" }
   ]
 }
