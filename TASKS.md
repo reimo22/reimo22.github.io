@@ -173,7 +173,7 @@ justify-content:flex-end` — `min-width:0` is the actual slider fix~~
       links and bookmarks still land somewhere
 - [x] Update nav (`site.json`), `SPEC.md`, this file
 - [x] Append build-log entry
-- [ ] Human browser check before merge: `/about/`, `/resume/` redirect, PDF
+- [x] Human browser check before merge: `/about/`, `/resume/` redirect, PDF
       link from both
 
 ## Phase 4.2 — About page contact icons
