@@ -35,6 +35,8 @@ points to — don't expect them echoed here.
 - `npm run test` — `node:test` suite (helpers, shortcodes, theme.js DOM
   tests, icon markup check); CI runs it as its own job gating deploy
 - `npx html-validate _site` — CI's HTML check, run locally before push
+- `npm run audit:banner` — visual-layout sweep (needs `npm run serve` up in
+  another terminal + `CHROME_PATH` set)
 
 ## Operational guardrails (enforced here)
 
@@ -43,3 +45,26 @@ points to — don't expect them echoed here.
   Frontmatter and content live upstream in `htb-writeups` — don't duplicate.
 - `.claude/settings.json` hooks auto-format on edit and rebuild on template /
   config / data / ascii changes.
+
+## Non-obvious architecture
+
+- `.eleventy.js` derives ASCII art at build time: `cactus.txt` is the single
+  source of truth, tiled and cut into a strip at build; `moon`/`stars`/`dino`
+  are composited by column/row arithmetic against that strip. Several magic
+  numbers are coupled across `.eleventy.js` and `src/assets/css/main.css`
+  (e.g. `SCENE_ROWS` ↔ `min-height`, banner crop constants) — change one and
+  the other must move with it.
+- `clientWidth`/`scrollWidth` measurements are unreliable for this banner's
+  leftward-overflowing crop; `scripts/sweep-banner.mjs` documents why.
+- `src/assets/js/` scripts are plain `<script>` (not ESM); `scripts/*.mjs` run
+  in Node but serialize callbacks into the browser (see `eslint.config.js`).
+
+## Environment quirks
+
+- Node version is pinned in `.nvmrc` (26.7.0).
+- Headless Chrome dies under secureblue's hardened malloc. The audit scripts
+  clear `LD_PRELOAD` (`env -u LD_PRELOAD`) and need `CHROME_PATH` pointing at a
+  headless shell (install: `npx @puppeteer/browsers install chrome-headless-shell@stable`).
+- CI first `npm run build`s and uploads `_site` as an artifact, then lint,
+  html-validate, lighthouse (assertions in `lighthouserc.json`), and lychee
+  all run against that single build; deploy is gated on all of them.
