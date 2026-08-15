@@ -800,3 +800,29 @@ in the shared footer and once on `/about/`, plus `export_pdf` — not the three
 the plan's own draft narration claimed while describing Step 2's expected
 output). No code changed as a result, but the discrepancy is recorded here
 rather than left for the next person to rediscover.
+
+## Phase 4 follow-up — Mobile pass
+
+Phase 4 shipped with one checklist item unresolved: a real-device mobile pass
+across `/`, `/about/`, and `/resume/` for horizontal scroll and touch targets
+≥44px. No browser automation was available in this session (the Claude-in-Chrome
+extension wasn't connected), so this used the same headless-Chrome approach as
+`audit:banner` instead of a hand-driven device check — a throwaway
+`puppeteer-core` script, swept at 360/390/430px in both themes, checking
+`document.documentElement.scrollWidth` against `clientWidth` and every
+`a`/`button`/`input`/`select`/`textarea`'s bounding box.
+
+It found two real bugs, not zero: `.footer-contact .icon-link` overrode the
+`.icon-link` base rule's `min-width`/`min-height: 44px` down to `auto`,
+shrinking the footer's email and GitHub links to their 20×20 icon image with
+no padding around it — under the touch-target floor. The override is gone;
+footer icons now match the same 44px minimum as every other icon link,
+`nav a`, and `.resume-download`. Separately, `.skip-link` measured 42px tall
+against its own text and padding, 2px under the floor — given
+`display: inline-flex; align-items: center; min-height: 44px`, the same
+pattern already used by `nav a` and `footer a`.
+
+This is a script sweep, not the real-device pass the checklist item asks for —
+it catches the CSS-computable failure modes (overflow, box size) but not
+odd viewport quirks, actual thumb-reach, or on-device rendering. Recorded as
+what it is rather than claiming full parity with a phone-in-hand check.

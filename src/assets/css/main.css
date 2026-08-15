@@ -60,6 +60,9 @@ body {
   position: absolute;
   left: -9999px;
   top: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   background: var(--color-bg);
   color: var(--color-fg);
   border: 1px solid var(--color-border);
@@ -213,11 +216,6 @@ footer {
   justify-content: center;
   min-width: 44px;
   min-height: 44px;
-}
-
-.footer-contact .icon-link {
-  min-width: auto;
-  min-height: auto;
 }
 
 .icon {
