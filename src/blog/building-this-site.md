@@ -712,3 +712,91 @@ once the shadowing was understood. The human picked the option that fully
 retires the old repo's URL surface rather than the one that mirrors the old
 SPEC wording exactly — confirming the PDF and stub should move together rather
 than leaving `/resume/` half-owned by the old repo's now-dead Pages config.
+
+## Phase 4.2 — About page contact icons
+
+The email and GitHub contacts moved from plain text/URL to icons, sourced as
+pre-colored PNG pairs (one tint per theme) rather than single-color SVGs. The
+site already had a dark/light asset-swap technique for the homepage banner —
+two elements rendered together, a `[data-theme]`-scoped CSS custom property
+picking which one displays — so the icon links reuse that same pattern instead
+of inventing a second one. A shared `icon-link.njk` macro keeps the pair-of-
+`<img>`-tags markup in one place rather than duplicated across `about.njk` and
+the shared footer.
+
+The same asset pack also carried a PDF-download icon and dedicated sun/moon
+PNGs, so the resume's "Download PDF" text link and the header's CSS-glyph
+theme-toggle button were switched to the icon treatment too, and the
+now-unused `--theme-toggle-icon` custom property and glyph rule were removed.
+
+The local build, lint suite, and `html-validate` all passed on each iteration.
+Stylelint's `no-descending-specificity` caught a selector-ordering issue when a
+footer-specific icon-sizing override was added below the general `.icon-link`
+rule in source order but not in specificity — moving the override immediately
+after the rule it narrows fixed it without changing the CSS's behavior.
+
+The AI proposed the dark/light PNG-pair technique and built the macro,
+passthrough copy, and every page's markup. Human browser review corrected the
+scope twice: it caught that the footer was missing the GitHub icon entirely
+(the earlier plan restated the footer as email-only, following an ambiguous
+line in the phase's task list) and confirmed adding it once asked. Both rounds
+of feedback were caught by looking at the rendered page, not by any local
+check — none of the tooling here validates icon _presence_, only that markup
+and CSS are well-formed.
+
+## Phase 4.3 — Testing infrastructure
+
+Every prior phase's checks stopped at lint, `html-validate`, Lighthouse, and
+link-checking — none of them assert what the site's own JavaScript or build
+logic actually does. This phase introduced a test convention rather than
+scoping tests narrowly to whatever the previous phase touched: Node's built-in
+`node:test` runner plus `node:assert/strict`, with `jsdom` added as the one
+new devDependency for the theme-toggle's DOM behavior. No third-party test
+framework — `node:test` has been stable since long before this repo's
+`.nvmrc`-pinned Node version, and the site has no need for a runner with more
+surface area than that.
+
+`.eleventy.js`'s seven pure banner/ascii-art helpers (`rightTrim` through
+`toSceneGrid`) and its four ascii shortcodes (`ascii`, `cactusStrip`,
+`moonAboveHorizon`, `starField`) were previously unexported closures reachable
+only through a full Eleventy build. They gained `export` and, for the
+shortcodes, moved from inline `addShortcode` closures to named top-level
+functions referenced by the registration call — a zero-behavior-change
+refactor, confirmed by running `npm run build` before and after and comparing
+the rendered banner markup. The shortcode tests reconstruct the cactus-strip,
+moon-occlusion, and star-tiling pipelines independently from the raw
+`.txt` assets rather than asserting against the module's own constants, so a
+test can't pass by coincidentally re-deriving the same numbers the
+implementation already hardcodes.
+
+`theme.js` stayed untouched — no refactor for testability — because its
+DOM tests load the real file into a `jsdom` window via `eval` and drive it
+with actual click events, the same interface a browser uses. A deliberate,
+reverted one-line break (`currentTheme()`'s fallback flipped from `"dark"` to
+`"light"`) confirmed the harness fails when the underlying script actually
+misbehaves, not just when the test file's own assumptions change.
+
+The icon-markup check is a static scan, not a rendered-DOM check: it regex-matches
+every `icons.iconLink(...)` call site across `.njk` templates and confirms each
+one resolves to an existing `_dark.png`/`_light.png` pair with a non-empty
+label. A rendered check would need a full Eleventy build plus DOM parsing to
+assert the same thing a plain-text scan already answers directly from source,
+so the static route was chosen once the plan's own review confirmed the scan
+finds every real call site (see below). Every test file runs in CI as its own
+job (`npm run test`), gating `deploy` alongside the existing `lint`,
+`html-validate`, `lighthouse`, and `lychee` jobs.
+
+The AI drafted the full plan and implementation across ten tasks in a single
+sitting, largely unprompted between tasks. Self-review (not human review)
+caught one real gap before this entry was written: the icon-link scanner's
+regex is lazy up to the first `)`, so a call site containing a nested paren
+(a Nunjucks filter, a `)` inside a string) would truncate mid-argument-list
+and silently drop that call from coverage while `allCalls.length > 0` still
+passed — the failure mode a static-scan test is actually supposed to guard
+against. Checking the scanner's output against a plain `grep -rn
+"iconLink(" src --include=*.njk` confirmed no such case exists in the current
+templates (5 real call sites — `email` and `github` each appear twice, once
+in the shared footer and once on `/about/`, plus `export_pdf` — not the three
+the plan's own draft narration claimed while describing Step 2's expected
+output). No code changed as a result, but the discrepancy is recorded here
+rather than left for the next person to rediscover.

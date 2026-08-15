@@ -1,3 +1,4 @@
+{% import "icon-link.njk" as icons %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -44,7 +45,20 @@
           id="theme-toggle"
           aria-label="Toggle color theme"
         >
-          <span class="theme-toggle-icon" aria-hidden="true"></span>
+          <img
+            class="icon icon-dark"
+            src="/assets/img/icons/sun.png"
+            alt=""
+            width="20"
+            height="20"
+          />
+          <img
+            class="icon icon-light"
+            src="/assets/img/icons/moon.png"
+            alt=""
+            width="20"
+            height="20"
+          />
         </button>
       </div>
       {% block banner %}{% endblock %}
@@ -53,9 +67,10 @@
       {% block content %}{% endblock %}
     </main>
     <footer>
-      <p>
+      <p class="footer-contact">
         &copy; {{ currentYear }} {{ site.title }} ·
-        <a href="mailto:kpinlac@keemail.me">kpinlac@keemail.me</a>
+        {{ icons.iconLink("mailto:kpinlac@keemail.me", "email", "Email") }}
+        {{ icons.iconLink("https://github.com/reimo22", "github", "GitHub") }}
       </p>
     </footer>
   </body>

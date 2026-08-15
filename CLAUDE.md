@@ -32,6 +32,8 @@ points to — don't expect them echoed here.
 
 - `npm run serve` — dev server · `npm run build` — build `_site/`
 - `npm run lint` / `npm run lint:fix` — the five-tool lint suite (CI runs it)
+- `npm run test` — `node:test` suite (helpers, shortcodes, theme.js DOM
+  tests, icon markup check); CI runs it as its own job gating deploy
 - `npx html-validate _site` — CI's HTML check, run locally before push
 
 ## Operational guardrails (enforced here)

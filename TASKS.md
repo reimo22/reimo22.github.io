@@ -173,8 +173,36 @@ justify-content:flex-end` — `min-width:0` is the actual slider fix~~
       links and bookmarks still land somewhere
 - [x] Update nav (`site.json`), `SPEC.md`, this file
 - [x] Append build-log entry
-- [ ] Human browser check before merge: `/about/`, `/resume/` redirect, PDF
+- [x] Human browser check before merge: `/about/`, `/resume/` redirect, PDF
       link from both
+
+## Phase 4.2 — About page contact icons
+
+- [x] Move email (currently footer-only) to the top of `/about/`, alongside
+      the existing GitHub link
+- [x] Replace both the email and GitHub link with icons instead of raw text/URL
+- [x] Apply the same icon treatment to the shared footer (email and GitHub
+      links on every page)
+
+## Phase 4.3 — Testing infrastructure
+
+- [x] No test framework or convention exists yet — introduce one (Node's
+      built-in `node:test` + `jsdom` for DOM cases), an `npm run test` script,
+      and CI wiring, rather than scoping tests to only the code one phase
+      touched
+- [x] Unit tests for `.eleventy.js`'s pure banner/ascii-art helpers
+      (`rightTrim`, `withNonEmptyLastLine`, `escapeHtml`, `toGrid`,
+      `horizonByColumn`, `groundRow`, `toSceneGrid`) and the `ascii`,
+      `cactusStrip`, `moonAboveHorizon`, `starField` shortcodes end-to-end
+      against the real committed ascii assets
+- [x] DOM tests for `theme.js`: defaults to dark, toggle click sets
+      `data-theme` + `localStorage` + swaps the `aria-label`, a second click
+      reverts, respects a `data-theme` already set on `<html>`, no-ops when
+      the toggle button is absent
+- [x] Icon markup check: every `icons.iconLink(...)` call site resolves to a
+      `_dark.png`/`_light.png` pair that actually exists in
+      `src/assets/img/icons/`, and always passes a non-empty label
+- [x] Document `npm run test` in `CLAUDE.md`'s Commands section
 
 ## Phase 5 — Writeups
 
