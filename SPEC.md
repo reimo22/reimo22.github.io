@@ -135,6 +135,13 @@ A layer on top of the working link-based site, not a replacement for it.
 - Lighthouse CI uses its default **mobile emulation preset**.
 - Verified on a real phone viewport before the static-pages phase closes.
 
+## Testing
+
+Test-driven: every feature ships with unit tests, every bug fix ships with a
+regression test that fails without the fix. Framework and CI wiring are
+decided in the phase that introduces them (see `TASKS.md`), not invented
+ad hoc per phase.
+
 ## CI (four checkpoints, on every PR and on push to `main`)
 
 Checkout uses `submodules: recursive`.
