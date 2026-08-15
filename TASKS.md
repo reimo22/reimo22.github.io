@@ -186,23 +186,23 @@ justify-content:flex-end` — `min-width:0` is the actual slider fix~~
 
 ## Phase 4.3 — Testing infrastructure
 
-- [ ] No test framework or convention exists yet — introduce one (Node's
+- [x] No test framework or convention exists yet — introduce one (Node's
       built-in `node:test` + `jsdom` for DOM cases), an `npm run test` script,
       and CI wiring, rather than scoping tests to only the code one phase
       touched
-- [ ] Unit tests for `.eleventy.js`'s pure banner/ascii-art helpers
+- [x] Unit tests for `.eleventy.js`'s pure banner/ascii-art helpers
       (`rightTrim`, `withNonEmptyLastLine`, `escapeHtml`, `toGrid`,
       `horizonByColumn`, `groundRow`, `toSceneGrid`) and the `ascii`,
       `cactusStrip`, `moonAboveHorizon`, `starField` shortcodes end-to-end
       against the real committed ascii assets
-- [ ] DOM tests for `theme.js`: defaults to dark, toggle click sets
+- [x] DOM tests for `theme.js`: defaults to dark, toggle click sets
       `data-theme` + `localStorage` + swaps the `aria-label`, a second click
       reverts, respects a `data-theme` already set on `<html>`, no-ops when
       the toggle button is absent
-- [ ] Icon markup check: every `icons.iconLink(...)` call site resolves to a
+- [x] Icon markup check: every `icons.iconLink(...)` call site resolves to a
       `_dark.png`/`_light.png` pair that actually exists in
       `src/assets/img/icons/`, and always passes a non-empty label
-- [ ] Document `npm run test` in `CLAUDE.md`'s Commands section
+- [x] Document `npm run test` in `CLAUDE.md`'s Commands section
 
 ## Phase 5 — Writeups
 
