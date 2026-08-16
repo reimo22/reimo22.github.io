@@ -1,0 +1,35 @@
+---
+title: Writeups
+permalink: /writeups/
+---
+{% extends "base.njk" %}
+{% block content %}
+  <article class="page">
+    <h1>Writeups</h1>
+    <p>Writeups from retired HackTheBox machines and CTF event challenges, mirrored from the <a href="https://github.com/reimo22/htb-writeups">htb-writeups</a> repo.</p>
+
+    <section>
+      <h2>Machines</h2>
+      <ul>
+        {% for item in collections["writeups-box"] %}
+          <li>
+            <a href="{{ item.url }}">{{ item.data.title }}</a>
+            <span class="resume-meta">{{ item.data.os }} · {{ item.data.difficulty }} · {{ item.data.date | isoDate }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section>
+      <h2>CTF challenges</h2>
+      <ul>
+        {% for item in collections["writeups-ctf"] %}
+          <li>
+            <a href="{{ item.url }}">{{ item.data.title }}</a>
+            <span class="resume-meta">{{ item.data.event }} · {{ item.data.difficulty }} · {{ item.data.date | isoDate }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  </article>
+{% endblock %}

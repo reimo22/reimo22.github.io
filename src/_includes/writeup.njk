@@ -1,0 +1,17 @@
+{% extends "base.njk" %}
+{% block content %}
+  <article class="page">
+    <header class="resume-header">
+      {# No <h1> here: every writeup README opens its body with `# Title`,
+         so emitting another from frontmatter would duplicate the page's H1. #}
+      {% if os %}
+        <p class="resume-meta">{{ os }} · {{ difficulty }}</p>
+      {% else %}
+        <p class="resume-meta">{{ event }} · {{ category }} · {{ difficulty }}</p>
+      {% endif %}
+      <p class="resume-meta">{{ technique }}</p>
+      <p class="resume-meta">Completed {{ date | isoDate }}</p>
+    </header>
+    {{ content | safe }}
+  </article>
+{% endblock %}

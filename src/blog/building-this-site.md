@@ -826,3 +826,161 @@ This is a script sweep, not the real-device pass the checklist item asks for —
 it catches the CSS-computable failure modes (overflow, box size) but not
 odd viewport quirks, actual thumb-reach, or on-device rendering. Recorded as
 what it is rather than claiming full parity with a phone-in-hand check.
+
+## Phase 5 — Writeups
+
+Phase 5 mounts `htb-writeups` as a git submodule at `src/writeups/boxes/` and
+renders all 11 writeups — 7 retired-machine + 4 CTF-event — as
+`/writeups/<slug>/` pages behind a `/writeups/` index. Upstream frontmatter
+work already landed at `eeb0d72`, so the peer-repo half of the plan was
+already done when this phase started and the PR is portfolio-site-only. The
+submodule pointer was pinned there unchanged.
+
+Two mechanisms in the original design doc were wrong, and both were corrected
+from scratch builds before any permanent code was written:
+
+- `eleventyComputed.tags` does **not** feed Eleventy collections — collections
+  resolve from `tags` before computed data runs, so the computed-tag
+  writeups-box / writeups-ctf split came out empty. Both collections are
+  instead registered with `addCollection` + `getFilteredByGlob`, split on
+  `data.os` presence.
+- `addPassthroughCopy("src/writeups/boxes/**/images/**")` keeps the `boxes/`
+  segment in the output (`_site/writeups/boxes/<slug>/images/…`), which breaks
+  every relative `images/…` link in the READMEs; the object-form
+  `{ glob: "writeups" }` flattens and collides (two `login.png`). The working
+  mechanism is a per-slug object-form copy looped over the box directories at
+  config time, mapping `<slug>/images` → `writeups/<slug>/images`.
+
+Notes that shaped the diff: `src/writeups/boxes/` is a submodule and was never
+edited from this repo. Passthrough copy ignores `.eleventyignore`, but the
+per-box object form touches only image dirs, so `.git/`, the repo-root
+`README.md`, and `TEMPLATE*.md` never reach `_site` (confirmed). Frontmatter
+is parsed with `gray-matter` — the same parser Eleventy uses — so the build
+gate (`missingFrontmatterKeys`) sees exactly what 11ty sees. The index lives at
+`src/writeups.njk` (site root), not `src/writeups/index.njk`: a parent-directory
+data file cascades into a sibling `index.njk` and would have handed it
+`writeup.njk`'s layout and permalink.
+
+The build gate in action: intentional stubbing would have been a test against a
+stub. Instead the gate's failure path is covered by unit tests on the pure
+`missingFrontmatterKeys` validator (box vs CTF key sets, real missing-key cases)
+with fixture data — CI's `test` job doesn't fetch submodules, so tests can't
+depend on one. The weekly submodule-bump Action opens a PR (never merges);
+the human merge gate stays.
+
+CI-signal ledger: the local `lint` run caught three `no-unused-vars` errors in
+`test/writeups.test.js` (a destructuring-`rest` idiom that leaves a named
+binding unused) and Prettier diffs across the four files the phase touched —
+all fixed before this entry. One surprise unrelated to Phase 5: the local
+`node_modules` was missing `jsdom`, making `theme.test.js` fail before any
+Phase 5 code existed; restored from the lockfile, no test modified.
+
+The AI drafted the implementation (cascade data file, two collections, per-box
+image passthrough, frontmatter-gate validator, writeup layout, index template,
+fixture tests, bump workflow) after re-verifying the empirical corrections
+against the submodule's real contents — only gatery/massagold/vaccine carry
+images, and all 11 READMEs open with their own `# Title`, so the layout emits
+no second H1. The standing human gate then applied: browser check before merge
+(CI with `submodules: recursive` runs after push), with this entry shipping in
+the same PR as the work.
+
+## Phase 5.1 — Code blocks + copy button
+
+Writeup `<pre>` blocks had zero styling — same color, same background as
+prose, since the whole site already runs `--font-mono`. There was also no
+copy affordance, and one writeup (`vaccine`) has 20 separate blocks. Design:
+[`docs/superpowers/specs/2026-08-16-codeblocks-and-copy-design.md`](docs/superpowers/specs/2026-08-16-codeblocks-and-copy-design.md).
+
+The banner ASCII art is also rendered as `<pre>` (`cactusStrip`,
+`moonAboveHorizon`, `starField`), so a bare `pre { background }` rule would
+have painted a box behind the dino. Everything here is scoped to `main pre`
+instead — the banner lives in `<header>`, outside `main`, on every current
+page — with one new token pair (`--code-bg`, one step off the page
+background in each theme) joining the existing `:root` /
+`:root[data-theme="light"]` blocks rather than a new selector carrying its
+own theme logic.
+
+The copy button couldn't be baked into markdown — `src/writeups/boxes/` is a
+submodule, never edited from this repo — so it's built entirely from the
+rendered `<pre>` structure on load: `codecopy.js` wraps each `main pre` in a
+`.codeblock` div and inserts a button, matching `theme.js`'s existing
+pattern (plain IIFE `<script defer>`, feature-detected, a no-op if nothing to
+wrap). Framing and the horizontal scroll are pure CSS, so a JS-off page still
+gets a bordered, scrollable block — only the button itself is the
+progressive-enhancement part. One `document`-level click listener handles
+every button (delegation, not 20 separate listeners on `vaccine`); the copy
+path tries `navigator.clipboard.writeText` first and falls back to a
+temporary off-screen `textarea` + `execCommand("copy")`, since Clipboard API
+availability isn't guaranteed insecure-context-wide. A failed copy surfaces
+as "Copy failed" on the button rather than doing nothing.
+
+`test/codecopy.test.js` follows `theme.test.js`'s convention (real file
+`eval`'d into a `jsdom` window, driven with real click events) plus one thing
+that file didn't need: the copy path resolves through a promise, so clicks in
+tests await a microtask flush before asserting. One test bug surfaced during
+this: an initial assertion looked for the fallback's temporary `textarea`
+inside `.codeblock`, but `codecopy.js` appends it to `document.body` — caught
+by the test itself failing, not by inspection, and fixed by asserting through
+`execCommand`'s callback instead of after the (synchronous) cleanup already
+removed the element. Confirmed `npm run test` (36 total), `npm run lint`,
+`npm run build`, and `npx html-validate _site` all green, and that
+`.codeblock`/`.codecopy` styling never reaches the header banner via a
+direct build check of the rendered HTML.
+
+The AI drafted the full design doc and implementation from a brainstorm
+(scope question: writeups-only vs. site-wide styling — resolved to site-wide,
+since the token/JS cost is identical either way and Phase 6's blog posts will
+hit the same fenced-code gap otherwise).
+
+The human browser check this entry originally claimed as "standing" instead
+found four real problems the automated suite couldn't have — none of them
+caught by `npm run test`, `npm run lint`, `html-validate`, or the AI's own
+self-review, because all four are rendering/layout defects that only show up
+on a real page:
+
+1. **Button size vs. block size.** The first `.codecopy` used a reserved
+   `padding-top: 3rem` on every wrapped `pre`, so a one-line code block grew
+   taller just to make room for the button — visible height inflation the
+   human caught immediately. Replaced with a floating, absolutely-positioned
+   button that doesn't participate in the block's own flow.
+2. **Phantom horizontal scrollbar.** Floating the button introduced a second
+   `overflow-x: auto` on the `.codeblock` wrapper (on top of `main pre`'s
+   own). An absolutely-positioned descendant counts toward its nearest
+   _scrolling_ ancestor's scrollable area — so the button itself became the
+   thing triggering a scrollbar that had nothing to do with code width.
+   Removed the wrapper's overflow; `main pre` alone owns horizontal scroll.
+3. **Button spilling off short blocks.** Once the block was allowed to be as
+   short as its content (fix for #1), a 44px button offset `0.5rem` from the
+   top needs ~60px of block height to stay contained — a one- or two-line
+   block is naturally shorter than that. Verified with real
+   `getBoundingClientRect()` measurements via a throwaway `puppeteer-core`
+   script (same `CHROME_PATH`/`LD_PRELOAD` setup as `audit:banner`) before
+   guessing at a fix: added `.codeblock pre { min-height: 3.75rem }`, which
+   only bites blocks that would otherwise be shorter than the button needs —
+   swept all 97 code blocks across all 11 writeups afterward to confirm zero
+   overflow, not just the one block in the screenshot.
+4. **Oversized visible button, then off-center one-liners.** The 44px touch
+   target (Phase 4's own accessibility floor) read as a big box stamped over
+   scrolling code. Fixed by keeping the button's real hit area at the full
+   44px — required, invisible — and moving the visible look to a small
+   `.codecopy-label` `<span>` inside it, so only a ~50×26px pill is what the
+   eye sees while the click/tap target stays compliant. That, in turn,
+   revealed a second issue: `<pre>` is a plain block box, so the extra height
+   from `min-height` (fix #3) sat below the code instead of around it —
+   `display: flex; align-items: center` on `.codeblock pre` was needed to
+   actually center a one-liner instead of just making room beneath it.
+5. **Inline-code tint leaking onto fenced blocks.** `main code`'s
+   background (meant only for `` `inline code` `` mid-sentence) had no
+   exclusion for `pre code`, so every fenced block showed a mismatched gray
+   patch stacked on top of `main pre`'s own background. Scoped to
+   `main code:not(pre code)`.
+
+None of AI self-review's earlier passes ("verified across 4 pages", "36/36
+tests") caught these because the test suite asserts DOM structure and copy
+behavior, not rendered geometry — the gap a screenshot-driven human pass
+exists to close. Each fix here was re-verified the same way: real
+`getBoundingClientRect()` numbers from headless Chrome against the live dev
+server, swept across all 11 writeups (97 code blocks total, zero overflow),
+not just the one block that prompted the report — plus `npm run test`
+(still 36/36, unmodified), `npm run lint`, and `npm run build` after every
+round.

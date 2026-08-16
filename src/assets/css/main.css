@@ -19,6 +19,7 @@
     ui-monospace, "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono",
     monospace;
   --content-max: 75ch;
+  --code-bg: #1e1b2c;
   --banner-light-display: none;
   --banner-dark-display: block;
   --icon-light-display: none;
@@ -35,6 +36,7 @@
   --color-muted: #5a554a;
   --color-accent: #201e1a;
   --color-border: #847c6e;
+  --code-bg: #efece5;
   --banner-light-display: block;
   --banner-dark-display: none;
   --icon-light-display: inline;
@@ -180,6 +182,89 @@ footer {
 
 .page li + li {
   margin-top: 0.5rem;
+}
+
+/* Code blocks. `main pre` rather than bare `pre`: the banner ASCII art is
+   also <pre>s, but they live in <header>, and the Phase 3.5 zoning was that
+   two-theme tokens carry every theme-varying value — code colors are no
+   exception. The background is pure CSS so blocks stay framed with JS off;
+   only the copy button's wrapper is JS-created. */
+main pre {
+  background: var(--code-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  margin: 1rem 0;
+  overflow-x: auto;
+  padding: 0.75rem 1rem;
+}
+
+/* Inline code only (mid-sentence, e.g. `foo`) — not `pre code`, a fenced
+   block, which already gets its background from `main pre` above. Without
+   the :not() this rule doubled up on fenced blocks and left a mismatched
+   gray patch over the block's own background. */
+main code:not(pre code) {
+  background: color-mix(in srgb, var(--color-fg) 6%, var(--color-bg));
+  border-radius: 3px;
+  padding: 0 0.25rem;
+}
+
+/* The copy-button wrapper, created by assets/js/codecopy.js. It only carries
+   positioning (button anchor) — main pre keeps its own overflow-x and size,
+   so the button floats over the code instead of pushing it down. No overflow
+   here: an absolutely positioned descendant counts toward its nearest
+   scrolling ancestor's scrollable area, so a *second* overflow-x on the
+   wrapper made the button itself the thing that triggered a phantom
+   horizontal scrollbar. */
+.codeblock {
+  position: relative;
+  margin: 1rem 0;
+}
+
+.codeblock pre {
+  /* Floating the button (0.5rem offset + 44px touch target) needs ~60px to
+     stay inside the block. A short one- or two-line block is naturally
+     shorter than that on its own, so the button's bottom-right corner hung
+     off the block's edge — this floor only bites blocks that would
+     otherwise be too short; anything with more content is already taller
+     and unaffected. `<pre>` is a plain block box, so that extra height just
+     sits below the text unless something centers it — flex does, and still
+     lets overflow-x scroll the (now vertically centered) content. */
+  display: flex;
+  align-items: center;
+  min-height: 3.75rem;
+  margin: 0;
+}
+
+/* The button itself is the full 44px touch target — required floor, kept
+   invisible (no background/border of its own) so it doesn't read as a big
+   box stamped over scrolling code. .codecopy-label is the small visible
+   pill inside it, sized to what the control should actually look like. */
+.codeblock .codecopy {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.codeblock .codecopy-label {
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--code-bg) 85%, transparent);
+  color: var(--color-accent);
+  padding: 0.15rem 0.5rem;
+  font-size: 14px;
+}
+
+.codeblock .codecopy:hover .codecopy-label {
+  text-decoration: underline;
 }
 
 .resume-download {

@@ -1,0 +1,3 @@
+[submodule "src/writeups/boxes"]
+	path = src/writeups/boxes
+	url = https://github.com/reimo22/htb-writeups.git

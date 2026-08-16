@@ -210,28 +210,88 @@ justify-content:flex-end` — `min-width:0` is the actual slider fix~~
 
 ## Phase 5 — Writeups
 
-- [ ] Add `htb-writeups` as a git submodule at `src/writeups/boxes/` (HTTPS URL) — pull the
-      commit with frontmatter already added upstream (currently: 7 boxes have it, 4 CTF
-      challenges — gatery, jailbreak, massagold, timekorp — still don't)
-- [ ] Get CTF-challenge frontmatter added upstream too (`title`/`event`/`category`/
-      `difficulty`/`technique`/`date`, per `TEMPLATE-ctf.md`'s field set) before wiring the
-      build check below, or those 4 directories will fail the build on first run
-- [ ] `src/writeups/writeups.11tydata.js`: cascade layout, computed permalink, and a per-item
-      `tags` (`"writeups-box"` vs `"writeups-ctf"`, derived from which frontmatter shape the
-      item has) — building two collections, not one
-- [ ] `addPassthroughCopy` for `src/writeups/boxes/**/images/**`
-- [ ] Build check in `.eleventy.js`: **fail build** if any box README is missing
+- [x] Add `htb-writeups` as a git submodule at `src/writeups/boxes/` (HTTPS URL) — added at
+      `eeb0d72` (2026-08-09), which already includes the CTF frontmatter. Verified all 11
+      READMEs carry complete frontmatter (`title`/`os`/`difficulty`/`technique`/`date` for
+      boxes; `title`/`event`/`category`/`difficulty`/`technique`/`date` for CTF). The "4 CTF
+      challenges still don't" note below was stale by then — no upstream PR needed
+- [x] Get CTF-challenge frontmatter added upstream — already landed in `eeb0d72`, see above
+- [x] `src/writeups/writeups.11tydata.js`: cascade `layout: writeup.njk` and a computed
+      `permalink` of `/writeups/<slug>/` (from `data.page.filePathStem`'s parent dir, not
+      `fileSlug` — that reads "README"). **Do NOT** set `tags` via `eleventyComputed` — this
+      was tried and empirically fails: Eleventy 3.1.6 builds collections from `tags` before
+      computed data resolves, so computed-tag collections come out empty. Build the two
+      collections (`writeups-box` / `writeups-ctf`) in `.eleventy.js` instead via
+      `eleventyConfig.addCollection` + `getFilteredByGlob("src/writeups/boxes/*/README.md")`,
+      filtered per item on `data.os` presence — matches the design doc's "derived from which
+      frontmatter shape the item has", just configured at install time, not in the cascade
+- [x] `addPassthroughCopy` for images — **the design doc's glob is wrong**: a scratch build
+      proved `"src/writeups/boxes/**/images/**"` keeps the `boxes/` segment in output
+      (`_site/writeups/boxes/<slug>/images/…`), so relative `images/…` links in the READMEs
+      404; and object-form `{ glob: "writeups" }` flattens files into `_site/writeups/`
+      (collides on boxes sharing a filename, e.g. login.png). Working mechanism (verified):
+      loop `src/writeups/boxes/*/images` at config time and
+      `addPassthroughCopy({ [dir]: "writeups/<slug>/images" })` per box. Note: passthrough
+      copy does **not** respect `.eleventyignore` — but the per-box object form only touches
+      image dirs, so `.git/`, root `README.md`, and `TEMPLATE*.md` never get copied
+- [x] `.eleventyignore` (new file) — `src/writeups/boxes/*.md` and `src/writeups/boxes/.git/**`
+      (the submodule root's README + the two frontmatter templates are not writeups; verified
+      the ignore is respected and `.git` stays out)
+- [x] Build check in `.eleventy.js`: **fail build** if any box README is missing
       `title`/`os`/`difficulty`/`technique`/`date`, or any CTF README is missing
-      `title`/`event`/`category`/`difficulty`/`technique`/`date`
-- [ ] `/writeups/` generated index page — two sections (boxes, CTF challenges), each reading
-      its own frontmatter via `collections["writeups-box"]` / `collections["writeups-ctf"]`,
-      each sorted by `date` (no separate parser/global data object; the same per-item data
-      also feeds each writeup's header in `writeup.njk`)
-- [ ] Verify all 11 writeups render with images intact, correct metadata,
+      `title`/`event`/`category`/`difficulty`/`technique`/`date`. Pure validator the tests can
+      call should be a small exported function (e.g. `missingFrontmatterKeys(frontmatter)` in
+      `.eleventy.js`); wire it into an `eleventyConfig.on("eleventy.before", …)` hook. Use
+      `gray-matter` (already a transitive dep of 11ty, present in node_modules at 4.0.3) so
+      the check parses frontmatter exactly as Eleventy does
+- [x] `/writeups/` generated index page — **file must live at `src/writeups.njk` (site root),
+      not `src/writeups/index.njk`**: a parent-directory data file cascades into a sibling
+      `index.njk` too, which would inherit `writeup.njk`'s layout and permalink. `src/writeups.njk`
+      with `permalink: /writeups/` sits outside the cascade. Two sections (boxes, CTF
+      challenges), each reading the collections above, each sorted by `date` incl. nav entry
+      in `src/_data/site.json`; the same per-item data feeds each writeup's header in `writeup.njk`
+- [x] `writeup.njk` layout: `{% extends "base.njk" %}`, header meta from per-item frontmatter,
+      then `{{ content | safe }}`. All 11 READMEs already start their body with a `# Title`
+      H1 — so do **not** emit a second `<h1>` from frontmatter (duplicate H1); either rely on
+      the markdown's own H1 or strip the leading one. OK for fonts/images to resolve relative
+- [x] Verify all 11 writeups render with images intact, correct metadata,
       `collections["writeups-box"].length === 7`, `collections["writeups-ctf"].length === 4`
-- [ ] No writeup content duplicated between the two repos
-- [ ] Weekly Action bumps the submodule pointer via PR; merge is a manual human step
-- [ ] Append build-log entry
+- [x] No writeup content duplicated between the two repos
+- [x] Weekly Action bumps the submodule pointer via PR; merge is a manual human step
+- [x] Append build-log entry
+
+## Phase 5.1 — Code blocks + copy button
+
+Design: [`docs/superpowers/specs/2026-08-16-codeblocks-and-copy-design.md`](docs/superpowers/specs/2026-08-16-codeblocks-and-copy-design.md).
+Rides on the Phase 5 PR: writeup `<pre>` blocks were completely unstyled
+(same color/background as prose), with no copy affordance.
+
+- [x] `--code-bg` token in both theme blocks; `main pre` framed (background,
+      border, radius, its own `overflow-x: auto` so wide lines scroll inside
+      the block, not the page); `main code:not(pre code)` gets a translucent
+      inline tint (excludes fenced-block code, which already has `main pre`'s
+      background — an earlier version without the exclusion doubled up into a
+      mismatched gray patch). Scoped to `main` so the banner's ASCII-art
+      `<pre>`s (which live in `<header>`) are untouched
+- [x] `.codeblock` wrapper + `.codecopy` button, 44px touch target (floating,
+      not reserved-space — an earlier `padding-top` approach inflated every
+      wrapped block's height): the button element is the full 44px hit area,
+      kept invisible; `.codecopy-label` is the small visible pill inside it.
+      `.codeblock pre { min-height: 3.75rem; display: flex; align-items: center }`
+      keeps the button contained on short blocks and keeps a one-liner's code
+      vertically centered instead of top-pinned with dead space below
+- [x] `src/assets/js/codecopy.js`: wraps every `main pre` in a `.codeblock`
+      with a Copy button at load time (progressive enhancement — JS-off pages
+      still get the framed, scrollable block from CSS alone, just no button).
+      One delegated `document` click listener, not per-block, since a single
+      writeup can have 20 blocks. `navigator.clipboard.writeText` with a
+      temp-`textarea` + `execCommand("copy")` fallback; label flips
+      Copy → Copied/Copy failed for ~2s with a re-entrant timer guard
+- [x] `test/codecopy.test.js`: wraps main pre only (not the banner), no-ops
+      with none present, copies exact block text via both the Clipboard API
+      and the fallback path, label timeout, failure state
+- [x] `npm run test`, `npm run lint`, `npm run build`, `npx html-validate _site`
+- [x] Append build-log entry
 
 ## Phase 6 — Blog
 
