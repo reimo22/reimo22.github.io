@@ -292,6 +292,14 @@ Rides on the Phase 5 PR: writeup `<pre>` blocks were completely unstyled
       and the fallback path, label timeout, failure state
 - [x] `npm run test`, `npm run lint`, `npm run build`, `npx html-validate _site`
 - [x] Append build-log entry
+- [ ] **Open, undecided**: `writeup.njk`'s frontmatter header (`resume-header`
+      block: os/event/category/difficulty/technique/date) overlaps content —
+      every README's own body also opens with a bold metadata block
+      (`**Difficulty:**`, `**OS:**`, etc., right under the `# Title` H1), since
+      that's upstream markdown in the submodule and can't be edited from here.
+      Two metadata blocks stacked back to back. No decision yet on which to
+      drop/trim/reconcile — needs a look at actual rendered pages before
+      picking an approach
 
 ## Phase 6 — Blog
 
