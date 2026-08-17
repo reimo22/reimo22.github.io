@@ -176,6 +176,14 @@ footer {
   margin-top: 1rem;
 }
 
+/* Writeup images (screenshots embedded in README bodies) have no intrinsic
+   sizing constraint from markdown-it and can overflow the page at native
+   resolution on narrow viewports. */
+main img {
+  height: auto;
+  max-width: 100%;
+}
+
 .page section {
   margin-top: 2rem;
 }
@@ -706,5 +714,24 @@ main blockquote > :last-child {
 @keyframes blink {
   50% {
     opacity: 0;
+  }
+}
+
+/* Writeup pages only: every README's body opens with a bold metadata block
+   (Event/Category/Difficulty/...) written as one markdown paragraph with a
+   single `\n` between lines. `breaks: false` in .eleventy.js leaves those as
+   literal newlines, which HTML collapses to a space — squishing the whole
+   block onto one line. white-space here restores the line breaks the source
+   already has; column-count splits that now-multi-line block across two
+   columns on wide viewports without needing to parse it into a grid (the
+   text is free-form markdown from the submodule, not structured data). */
+.resume-header + h1 + p {
+  white-space: pre-line;
+}
+
+@media (width >= 40rem) {
+  .resume-header + h1 + p {
+    column-count: 2;
+    column-gap: 2rem;
   }
 }
