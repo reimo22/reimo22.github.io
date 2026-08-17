@@ -1,0 +1,43 @@
+name: Bump writeups submodule
+
+on:
+  schedule:
+    # Mondays 06:00 UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: bump-writeups
+  cancel-in-progress: true
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Point the submodule at upstream HEAD
+        run: git submodule update --remote src/writeups/boxes
+      - name: Open a PR if the pointer moved
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet; then
+            echo "writeups submodule already at upstream HEAD; nothing to do"
+            exit 0
+          fi
+          branch="chore/bump-writeups-$(date +%Y%m%d)"
+          git checkout -b "$branch"
+          git add src/writeups/boxes .gitmodules
+          git commit -m "chore(writeups): bump submodule to upstream HEAD"
+          git push origin "$branch"
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "chore(writeups): bump submodule to upstream HEAD" \
+            --body "Pulls new writeup content from \`htb-writeups\` into \`main\`. Merge is a manual human step so the site only ships reviewed content."

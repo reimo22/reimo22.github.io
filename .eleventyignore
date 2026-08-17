@@ -1,0 +1,6 @@
+# The htb-writeups submodule is mounted inside Eleventy's input dir, so these
+# files would otherwise be built as templates: the repo's own navigation README
+# and its two frontmatter templates aren't writeups. The per-writeup README.md
+# files one level deeper are unaffected (`*` doesn't cross `/`).
+src/writeups/boxes/*.md
+src/writeups/boxes/.git/**

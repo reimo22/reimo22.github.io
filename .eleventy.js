@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import matter from "gray-matter";
 import markdownIt from "markdown-it";
 
 // Cactus strip generation. `cactus.txt` stays the single source of truth —
@@ -38,6 +39,28 @@ const SCENE_ROWS = 17;
 // oversight; a positive value would do the opposite and trim the disc back
 // from the ridge instead.
 const MOON_GROUND_OVERLAP = -1;
+
+// The writeup frontmatter contract, enforced against every README.md in the
+// submodule at build start. Each box has its own schema (os) and each CTF
+// challenge its own (event/category), distinguished by whether `os` is set.
+const BOX_KEYS = ["title", "os", "difficulty", "technique", "date"];
+const CTF_KEYS = [
+  "title",
+  "event",
+  "category",
+  "difficulty",
+  "technique",
+  "date",
+];
+
+export function missingFrontmatterKeys(frontmatter = {}) {
+  const keys = frontmatter.os ? BOX_KEYS : CTF_KEYS;
+  return keys.filter((key) => frontmatter[key] == null);
+}
+
+export function isoDate(value) {
+  return new Date(value).toISOString().slice(0, 10);
+}
 
 export function rightTrim(line) {
   return line.replace(/\s+$/, "");
@@ -267,6 +290,75 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/assets/js");
   eleventyConfig.addPassthroughCopy("src/assets/img");
   eleventyConfig.addPassthroughCopy("src/about");
+
+  // The directories inside the htb-writeups submodule, found once at config
+  // time and reused by both the image passthrough and the frontmatter gate.
+  const boxDirs = fs
+    .readdirSync("src/writeups/boxes", { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && !entry.name.startsWith("."))
+    .map((entry) => entry.name);
+
+  const writeupGlob = "src/writeups/boxes/*/README.md";
+  const byDate = (a, b) => new Date(a.data.date) - new Date(b.data.date);
+
+  // YAML dates parse to JS Date objects; templates need a plain YYYY-MM-DD.
+  eleventyConfig.addFilter("isoDate", isoDate);
+
+  // Two kinds of writeup, split on which frontmatter shape the item has.
+  // Must be addCollection: eleventyComputed.tags never reaches a collection,
+  // because Eleventy resolves collections from `tags` before computed data.
+  eleventyConfig.addCollection("writeups-box", (api) =>
+    api
+      .getFilteredByGlob(writeupGlob)
+      .filter((item) => item.data.os)
+      .sort(byDate),
+  );
+  eleventyConfig.addCollection("writeups-ctf", (api) =>
+    api
+      .getFilteredByGlob(writeupGlob)
+      .filter((item) => item.data.event)
+      .sort(byDate),
+  );
+
+  // Per-box object form. The design doc's glob (`boxes/**/images/**`) keeps
+  // the `boxes/` segment in output and breaks relative README links, while a
+  // top-level `{ glob: "writeups" }` flattens files into _site/writeups/ and
+  // collides on shared filenames (two login.png). Object form per box maps
+  // exactly to _site/writeups/<slug>/images. Passthrough ignores
+  // .eleventyignore, but this only touches image dirs, so .git/, the root
+  // README, and the templates never get copied.
+  for (const slug of boxDirs) {
+    const imagesDir = path.join("src/writeups/boxes", slug, "images");
+    if (fs.existsSync(imagesDir)) {
+      eleventyConfig.addPassthroughCopy({
+        [imagesDir]: `writeups/${slug}/images`,
+      });
+    }
+  }
+
+  // Fail the build on any writeup missing a required frontmatter key rather
+  // than shipping blank metadata behind a green check. Parsed with gray-matter
+  // so the gate sees exactly what Eleventy sees.
+  eleventyConfig.on("eleventy.before", () => {
+    const failures = [];
+    for (const slug of boxDirs) {
+      const filePath = path.join("src/writeups/boxes", slug, "README.md");
+      if (!fs.existsSync(filePath)) {
+        continue;
+      }
+      const { data } = matter(fs.readFileSync(filePath, "utf8"));
+      const missing = missingFrontmatterKeys(data);
+      if (missing.length > 0) {
+        failures.push(`${slug}: missing ${missing.join(", ")}`);
+      }
+    }
+    if (failures.length > 0) {
+      throw new Error(
+        `writeups build check: ${failures.length} README(s) missing frontmatter keys:\n` +
+          failures.join("\n"),
+      );
+    }
+  });
 
   eleventyConfig.addShortcode("ascii", asciiShortcode);
   eleventyConfig.addShortcode("cactusStrip", cactusStrip);
