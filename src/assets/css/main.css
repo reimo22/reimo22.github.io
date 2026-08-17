@@ -167,6 +167,15 @@ footer {
   margin-top: 0;
 }
 
+/* Writeup pages only: the body's own <h1> (rendered from markdown) is a
+   sibling immediately after .resume-header, not nested inside it like
+   about.njk's — so the blanket .page h1 reset above zeroes its top margin
+   too and it lands flush against the header's border-bottom. Restore the
+   gap for that one case. */
+.resume-header + h1 {
+  margin-top: 1rem;
+}
+
 .page section {
   margin-top: 2rem;
 }
@@ -206,6 +215,25 @@ main code:not(pre code) {
   background: color-mix(in srgb, var(--color-fg) 6%, var(--color-bg));
   border-radius: 3px;
   padding: 0 0.25rem;
+}
+
+/* Blockquotes (writeup asides, e.g. "I've since realized..."). Browser
+   default is bare indent with no visual marker; add the left rule readers
+   expect from rendered markdown elsewhere, using the same border token as
+   `main pre` above. */
+main blockquote {
+  border-left: 3px solid var(--color-border);
+  color: var(--color-muted);
+  margin: 1rem 0;
+  padding: 0.25rem 0 0.25rem 1rem;
+}
+
+main blockquote > :first-child {
+  margin-top: 0;
+}
+
+main blockquote > :last-child {
+  margin-bottom: 0;
 }
 
 /* The copy-button wrapper, created by assets/js/codecopy.js. It only carries

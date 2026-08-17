@@ -984,3 +984,67 @@ server, swept across all 11 writeups (97 code blocks total, zero overflow),
 not just the one block that prompted the report — plus `npm run test`
 (still 36/36, unmodified), `npm run lint`, and `npm run build` after every
 round.
+
+## Phase 5.1 follow-up — Resolving the header/body metadata overlap
+
+Phase 5.1 shipped with one open item: `writeup.njk`'s `resume-header` block
+rendered `os`/`difficulty` (or `event`/`category`/`difficulty`) plus
+`technique` and `date` from frontmatter, but every README's own body — also
+upstream content in the `htb-writeups` submodule, unreachable from this repo
+— opens with its own bold metadata block (`**Difficulty:**`, `**OS:**`, etc.)
+directly under the `# Title` H1. Two metadata blocks stacked back to back on
+every one of the 11 pages.
+
+Checked all 11 READMEs directly rather than assuming the pattern held
+site-wide: every box body states `**OS:**` and `**Difficulty:**`; every CTF
+body states `**Event:**`, `**Category:**`, and `**Difficulty:**`. Neither
+`technique` nor `date` appears in any body — those are frontmatter-only,
+authored for this site's rendering, not restated in the writeup prose. So the
+overlap was exactly `os`/`difficulty`/`event`/`category`, and only those.
+
+Fix: trimmed `resume-header` to just `technique` and `Completed {{ date }}`,
+deleting the `os`/`event`/`category`/`difficulty` branch entirely — the two
+fields that carry information the body doesn't already state, nothing more.
+The `/writeups/` index page (`writeups.njk`) keeps rendering `os`/
+`difficulty`/`event`/`category` in its list rows, since that's a summary
+view with no adjacent body text to duplicate against — only the per-page
+header changed.
+
+Re-verified `npm run test` (36/36), `npm run lint`, `npm run build`, and
+`npx html-validate _site`, all clean; confirmed the rendered header on `cap`
+now shows only technique + date, with the body's own `**Difficulty:**
+Easy` / `**OS:** Linux` line immediately following, unduplicated.
+
+The AI surveyed all 11 bodies via grep before proposing a fix, rather than
+generalizing from one writeup, since box and CTF frontmatter shapes differ.
+The human made the actual call on which fields to drop versus which side to
+edit — dropping from the header was the only option available anyway, since
+the submodule content can't be touched from this repo.
+
+The human browser check that followed found two more rendering gaps neither
+`npm run test` nor `html-validate` could see, both from markdown elements
+that had never been styled before this phase surfaced them:
+
+1. **Bare `blockquote`.** Writeup asides (e.g. `cap`'s "I've since realized
+   10000 is too aggressive...") rendered as plain browser-default indent —
+   no left rule, nothing distinguishing it from an indented paragraph. No
+   `blockquote` rule existed anywhere in `main.css`. Added one scoped to
+   `main blockquote`, following the same convention as the code-block rules
+   just above it: a `--color-border` left rule and `--color-muted` text,
+   plus first/last-child margin resets so it doesn't add extra space against
+   its own padding.
+2. **`<h1>` flush against the header's border.** Every writeup's title
+   landed with zero gap under `.resume-header`'s `border-bottom`. Cause:
+   `.page h1 { margin-top: 0 }` — written for `about.njk`, where `<h1>` is
+   nested _inside_ `.resume-header`, and reused by `writeups.njk`, where
+   `<h1>` is the article's first child either way. `writeup.njk` is neither:
+   its `<h1>` comes from the markdown body, a sibling _after_
+   `.resume-header` closes, so the same blanket rule zeroed a margin that
+   was supposed to exist. Fixed with a narrower selector,
+   `.resume-header + h1 { margin-top: 1rem }`, that only fires for that one
+   sibling relationship — `about.njk`'s nested h1 and `writeups.njk`'s
+   first-child h1 are unaffected.
+
+Both fixes re-verified with `npm run build` and `npx stylelint` clean; no
+existing test covers rendered spacing or blockquote markup, so this stayed a
+visual check against the dev server rather than an assertion.

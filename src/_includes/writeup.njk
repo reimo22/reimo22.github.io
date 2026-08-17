@@ -3,12 +3,11 @@
   <article class="page">
     <header class="resume-header">
       {# No <h1> here: every writeup README opens its body with `# Title`,
-         so emitting another from frontmatter would duplicate the page's H1. #}
-      {% if os %}
-        <p class="resume-meta">{{ os }} · {{ difficulty }}</p>
-      {% else %}
-        <p class="resume-meta">{{ event }} · {{ category }} · {{ difficulty }}</p>
-      {% endif %}
+         so emitting another from frontmatter would duplicate the page's H1.
+         os/difficulty/event/category are omitted too: every README's body
+         also opens with its own bold metadata block restating them (upstream
+         markdown in the submodule, can't be edited from here) — only
+         technique and date aren't already duplicated in the body. #}
       <p class="resume-meta">{{ technique }}</p>
       <p class="resume-meta">Completed {{ date | isoDate }}</p>
     </header>
