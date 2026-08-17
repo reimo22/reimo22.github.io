@@ -303,11 +303,22 @@ Rides on the Phase 5 PR: writeup `<pre>` blocks were completely unstyled
 
 ## Phase 6 — Blog
 
+- [ ] Split the build log: `src/blog/building-this-site.md` (1000+ lines
+      across 15+ entries) is too long for anyone to actually read as a post.
+      Trim it down to a short, publishable version per phase — the decision
+      and its outcome, not the full back-and-forth — and move the verbose
+      version (every fix, every rejected approach, every human-vs-AI
+      correction) to a new `docs/build-log-reference.md`, not built by
+      Eleventy, alongside the other `docs/superpowers/` planning docs. Migrate
+      all existing entries into both files rather than starting the split
+      from Phase 6 onward. Update `SPEC.md`'s "Build log" section and
+      `CLAUDE.md`'s doc pointers to describe the two-tier convention
 - [ ] Blog collection config (`src/blog/*.md`)
 - [ ] `/blog/` index, per-post layout (`post.njk`)
 - [ ] RSS feed
 - [ ] Confirm `building-this-site.md` now renders as a real post
-- [ ] Append build-log entry
+- [ ] Append build-log entry (short version in the post; detail in the
+      reference doc, per the new convention above)
 
 ## Phase 7 — Command palette
 
