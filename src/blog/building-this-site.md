@@ -1048,3 +1048,46 @@ that had never been styled before this phase surfaced them:
 Both fixes re-verified with `npm run build` and `npx stylelint` clean; no
 existing test covers rendered spacing or blockquote markup, so this stayed a
 visual check against the dev server rather than an assertion.
+
+## Phase 5.1 follow-up #2 — Metadata line squish and unbounded images
+
+A human read of the rendered `writeup.njk` pages caught two more gaps the
+automated checks didn't cover: the body's own metadata block (`**Event:**
+... **Category:** ... **Difficulty:** ...`, upstream content in the
+`htb-writeups` submodule) rendered as one squished line instead of one line
+per field, and embedded screenshots had no max-width, so a large source
+image could overflow a narrow viewport.
+
+Root cause of the squish: each README writes that block as a single markdown
+paragraph, with a bare `\n` (no blank line) between `**Label:**` entries.
+`.eleventy.js` configures markdown-it with `breaks: false`, so those single
+newlines aren't converted to `<br>` — and HTML collapses literal newlines to
+a single space, flattening the whole block onto one visual line regardless
+of the source formatting. Confirmed across all 11 READMEs that this
+metadata paragraph is always the first `<p>` immediately following the
+markdown body's own `<h1>`.
+
+Fix, CSS-only (the source READMEs live upstream and can't be edited from
+this repo): `.resume-header + h1 + p { white-space: pre-line }` restores the
+line breaks the source markdown already has, and `column-count: 2` at the
+existing `40rem` breakpoint splits the block across two columns on wider
+viewports. A real grid/two-column layout built from parsed label/value pairs
+was considered and rejected — the content is free-form markdown, not
+structured data, so `column-count` on the existing paragraph is the smallest
+change that doesn't risk mis-parsing a field value that itself contains a
+colon or newline. Separately, `main img { max-width: 100%; height: auto }`
+caps embedded screenshots to the container width.
+
+Re-verified `npm run build`, `npm run test` (36/36), and `npm run lint`
+(catching and fixing a `stylelint no-duplicate-selectors` regression and a
+`no-descending-specificity` ordering issue introduced while placing the new
+rules), all clean.
+
+The human caught both issues from an actual rendered page — this class of
+bug (correct HTML, wrong visual layout) isn't something the automated
+build/test/lint suite catches at all, so it depended entirely on the manual
+browser-check step in the working protocol. The human also proposed the
+initial fix direction (two columns, capped image width); the AI investigated
+the root cause (`breaks: false` plus HTML's newline collapsing) and picked
+`white-space: pre-line` plus `column-count` over restructuring the template,
+since the metadata text is upstream submodule content this repo can't edit.
