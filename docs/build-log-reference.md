@@ -1106,3 +1106,44 @@ unchanged — same 19 files, same content — but the repo is now self-contained
 
 No design doc, no new features, no CSS or template changes. This was the
 smallest phase yet: verify, convert, confirm the build still passes.
+
+## Phase 6.2 — External links open in a new tab
+
+Mechanical phase: every external link on the site was missing
+`target="_blank" rel="noopener noreferrer"`. Three change sites covered all 26
+external `<a href>` links:
+
+1. **`icon-link.njk` macro** (line 6): added `target="_blank" rel="noopener
+   noreferrer"` directly to the `<a>` tag. The macro is only ever called with
+   external URLs (email, GitHub), so a conditional parameter wasn't justified.
+   Covers 5 icon links across every page's footer and `/about/`.
+
+2. **`writeups.njk`** (line 9): added the same attributes to the raw `<a>` for
+   the htb-writeups repo link. The only external `<a>` outside the macro.
+
+3. **`.eleventy.js` markdown-it plugin**: a `link_open` renderer rule that
+   injects `target="_blank" rel="noopener noreferrer"` on any `href` matching
+   `/^https?:\/\//`. Covers all 20+ links in the two blog `.md` files and is
+   future-proof for any new markdown content. Internal links (`/writeups/...`,
+   `/about/`, etc.) are unaffected.
+
+The initial attempt used `md.renderer.rules.link_open.bind(...)`, which crashed
+at build time — markdown-it doesn't define `link_open` as an own-property rule
+(it falls through to `self.renderToken`). Fixed by calling `self.renderToken`
+directly.
+
+A second bug appeared on the first build: `attrPush("target", "_blank")` with
+two string arguments produced `t="a" r="e"` in the output instead of
+`target="_blank" rel="noopener noreferrer"`. In markdown-it v15, `attrPush`
+takes a single `[name, value]` array, not two separate arguments — the old
+two-argument form pushes bare strings into the attrs array, which
+`renderToken` then renders as single-character attribute names/values. Fixed
+by changing to `attrPush(["target", "_blank"])`.
+
+**AI-vs-human split**: AI identified all external links via a codebase search,
+proposed the markdown-it plugin approach, and made all three edits. The
+`attrPush` bug was caught by the human during a live browser check — the
+markdown links opened in the same tab with mangled attributes. AI diagnosed
+the markdown-it v15 API change and fixed it. Human approved the resume PDF
+opening in a new tab (the macro hardcodes the attributes, so the local PDF
+link also gets them — a deliberate simplification, not an oversight).

@@ -347,11 +347,11 @@ symlinks. A vault→repo sync script can follow as a separate concern.
 
 ## Phase 6.2 — External links open in a new tab
 
-- [ ] Audit every external link (footer/about GitHub + email icons, resume
+- [x] Audit every external link (footer/about GitHub + email icons, resume
       PDF, writeup upstream links, blog post links) and open them in a new
       tab (`target="_blank" rel="noopener noreferrer"`) instead of replacing
       the current page; internal site links stay same-tab
-- [ ] Append build-log entry
+- [x] Append build-log entry
 
 ## Phase 7 — Command palette
 
