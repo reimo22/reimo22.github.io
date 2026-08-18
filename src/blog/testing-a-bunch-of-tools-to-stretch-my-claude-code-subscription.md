@@ -4,13 +4,14 @@ date: 2026-08-11
 tags: [blog, claude-code]
 status: evergreen
 ---
+
 TL;DR. When to use each tool:
 
-* Use [LiteLLM](https://github.com/BerriAI/litellm) if you have a lot of API keys / subscriptions to manage and are serving multiple users — suitable for teams.
-* Use [OmniRoute](https://github.com/diegosouzapw/OmniRoute) if you're free or low budget and need to squeeze the most inference out of it. It's tedious registering for so many accounts, and it's borderline against TOS — consider [OpenCode](https://github.com/sst/opencode)'s free models instead.
-* [RTK](https://github.com/rtk-ai/rtk) for free token savings for shell outputs.
-* [Headroom](https://github.com/headroomlabs-ai/headroom) if you want to maximize token savings and don't mind some config.
-* [Caveman](https://github.com/juliusbrussee/caveman) if you don't mind the tone change.
+- Use [LiteLLM](https://github.com/BerriAI/litellm) if you have a lot of API keys / subscriptions to manage and are serving multiple users — suitable for teams.
+- Use [OmniRoute](https://github.com/diegosouzapw/OmniRoute) if you're free or low budget and need to squeeze the most inference out of it. It's tedious registering for so many accounts, and it's borderline against TOS — consider [OpenCode](https://github.com/sst/opencode)'s free models instead.
+- [RTK](https://github.com/rtk-ai/rtk) for free token savings for shell outputs.
+- [Headroom](https://github.com/headroomlabs-ai/headroom) if you want to maximize token savings and don't mind some config.
+- [Caveman](https://github.com/juliusbrussee/caveman) if you don't mind the tone change.
 
 For the past few days I've looked into various ways to optimize cost. I was initially looking to replace my Claude Pro subscription entirely with a cheaper subscription like OpenCode Go or PAYG API.
 
@@ -44,11 +45,11 @@ But my main gripe with OmniRoute is that websearch and webfetch don't work out o
 
 The biggest win, though, was that OmniRoute comes bundled with a lot of different compression engines. Most notable:
 
-* **RTK (Rust Token Killer)** — a standalone CLI tool that compresses tool outputs like bash, grep, ls, git, etc. You can use hooks to enforce it on every command, or instruct your model via system prompt to use it selectively on large, repetitive outputs. OmniRoute bundles its own TypeScript reimplementation of it, and since OmniRoute already sits as a proxy in front of Claude Code, it automatically rewrites bash calls into RTK-shortened output — no hooks needed. Claude actually lauded it for being clean and concise.
+- **RTK (Rust Token Killer)** — a standalone CLI tool that compresses tool outputs like bash, grep, ls, git, etc. You can use hooks to enforce it on every command, or instruct your model via system prompt to use it selectively on large, repetitive outputs. OmniRoute bundles its own TypeScript reimplementation of it, and since OmniRoute already sits as a proxy in front of Claude Code, it automatically rewrites bash calls into RTK-shortened output — no hooks needed. Claude actually lauded it for being clean and concise.
 
-* **Headroom + CCR** — a proxy that compresses structured output (JSON, code, etc.). Large blocks of text are replaced with a reference and a hash, instructing the model to retrieve the original via tool call if needed — creating huge token savings. I hadn't yet set up OmniRoute's MCP before enabling compression, so Claude noticed its prompts were being injected and context replaced, with no way to retrieve the original, and hard refused. So be sure your model can call the retrieve tool before enabling this.
+- **Headroom + CCR** — a proxy that compresses structured output (JSON, code, etc.). Large blocks of text are replaced with a reference and a hash, instructing the model to retrieve the original via tool call if needed — creating huge token savings. I hadn't yet set up OmniRoute's MCP before enabling compression, so Claude noticed its prompts were being injected and context replaced, with no way to retrieve the original, and hard refused. So be sure your model can call the retrieve tool before enabling this.
 
-* **Caveman** — "why use many token when few do trick". It uses regex rules to rip out pleasantries, filler, etc. The lite setting was bearable; full was unacceptable, borderline gibberish, and I'm not desperate enough for tokens to tolerate that. This turned Claude from warm, somewhat verbose into concise and efficient — kind of undoing preference training (RLHF), sounding like a much cheaper model. Not a downside, but it is a tradeoff.
+- **Caveman** — "why use many token when few do trick". It uses regex rules to rip out pleasantries, filler, etc. The lite setting was bearable; full was unacceptable, borderline gibberish, and I'm not desperate enough for tokens to tolerate that. This turned Claude from warm, somewhat verbose into concise and efficient — kind of undoing preference training (RLHF), sounding like a much cheaper model. Not a downside, but it is a tradeoff.
 
 ![OmniRoute's effective prompt compression pipeline: session-dedup → ccr → headroom → caveman](/assets/img/blog/stretching-your-claude-code-subscription--compression-pipeline.png)
 
