@@ -7,7 +7,7 @@ status: evergreen
 
 Chris Titus's [AI-assisted workflow](https://christitus.com/my-ai-workflow/)
 showed up on my feed a week or two ago (I'm a sucker for workflow videos),
-and it struck me after I used AI to set up [Omniroute](/blog/testing-a-bunch-of-tools-to-stretch-my-claude-code-subscription/),
+and it struck me after I used AI to set up [Omniroute](/blog/token-saving-tools-for-claude-code/),
 to finally work on this site — it had been rotting in my future/maybe pile
 for months. For anyone who's still procrastinating on projects,
 there's literally no excuse anymore with AI agents, DeepSeek is free on OpenCode.

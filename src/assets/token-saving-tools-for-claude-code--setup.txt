@@ -1,0 +1,238 @@
+# Optimized Claude Code Setup
+
+> Guide for installing and configuring RTK, Headroom, and Caveman to minimize token usage in Claude Code. Covers setup, gotchas, and a manual fallback strategy.
+
+## Overview
+
+This guide walks you through three compression tools that reduce token consumption in Claude Code. RTK is independent and safe to combine with anything. Headroom and Caveman's proxy overlap in function (see "Choosing an input-compression approach" below), so pick one rather than both; the Caveman skill is independent and works alongside either.
+
+| Tool | What it compresses | Savings |
+|------|-------------------|---------|
+| [RTK](https://github.com/rtk-ai/rtk) | Bash/shell command output | 60-90% on command output |
+| [Headroom](https://github.com/headroomlabs-ai/headroom) | Structured output (JSON, code, logs) | 15-20% on coding agent sessions |
+| [Caveman](https://github.com/JuliusBrussee/caveman) | Agent output verbosity + input compression via proxy | 33% input / 65% output |
+
+## Step 1: RTK (Rust Token Killer)
+
+RTK intercepts shell commands and compresses their output before Claude reads it. Single Rust binary, zero dependencies.
+
+### Install
+
+```bash
+# Homebrew (recommended)
+brew install rtk
+
+# Or quick install (Linux/macOS)
+curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh
+```
+
+After install, add to PATH if using quick install:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc  # or ~/.zshrc
+```
+
+### Setup
+
+**Ask the user:** Do you want a global shell hook (highest savings, rewrites all commands automatically) or agent-selective compression (agent decides when to compress, based on output size and repetitiveness)?
+
+#### Option A: Global hook (recommended)
+
+```bash
+rtk init -g
+```
+
+Then restart Claude Code. Every Bash command is automatically rewritten to its RTK equivalent.
+
+#### Option B: Agent-selective
+
+Skip `rtk init`. Instead, add to `CLAUDE.md`:
+
+```
+Use RTK to compress command output when it's large or repetitive — decide this per command rather than applying it blindly. Good candidates: `git status`, `git diff`, `git log`, `ls`, `find`, `grep`, `cargo test`, `npm test`, `pytest`. Prefix these with `rtk` when the output is likely to be verbose.
+```
+
+### Verify
+
+```bash
+rtk --version    # Should show version
+rtk gain         # Shows savings dashboard
+```
+
+## Choosing an input-compression approach: Headroom vs. Caveman proxy
+
+Headroom and Caveman's proxy do the same core job — compressing input via a proxy, replacing large blocks with a reference/hash and retrieving on demand (ccr). Running both at once is untested and may conflict, so pick one, not both:
+
+- **Headroom** — standalone proxy, requires MCP retrieval to be configured first (see Step 2).
+- **Caveman proxy** — bundled with Caveman, no separate MCP retrieval step documented (see Step 3).
+
+**Ask the user:** I've only tested Headroom + Caveman skill together, not Caveman's proxy + skill, so I can't give a confident recommendation on the latter combo. Do you want to go with Headroom, or with Caveman's proxy? (The Caveman skill, which handles output terseness, is independent of this choice and works with either — see Step 3.)
+
+- If Headroom → do Step 2, then Step 3 but install the **skill only**, skip the Caveman proxy install.
+- If Caveman proxy → skip Step 2 entirely, do Step 3 in full (skill + proxy).
+
+## Step 2: Headroom
+
+Headroom compresses structured output — JSON, code blocks, logs — before they reach the LLM. It works as a proxy, a library, or via `headroom wrap`.
+
+### Install
+
+```bash
+# Using uv (recommended — isolated env)
+uv tool install --python 3.13 "headroom-ai[all]"
+
+# Or pip
+pip install "headroom-ai[all]"
+```
+
+Requires Python 3.10+.
+
+### Setup
+
+**MCP retrieval must be confirmed reachable before you redirect Claude Code through Headroom.** Headroom replaces large text blocks with hashed references and expects the model to retrieve the originals via tool call. If the retrieval tool isn't reachable when compression kicks in, the model sees injected references it has no way to resolve, and will hard refuse.
+
+Setup order:
+
+1. Configure MCP retrieval tools:
+   ```bash
+   headroom mcp install
+   ```
+2. Verify the model can actually call the retrieval tool.
+3. Test this in a **second terminal / separate session** first — don't verify against the session you're currently working in.
+4. Once confirmed, wrap your current session:
+   ```bash
+   headroom wrap claude
+   ```
+   This starts a local proxy and points Claude Code at it via env var. Keep the terminal running while you work.
+
+   Optionally, alias this so `claude` launches wrapped by default:
+   ```bash
+   alias claude="headroom wrap claude"
+   ```
+
+To undo:
+
+```bash
+headroom unwrap claude
+```
+
+### Verify
+
+```bash
+headroom doctor    # Health check
+headroom perf      # Performance stats
+```
+
+## Step 3: Caveman
+
+Caveman has two components: a **skill** (makes agent output terse) and a **proxy** (compresses input, overlaps with Headroom — see the section above before installing this).
+
+### Install the skill (output compression)
+
+Always safe to install regardless of which input-compression option was picked:
+
+```bash
+npx skills add JuliusBrussee/caveman
+```
+
+### Install the proxy (input compression)
+
+**Only if Caveman proxy was picked over Headroom above.** Skip this if Headroom is already handling input compression.
+
+```bash
+npm install -g @caveman-ai/cli && caveman setup --install
+```
+
+### Setup
+
+```bash
+caveman claude
+```
+
+Optionally, alias this so `claude` launches wrapped by default:
+
+```bash
+alias claude="caveman claude"
+```
+
+Skip this step (and the alias) if only the skill was installed — Headroom handles the proxy layer in that case.
+
+### Tone setting
+
+**Ask the user:** Do you want the 'Lite' setting (concise, efficient — recommended) or do you want to skip Caveman entirely to keep Claude's standard personality?
+
+**Do NOT use the 'Full' setting.** Full mode produces borderline gibberish — it strips too much and makes responses unreadable. Lite is the sweet spot.
+
+To set lite mode, add to `CLAUDE.md`:
+
+```
+Always use caveman lite mode. Never use full or ultra.
+```
+
+Or use the slash command:
+
+```
+/caveman lite
+```
+
+### Verify
+
+```bash
+caveman learn    # Scans your session history, shows token sinks
+```
+
+## Gotchas
+
+### Context Window
+
+When defining model names (e.g. in bash aliases or env vars), always append `[1m]` to access the full 1M context window:
+
+```
+claude-sonnet-5[1m]
+```
+
+Without the suffix, Claude Code defaults to 200k context.
+
+## Fallback Strategy: Bash Alias
+
+There are two different things a fallback alias can do here, worth not conflating:
+
+**a) Bypass — route straight back to your subscription.** Unsets `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN`, and `ANTHROPIC_MODEL`, undoing whatever pointed Claude Code elsewhere, so you're back on your normal subscription with `/remote-control` and MCP connectors working. This isn't just a router thing — **Headroom and Caveman's proxy set these same env vars to route Claude Code through their local proxy**, which means they break `/remote-control` and MCP connectors the same way a router would while active. If you've set up either from this guide, you'll likely want this alias too, for whenever you need `/remote-control` or a connector mid-session.
+
+**Ask the user:** Do you want this bypass alias? What should it be named? Default: `unwrap`.
+
+```bash
+unwrap() {
+  unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN ANTHROPIC_MODEL
+  exec claude "$@"
+}
+```
+
+**b) Redirect — route to an external API when your subscription runs out.** This is the other relevant one for this guide.
+
+**Ask the user:**
+1. What should the fallback function be named? Default: `cc`.
+2. Which provider do you have a key for (e.g. DeepSeek, NanoGPT, other)? Fetch that provider's official Claude Code integration docs for the exact `ANTHROPIC_BASE_URL`, auth env var, and model name — don't assume the shape below matches your provider as-is, it's illustrative.
+
+Shape to fill in from the provider's docs:
+
+```bash
+<name>() {
+  export ANTHROPIC_BASE_URL="https://api.provider.example"
+  export ANTHROPIC_AUTH_TOKEN="your-api-key-here"
+  export ANTHROPIC_MODEL="provider-model-name"
+  exec claude "$@"
+}
+```
+
+This bypasses `/remote-control` and any Claude.ai MCP connectors while active — treat it as a backup for when your subscription is exhausted, not a daily driver, if you rely on those.
+
+Usage: `/exit`, `<name>`, `/resume` — switches to the fallback provider and resumes your session.
+
+## Sources
+
+Always refer to the official repos for the latest instructions:
+
+- RTK: https://github.com/rtk-ai/rtk
+- Headroom: https://github.com/headroomlabs-ai/headroom
+- Caveman: https://github.com/JuliusBrussee/caveman
