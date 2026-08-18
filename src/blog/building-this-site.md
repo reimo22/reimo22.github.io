@@ -56,7 +56,7 @@ for a one-line fix. The safety net exists for a reason.
 So I protected main: required status checks to pass. Since I'm the only
 collaborator, I set up an OpenCode review workflow — comment `/oc` on a
 PR and it reviews the diff, leaving comments on anything that looks off.
-On-demand code review, to sanity-check my commits.
+Sanity check on demand.
 
 [Akita's line](https://akitaonrails.com/en/2026/02/16/vibe-code-zero-to-production-in-6-days-the-m-akita-chronicles/)
 on this says it better than I can: "Vibe Coding the right way has only one
