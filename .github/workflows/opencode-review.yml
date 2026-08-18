@@ -20,5 +20,6 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         with:
           model: opencode-go/glm-5.2
+          use_github_token: "true"
           prompt: |
             Review this pull request. If the code looks good and all CI checks pass, approve it with a brief comment. If there are issues, comment on what needs fixing.
