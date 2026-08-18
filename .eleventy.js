@@ -303,7 +303,9 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/assets/js");
   eleventyConfig.addPassthroughCopy("src/assets/img");
   eleventyConfig.addPassthroughCopy("src/about");
-  eleventyConfig.addPassthroughCopy("src/assets/token-saving-tools-for-claude-code--setup.txt");
+  eleventyConfig.addPassthroughCopy(
+    "src/assets/token-saving-tools-for-claude-code--setup.txt",
+  );
 
   // The directories inside the htb-writeups submodule, found once at config
   // time and reused by both the image passthrough and the frontmatter gate.
