@@ -53,10 +53,10 @@ The one time I tried merging to main directly, it bit me with a failed CI.
 Always open PRs, and don't skip code reviews — even when it feels like overkill
 for a one-line fix. The safety net exists for a reason.
 
-So I protected main: required status checks to pass, and required at
-least one approving review before merge. Since I'm the only collaborator,
-I added an OpenCode review workflow — it checks each PR and approves it
-if the code looks good. Automated gatekeeper, one less thing to worry about.
+So I protected main: required status checks to pass. Since I'm the only
+collaborator, I set up an OpenCode review workflow — comment `/oc` on a
+PR and it reviews the diff, leaving comments on anything that looks off.
+Sanity check on demand.
 
 [Akita's line](https://akitaonrails.com/en/2026/02/16/vibe-code-zero-to-production-in-6-days-the-m-akita-chronicles/)
 on this says it better than I can: "Vibe Coding the right way has only one
