@@ -49,11 +49,15 @@ you keep an agent on target, and partly because a single overloaded
 Superpowers or `/code-review` prompt is enough to burn through a whole
 5-hour Claude Pro window by itself.
 
+The one time I tried merging to main directly, it bit me with a failed CI.
+Always open PRs, and don't skip code reviews — even when it feels like overkill
+for a one-line fix. The safety net exists for a reason.
+
 [Akita's line](https://akitaonrails.com/en/2026/02/16/vibe-code-zero-to-production-in-6-days-the-m-akita-chronicles/)
 on this says it better than I can: "Vibe Coding the right way has only one
 path: Extreme Programming!" — pair programming (plan first, out loud), TDD,
 and CI, or you're not really doing this, you're just hoping. That's the
 whole workflow, really. Everything else is detail.
 
-Repo's [here](https://github.com/reimo22/reimo22.github.io), if you want to
+The repo is [on GitHub](https://github.com/reimo22/reimo22.github.io), if you want to
 see how it actually turned out.
