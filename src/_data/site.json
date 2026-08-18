@@ -4,6 +4,7 @@
   "nav": [
     { "label": "Home", "url": "/" },
     { "label": "About", "url": "/about/" },
-    { "label": "Writeups", "url": "/writeups/" }
+    { "label": "Writeups", "url": "/writeups/" },
+    { "label": "Blog", "url": "/blog/" }
   ]
 }

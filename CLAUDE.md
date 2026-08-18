@@ -10,7 +10,10 @@ points to — don't expect them echoed here.
 - **`SPEC.md`** — product decisions, requirements, CI thresholds.
 - **`TASKS.md`** — the phase checklist and current status.
 - **`docs/superpowers/specs/2026-08-09-portfolio-site-design.md`** — design rationale.
-- **`src/blog/building-this-site.md`** — the per-phase build log.
+- **`src/blog/building-this-site.md`** — narrative essay covering the full build
+  (the real `/blog` post). **`docs/build-log-reference.md`** — the unabridged
+  version of the same log (every fix, every rejected approach), not built by
+  Eleventy.
 
 ## Working protocol
 
@@ -22,7 +25,8 @@ points to — don't expect them echoed here.
   local server (`npm run serve`), hand it to the human for a manual check of
   the site in a browser, and don't proceed until they confirm. Only then
   commit and wrap up the phase.
-- Every phase appends a build-log entry to `src/blog/building-this-site.md`
+- Every phase appends a build-log entry (short version in
+  `src/blog/building-this-site.md`, detail in `docs/build-log-reference.md`)
   **in the same PR** as the work — never retrospectively.
 - Each build-log entry records what CI actually caught and the AI-vs-human
   split: what the AI drafted, where human review redirected it. Corrections

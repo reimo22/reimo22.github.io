@@ -303,22 +303,55 @@ Rides on the Phase 5 PR: writeup `<pre>` blocks were completely unstyled
 
 ## Phase 6 — Blog
 
-- [ ] Split the build log: `src/blog/building-this-site.md` (1000+ lines
+- [x] Split the build log: `src/blog/building-this-site.md` (1000+ lines
       across 15+ entries) is too long for anyone to actually read as a post.
-      Trim it down to a short, publishable version per phase — the decision
-      and its outcome, not the full back-and-forth — and move the verbose
-      version (every fix, every rejected approach, every human-vs-AI
-      correction) to a new `docs/build-log-reference.md`, not built by
-      Eleventy, alongside the other `docs/superpowers/` planning docs. Migrate
-      all existing entries into both files rather than starting the split
-      from Phase 6 onward. Update `SPEC.md`'s "Build log" section and
-      `CLAUDE.md`'s doc pointers to describe the two-tier convention
-- [ ] Blog collection config (`src/blog/*.md`)
-- [ ] `/blog/` index, per-post layout (`post.njk`)
-- [ ] RSS feed
-- [ ] Confirm `building-this-site.md` now renders as a real post
-- [ ] Append build-log entry (short version in the post; detail in the
+      Rewrite it as a narrative essay covering the full build process and
+      decisions, and move the verbose version (every fix, every rejected
+      approach, every human-vs-AI correction) to a new
+      `docs/build-log-reference.md`, not built by Eleventy, alongside the
+      other `docs/superpowers/` planning docs. Migrate all existing entries
+      into both files rather than starting the split from Phase 6 onward.
+      Update `SPEC.md`'s "Build log" section and `CLAUDE.md`'s doc pointers
+      to describe the two-tier convention
+- [x] Blog collection config (`src/blog/*.md`) — `src/blog/blog.11tydata.js`
+      cascades `layout: post.njk`; `addCollection("blog", ...)` in
+      `.eleventy.js` (same `getFilteredByGlob` pattern as the writeups
+      collections, not `tags`, for the same computed-data-ordering reason)
+- [x] `/blog/` index (`src/blog.njk`), per-post layout (`src/_includes/post.njk`)
+- [x] RSS feed — hand-rolled `src/feed.njk` at `/feed.xml`, no new dependency;
+      `rfc822Date` filter added alongside the existing `isoDate` for `<pubDate>`
+- [x] Confirm `building-this-site.md` now renders as a real post — `draft`,
+      `permalink: false`, and `eleventyExcludeFromCollections` removed;
+      verified `_site/blog/building-this-site/index.html` renders with nav,
+      footer, and the trimmed content, and appears in `/blog/`'s list
+- [x] Append build-log entry (narrative essay in the post; detail in the
       reference doc, per the new convention above)
+
+### Post-merge: convert blog symlinks to real files
+
+Both `src/blog/*.md` files are currently symlinks into the Obsidian vault.
+CI (and any clone without the vault) silently skips them — the posts vanish
+from `/blog/` with no error. Copy the real files into the repo and remove the
+symlinks. A vault→repo sync script can follow as a separate concern.
+
+## Phase 6.1 — Finalize pending blog posts
+
+- [x] `testing-a-bunch-of-tools-to-stretch-my-claude-code-subscription.md`:
+      already `status: evergreen` with no TODOs — post is publish-ready
+- [x] Verify `/blog/testing-a-bunch-of-tools-to-stretch-my-claude-code-subscription/`
+      builds and renders (default permalink from filename, same convention as
+      `building-this-site.md`)
+- [x] `npm run build` + spot check both posts render correctly in `/blog/`
+      and the RSS feed
+- [x] Convert blog symlinks to real files (post-merge note in TASKS.md)
+
+## Phase 6.2 — External links open in a new tab
+
+- [ ] Audit every external link (footer/about GitHub + email icons, resume
+      PDF, writeup upstream links, blog post links) and open them in a new
+      tab (`target="_blank" rel="noopener noreferrer"`) instead of replacing
+      the current page; internal site links stay same-tab
+- [ ] Append build-log entry
 
 ## Phase 7 — Command palette
 

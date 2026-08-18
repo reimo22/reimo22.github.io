@@ -308,6 +308,7 @@ main blockquote > :last-child {
   align-items: center;
   min-height: 44px;
   border: 1px solid var(--color-border);
+  border-radius: 4px;
   margin-top: 1rem;
   padding: 0.5rem 0.75rem;
   text-decoration: none;
@@ -354,6 +355,12 @@ main blockquote > :last-child {
 
 .resume-item + .resume-item {
   margin-top: 1.5rem;
+}
+
+.resume-item-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .resume-item p {

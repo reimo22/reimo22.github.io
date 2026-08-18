@@ -165,12 +165,14 @@ Deploy (`actions/deploy-pages`) runs only after all four checks pass on `main`.
 
 ## Build log
 
-`src/blog/building-this-site.md` is created in phase 1, before any site code,
-and gets an entry appended in the **same PR** as each subsequent phase's work —
-not written retrospectively. Each entry: the decision made and its alternative,
-where the spec turned out wrong, what CI actually caught (with specifics), and
-where AI assistance helped vs. where human review caught something. It starts
-rendering as a real `/blog` post once the blog collection exists (phase 6).
+Two-tier convention, split in phase 6: `src/blog/building-this-site.md` is a
+narrative essay covering the full build — the process and decisions, not a
+per-phase breakdown — and renders as a real `/blog` post.
+`docs/build-log-reference.md` holds the unabridged account (every fix, every
+rejected approach, every human-vs-AI correction), is not built by Eleventy,
+and lives alongside the other `docs/superpowers/` planning docs. Both files
+get an entry appended in the **same PR** as each phase's work — not written
+retrospectively.
 
 ## Non-goals
 

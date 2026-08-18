@@ -1,0 +1,22 @@
+---
+title: Blog
+permalink: /blog/
+---
+{% extends "base.njk" %}
+{% block content %}
+  <article class="page">
+    <h1>Blog</h1>
+    <p>
+      Posts about this site and what it's built from, incl. the
+      <a href="/feed.xml">RSS feed</a>.
+    </p>
+    <ul>
+      {% for item in collections.blog %}
+        <li>
+          <a href="{{ item.url }}">{{ item.data.title }}</a>
+          <span class="resume-meta">{{ item.data.date | isoDate }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </article>
+{% endblock %}

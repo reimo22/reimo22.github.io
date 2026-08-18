@@ -62,6 +62,11 @@ export function isoDate(value) {
   return new Date(value).toISOString().slice(0, 10);
 }
 
+// RFC-822, the date format RSS 2.0's <pubDate> requires.
+export function rfc822Date(value) {
+  return new Date(value).toUTCString();
+}
+
 export function rightTrim(line) {
   return line.replace(/\s+$/, "");
 }
@@ -303,6 +308,7 @@ export default function (eleventyConfig) {
 
   // YAML dates parse to JS Date objects; templates need a plain YYYY-MM-DD.
   eleventyConfig.addFilter("isoDate", isoDate);
+  eleventyConfig.addFilter("rfc822Date", rfc822Date);
 
   // Two kinds of writeup, split on which frontmatter shape the item has.
   // Must be addCollection: eleventyComputed.tags never reaches a collection,
@@ -312,6 +318,12 @@ export default function (eleventyConfig) {
       .getFilteredByGlob(writeupGlob)
       .filter((item) => item.data.os)
       .sort(byDate),
+  );
+  // Same addCollection + getFilteredByGlob pattern as the writeups
+  // collections above, for the same reason: relying on `tags` risks the
+  // computed-data-resolves-after-collections trap already hit in Phase 5.
+  eleventyConfig.addCollection("blog", (api) =>
+    api.getFilteredByGlob("src/blog/*.md").sort(byDate).reverse(),
   );
   eleventyConfig.addCollection("writeups-ctf", (api) =>
     api
