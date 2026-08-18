@@ -1,5 +1,5 @@
 ---
-title: Testing a bunch of tools to stretch my Claude Code subscription
+title: Stretching my Claude Code subscription with tools
 date: 2026-08-11
 tags: [blog, claude-code]
 status: evergreen

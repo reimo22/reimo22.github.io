@@ -55,5 +55,5 @@ path: Extreme Programming!" — pair programming (plan first, out loud), TDD,
 and CI, or you're not really doing this, you're just hoping. That's the
 whole workflow, really. Everything else is detail.
 
-Repo's [here](https://github.com/reimo22/reimo22.github.io), if you want to
+The repo is [on GitHub](https://github.com/reimo22/reimo22.github.io), if you want to
 see how it actually turned out.
