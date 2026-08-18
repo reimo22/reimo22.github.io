@@ -1,7 +1,7 @@
 # TASKS — reimo22.github.io
 
 Each phase is one small, reviewable PR against `main`. Every phase from 1 onward
-ends by appending an entry to `src/blog/building-this-site.md` in the same PR.
+ends by appending a build-log entry to `docs/build-log-reference.md` in the same PR.
 See [`SPEC.md`](SPEC.md) for the full rationale behind each decision below.
 
 ## Phase 1 — Spec & tasks (this PR)
@@ -365,6 +365,8 @@ symlinks. A vault→repo sync script can follow as a separate concern.
 - [ ] Append final build-log entry
 
 ## Cross-cutting verification (run at the end, and spot-checked per phase)
+
+- [ ] Write `README.md` — what the site is, tech stack, how to run locally
 
 - [ ] `npx @11ty/eleventy --serve` full click-through, all writeups + images
 - [ ] Keyboard pass: `/`, `Ctrl+K`, `Esc`, arrows, `Enter`; confirm `/` still types a literal slash in real inputs

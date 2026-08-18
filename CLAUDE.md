@@ -10,10 +10,10 @@ points to — don't expect them echoed here.
 - **`SPEC.md`** — product decisions, requirements, CI thresholds.
 - **`TASKS.md`** — the phase checklist and current status.
 - **`docs/superpowers/specs/2026-08-09-portfolio-site-design.md`** — design rationale.
-- **`src/blog/building-this-site.md`** — narrative essay covering the full build
-  (the real `/blog` post). **`docs/build-log-reference.md`** — the unabridged
-  version of the same log (every fix, every rejected approach), not built by
-  Eleventy.
+- **`src/blog/building-this-site.md`** — narrative essay (the real `/blog`
+  post), not a build log. **`docs/build-log-reference.md`** — the
+  authoritative build log: every phase, every fix, every rejected approach,
+  not built by Eleventy.
 
 ## Working protocol
 
@@ -25,22 +25,34 @@ points to — don't expect them echoed here.
   local server (`npm run serve`), hand it to the human for a manual check of
   the site in a browser, and don't proceed until they confirm. Only then
   commit and wrap up the phase.
-- Every phase appends a build-log entry (short version in
-  `src/blog/building-this-site.md`, detail in `docs/build-log-reference.md`)
-  **in the same PR** as the work — never retrospectively.
+- Every phase appends a build-log entry to `docs/build-log-reference.md`
+  **in the same PR** as the work — never retrospectively. The blog post
+  (`src/blog/building-this-site.md`) is a narrative essay, not a log.
 - Each build-log entry records what CI actually caught and the AI-vs-human
   split: what the AI drafted, where human review redirected it. Corrections
   get recorded, not quietly redone.
 
 ## Commands
 
-- `npm run serve` — dev server · `npm run build` — build `_site/`
-- `npm run lint` / `npm run lint:fix` — the five-tool lint suite (CI runs it)
+- `npm run serve &` — dev server (**must background it** — it never exits,
+  and running it foregrounded blocks opencode). Kill with `kill %1` or `pkill -f eleventy`.
+- `npm run build` — build `_site/`
+- `npm run lint` / `npm run lint:fix` — the five-tool lint suite (CI runs it).
+  **Always run `npm run lint` before pushing** to catch eslint, stylelint,
+  prettier, and markdownlint issues locally before CI.
 - `npm run test` — `node:test` suite (helpers, shortcodes, theme.js DOM
   tests, icon markup check); CI runs it as its own job gating deploy
 - `npx html-validate _site` — CI's HTML check, run locally before push
 - `npm run audit:banner` — visual-layout sweep (needs `npm run serve` up in
   another terminal + `CHROME_PATH` set)
+
+## Context7
+
+Use Context7 (`use context7` in prompts) to pull up-to-date, version-specific
+library documentation into context. Especially useful for Eleventy, Nunjucks,
+and Node.js API questions where training data may be stale. **Default behavior:
+always use Context7 when working with library APIs, frameworks, or package
+documentation** — don't wait to be asked.
 
 ## Operational guardrails (enforced here)
 
