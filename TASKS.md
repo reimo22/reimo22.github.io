@@ -367,6 +367,8 @@ symlinks. A vault→repo sync script can follow as a separate concern.
 ## Cross-cutting verification (run at the end, and spot-checked per phase)
 
 - [ ] Write `README.md` — what the site is, tech stack, how to run locally
+- [ ] Create `robots.txt` — standard crawl directives
+- [ ] Create site-level `llms.txt` — structured metadata for AI agents (useful for scrapers to understand site content and navigation; value is limited for a static site but costs nothing)
 
 - [ ] `npx @11ty/eleventy --serve` full click-through, all writeups + images
 - [ ] Keyboard pass: `/`, `Ctrl+K`, `Esc`, arrows, `Enter`; confirm `/` still types a literal slash in real inputs

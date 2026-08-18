@@ -5,13 +5,15 @@ tags: [blog, claude-code]
 status: evergreen
 ---
 
-TL;DR. When to use each tool:
+TL;DR. I tried LiteLLM and OmniRoute but dropped both routers — too much complexity for a single-user setup. The compression engines are the real win. When to use each tool:
 
 - Use [LiteLLM](https://github.com/BerriAI/litellm) if you have a lot of API keys / subscriptions to manage and are serving multiple users — suitable for teams.
 - Use [OmniRoute](https://github.com/diegosouzapw/OmniRoute) if you're free or low budget and need to squeeze the most inference out of it. It's tedious registering for so many accounts, and it's borderline against TOS — consider [OpenCode](https://github.com/sst/opencode)'s free models instead.
 - [RTK](https://github.com/rtk-ai/rtk) for free token savings for shell outputs.
 - [Headroom](https://github.com/headroomlabs-ai/headroom) if you want to maximize token savings and don't mind some config.
 - [Caveman](https://github.com/juliusbrussee/caveman) if you don't mind the tone change.
+
+> Want this high-efficiency setup? Pass <a href="/assets/token-saving-tools-for-claude-code--setup.txt" target="_blank" rel="noopener noreferrer">llms.txt</a> to Claude and it will handle the configuration and gotchas for you.
 
 For the past few days I've looked into various ways to optimize cost. I was initially looking to replace my Claude Pro subscription entirely with a cheaper subscription like OpenCode Go or PAYG API.
 
@@ -25,7 +27,7 @@ I tried to find ways to seamlessly fallback from my Claude sub to APIs. I got ke
 
 You can manually wire them up via env vars, better yet create a function in bashrc with all the variables exported. Now I got `claude`, [`deepclaude`](https://api-docs.deepseek.com/quick_start/agent_integrations/claude_code/), [`nanocc`](https://docs.nano-gpt.com/integrations/claude-code), but I didn't wanna keep manually switching between them.
 
-![The deepclaude() bashrc function: exports ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN, and model overrides pointing Claude Code at DeepSeek's API, then execs claude](/assets/img/blog/stretching-your-claude-code-subscription--deepclaude.png)
+![The deepclaude() bashrc function: exports ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN, and model overrides pointing Claude Code at DeepSeek's API, then execs claude](/assets/img/blog/token-saving-tools-for-claude-code--deepclaude.png)
 
 Hence I looked into **LiteLLM** — it's positioned as the one unified interface for all your API providers.
 
@@ -51,25 +53,29 @@ The biggest win, though, was that OmniRoute comes bundled with a lot of differen
 
 - **Caveman** — "why use many token when few do trick". It uses regex rules to rip out pleasantries, filler, etc. The lite setting was bearable; full was unacceptable, borderline gibberish, and I'm not desperate enough for tokens to tolerate that. This turned Claude from warm, somewhat verbose into concise and efficient — kind of undoing preference training (RLHF), sounding like a much cheaper model. Not a downside, but it is a tradeoff.
 
-![OmniRoute's effective prompt compression pipeline: session-dedup → ccr → headroom → caveman](/assets/img/blog/stretching-your-claude-code-subscription--compression-pipeline.png)
+![OmniRoute's effective prompt compression pipeline: session-dedup → ccr → headroom → caveman](/assets/img/blog/token-saving-tools-for-claude-code--compression-pipeline.png)
 
 The other compression tools were too aggressive for my taste.
 
 Together, these tools cut ~13% of filtered tokens — 46.5M tokens saved across 3,555 requests over 30 days from the pipeline alone.
 
-![OmniRoute's 30-day compression dashboard: 46,475,926 tokens saved across 3,555 requests, 13% average savings](/assets/img/blog/stretching-your-claude-code-subscription--compression-stats.png)
+![OmniRoute's 30-day compression dashboard: 46,475,926 tokens saved across 3,555 requests, 13% average savings](/assets/img/blog/token-saving-tools-for-claude-code--compression-stats.png)
 
 Caching numbers: an 81.2% cache rate and 88.1% cache reuse ratio.
 
-![OmniRoute's cache dashboard: 81.2% cache rate, 88.1% cache reuse ratio, 205,776,507 cache read tokens, 12,328,602 cache write tokens](/assets/img/blog/stretching-your-claude-code-subscription--cache-overview.png)
+![OmniRoute's cache dashboard: 81.2% cache rate, 88.1% cache reuse ratio, 205,776,507 cache read tokens, 12,328,602 cache write tokens](/assets/img/blog/token-saving-tools-for-claude-code--cache-overview.png)
 
 Broken down by provider, nanogpt's cache rate trails the rest despite a comparable cache reuse ratio — probably skewed from switching between many different models, whereas with the other providers I'd only ever run one or two of theirs.
 
-![Per-provider cache breakdown: nanogpt's cache rate sits at 63.5% against a 94.0% reuse ratio, well below claude, deepseek, and the opencode providers](/assets/img/blog/stretching-your-claude-code-subscription--cache-rate.png)
+![Per-provider cache breakdown: nanogpt's cache rate sits at 63.5% against a 94.0% reuse ratio, well below claude, deepseek, and the opencode providers](/assets/img/blog/token-saving-tools-for-claude-code--cache-rate.png)
 
 The thing is, none of these token-saving engines require OmniRoute — I just discovered them through it, since they're bundled together. LiteLLM can apparently be integrated with Headroom too.
 
-My conclusion: I'm overengineering this. Logging in would let me keep all the benefits: `/remote-control`, my MCP connectors, websearch/fetch. And setting an alias in `.bashrc` with env variables linking to an external provider is trivial and doesn't mess with my setup. I'll just install the compression engines directly into Claude Code.
+> **The proxy tradeoff:** Any proxy that intercepts Claude Code's API traffic — OmniRoute, Headroom, Caveman's proxy — disables `/remote-control` and your Claude.ai MCP connectors (the ones you sign into via the webapp). The same goes for routing through external APIs like DeepSeek. Local MCP servers are unaffected. This isn't a bug; it's how API routing works. You can't have both at the same time.
+>
+> If you rely on `/remote-control` or cloud connectors, skip the proxies entirely — Caveman's skill (output terseness) and RTK (shell output compression) work without intercepting traffic and still give you meaningful savings.
+
+My actual setup: RTK, Headroom, and Caveman's skill. No routers. A `cc` alias in `.bashrc` for when my subscription runs out. That's it — logging in keeps `/remote-control`, my MCP connectors, websearch/fetch, and setting an alias for an external provider is trivial when I need it.
 
 By this point I exhausted my DeepSeek API, leaving me with two providers. I basically went full circle from wanting seamless model switching to settling with a fallback `nanocc`, now called `cc`. `/exit`, `cc`, `/resume` does what I want with less overhead.
 
