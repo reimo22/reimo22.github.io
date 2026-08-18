@@ -282,14 +282,22 @@ export function starField() {
 }
 
 export default function (eleventyConfig) {
-  eleventyConfig.setLibrary(
-    "md",
-    markdownIt({
-      html: true,
-      breaks: false,
-      linkify: true,
-    }),
-  );
+  const md = markdownIt({
+    html: true,
+    breaks: false,
+    linkify: true,
+  });
+
+  md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
+    const href = tokens[idx].attrGet("href");
+    if (href && /^https?:\/\//.test(href)) {
+      tokens[idx].attrPush(["target", "_blank"]);
+      tokens[idx].attrPush(["rel", "noopener noreferrer"]);
+    }
+    return self.renderToken(tokens, idx, options);
+  };
+
+  eleventyConfig.setLibrary("md", md);
 
   eleventyConfig.addPassthroughCopy("src/assets/css");
   eleventyConfig.addPassthroughCopy("src/assets/js");

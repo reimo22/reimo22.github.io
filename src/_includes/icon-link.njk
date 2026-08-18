@@ -3,7 +3,7 @@
    alongside every other theme token in the :root blocks) shows only the one
    matching the active theme, same technique as the banner swap. #}
 {% macro iconLink(href, icon, label, class) %}
-  <a href="{{ href }}" class="icon-link{% if class %} {{ class }}{% endif %}">
+  <a href="{{ href }}" target="_blank" rel="noopener noreferrer" class="icon-link{% if class %} {{ class }}{% endif %}">
     <img
       class="icon icon-dark"
       src="/assets/img/icons/{{ icon }}_dark.png"
