@@ -1,5 +1,5 @@
 ---
-title: Stretching my Claude Code subscription with tools
+title: Token-Saving Tools for Claude Code
 date: 2026-08-11
 tags: [blog, claude-code]
 status: evergreen
