@@ -49,6 +49,10 @@ you keep an agent on target, and partly because a single overloaded
 Superpowers or `/code-review` prompt is enough to burn through a whole
 5-hour Claude Pro window by itself.
 
+The one time I tried merging to main directly, it bit me with a failed CI.
+Always open PRs, and don't skip code reviews — even when it feels like overkill
+for a one-line fix. The safety net exists for a reason.
+
 [Akita's line](https://akitaonrails.com/en/2026/02/16/vibe-code-zero-to-production-in-6-days-the-m-akita-chronicles/)
 on this says it better than I can: "Vibe Coding the right way has only one
 path: Extreme Programming!" — pair programming (plan first, out loud), TDD,
