@@ -1114,7 +1114,7 @@ Mechanical phase: every external link on the site was missing
 external `<a href>` links:
 
 1. **`icon-link.njk` macro** (line 6): added `target="_blank" rel="noopener
-   noreferrer"` directly to the `<a>` tag. The macro is only ever called with
+noreferrer"` directly to the `<a>` tag. The macro is only ever called with
    external URLs (email, GitHub), so a conditional parameter wasn't justified.
    Covers 5 icon links across every page's footer and `/about/`.
 
