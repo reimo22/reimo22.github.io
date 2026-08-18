@@ -1,0 +1,24 @@
+name: opencode-review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+jobs:
+  review:
+    if: github.event.pull_request.user.login != 'opencode-agent[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+      issues: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: anomalyco/opencode/github@latest
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        with:
+          model: opencode-go/glm-5.2
+          prompt: |
+            Review this pull request. If the code looks good and all CI checks pass, approve it with a brief comment. If there are issues, comment on what needs fixing.
