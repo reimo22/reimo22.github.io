@@ -25,7 +25,7 @@ const PAGE_HTML = `
     ${JSON.stringify({ nav: NAV, actions: ACTIONS })}
   </script>
   <button id="theme-toggle" aria-label="Toggle theme"></button>
-  <footer><p class="palette-hint">press / for commands</p></footer>
+  <footer><p class="palette-hint" tabindex="-1">press / for commands</p></footer>
 `;
 
 function makeDom(bodyHtml = PAGE_HTML) {
@@ -47,7 +47,8 @@ function pressKey(dom, key, opts = {}) {
     metaKey: !!opts.metaKey,
     shiftKey: !!opts.shiftKey,
   });
-  dom.window.document.dispatchEvent(event);
+  var target = dom.window.document.activeElement || dom.window.document;
+  target.dispatchEvent(event);
   return event;
 }
 
@@ -94,4 +95,130 @@ test("no-ops when island has invalid JSON", () => {
   );
   dom.window.eval(COMMANDS_JS);
   assert.equal(dom.window.__palette, undefined);
+});
+
+// --- Palette UI ---
+
+test("/ opens palette when focus is on body", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  const dialog = document.querySelector('[role="dialog"]');
+  assert.ok(dialog);
+  assert.equal(dialog.getAttribute("aria-modal"), "true");
+  assert.equal(dialog.getAttribute("aria-label"), "Command palette");
+  const input = document.querySelector('[role="combobox"]');
+  assert.ok(input);
+  assert.equal(document.activeElement, input);
+});
+
+test("/ does not open when focus is in an input", () => {
+  const dom = makeDom(`
+    <input type="text" id="test-input" />
+    <script type="application/json" id="site-commands">
+      ${JSON.stringify({ nav: NAV, actions: ACTIONS })}
+    </script>
+    <button id="theme-toggle"></button>
+  `);
+  const { document } = dom.window;
+  document.getElementById("test-input").focus();
+  pressKey(dom, "/");
+  assert.equal(document.querySelector('[role="dialog"]'), null);
+});
+
+test("Ctrl+K opens palette regardless of focus", () => {
+  const dom = makeDom();
+  pressKey(dom, "k", { ctrlKey: true });
+  assert.ok(dom.window.document.querySelector('[role="dialog"]'));
+  assert.equal(
+    dom.window.document.activeElement.getAttribute("role"),
+    "combobox",
+  );
+});
+
+test("Ctrl+K toggles: closes when already open", () => {
+  const dom = makeDom();
+  pressKey(dom, "k", { ctrlKey: true });
+  assert.ok(dom.window.document.querySelector('[role="dialog"]'));
+  pressKey(dom, "k", { ctrlKey: true });
+  assert.equal(dom.window.document.querySelector('[role="dialog"]'), null);
+});
+
+test("Esc closes and restores focus to trigger", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  const hint = document.querySelector(".palette-hint");
+  hint.focus();
+  pressKey(dom, "/");
+  pressKey(dom, "Escape");
+  assert.equal(document.querySelector('[role="dialog"]'), null);
+  assert.equal(document.activeElement, hint);
+});
+
+test("backdrop click closes palette", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  const backdrop = document.querySelector(".palette-backdrop");
+  assert.ok(backdrop);
+  backdrop.dispatchEvent(
+    new dom.window.MouseEvent("click", { bubbles: true }),
+  );
+  assert.equal(document.querySelector('[role="dialog"]'), null);
+});
+
+test("options have role=option and aria-selected on active", () => {
+  const dom = makeDom();
+  pressKey(dom, "/");
+  const opts = dom.window.document.querySelectorAll('[role="option"]');
+  assert.ok(opts.length >= 9);
+  assert.equal(opts[0].getAttribute("aria-selected"), "true");
+  assert.equal(opts[1].getAttribute("aria-selected"), "false");
+});
+
+test("ArrowDown moves selection; wraps at end", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  const input = document.querySelector('[role="combobox"]');
+  assert.equal(input.getAttribute("aria-activedescendant"), "palette-opt-0");
+  pressKey(dom, "ArrowDown");
+  assert.equal(input.getAttribute("aria-activedescendant"), "palette-opt-1");
+});
+
+test("Home jumps to first, End to last", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  const input = document.querySelector('[role="combobox"]');
+  pressKey(dom, "End");
+  assert.equal(input.getAttribute("aria-activedescendant"), "palette-opt-8");
+  pressKey(dom, "Home");
+  assert.equal(input.getAttribute("aria-activedescendant"), "palette-opt-0");
+});
+
+test("filter narrows list by substring", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  const input = document.querySelector('[role="combobox"]');
+  input.value = "theme";
+  input.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+  const opts = document.querySelectorAll('[role="option"]');
+  assert.equal(opts.length, 1);
+  assert.equal(opts[0].textContent, "Toggle theme");
+});
+
+test("filter shows no-match row when nothing matches", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  const input = document.querySelector('[role="combobox"]');
+  input.value = "zzzzz";
+  input.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+  const opts = document.querySelectorAll('[role="option"]');
+  assert.equal(opts.length, 0);
+  const empty = document.querySelector(".palette-option-empty");
+  assert.ok(empty);
+  assert.equal(empty.textContent, "No commands");
 });
