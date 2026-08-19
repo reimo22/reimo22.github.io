@@ -384,13 +384,13 @@ help`) + `?` overlay listing every shortcut
 
 ## Phase 8 — Home page + site housekeeping
 
-- [ ] Surface 3 most-recent blog posts + 3 most-recent writeups on `/`
-- [ ] Create `src/404.njk` with permalink `/404.html` for GitHub Pages
-- [ ] Create `src/robots.txt` + `src/llms.txt` + `src/sitemap.njk`
-- [ ] Add passthrough copy for `.txt` files in `.eleventy.js`
-- [ ] Write `README.md` — what the site is, tech stack, how to run locally
-- [ ] `npm run lint`, `npm test`, `npm run build`, `npx html-validate _site`
-- [ ] Append build-log entry
+- [x] Surface 3 most-recent blog posts + 3 most-recent writeups on `/`
+- [x] Create `src/404.njk` with permalink `/404.html` for GitHub Pages
+- [x] Create `src/robots.txt` + `src/llms.txt` + `src/sitemap.njk`
+- [x] Add passthrough copy for `.txt` files in `.eleventy.js`
+- [x] Write `README.md` — what the site is, tech stack, how to run locally
+- [x] `npm run lint`, `npm test`, `npm run build`, `npx html-validate _site`
+- [x] Append build-log entry
 
 ## Cross-cutting verification (run at the end, and spot-checked per phase)
 
