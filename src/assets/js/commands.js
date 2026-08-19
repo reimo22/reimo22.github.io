@@ -1,7 +1,5 @@
-// Command palette. Reads the site-command data island and builds a
-// unified command list from nav + actions. Palette UI is added in a
-// later task; this skeleton builds the list and exposes it for
-// testing.
+// Command palette. Reads the site-command data island, builds a unified
+// command list from nav + actions, and wires the palette + help overlay UI.
 (function () {
   "use strict";
 
@@ -208,7 +206,9 @@
       dialog.appendChild(row);
     }
 
-    backdrop.addEventListener("click", closeHelp);
+    backdrop.addEventListener("click", function (e) {
+      if (e.target === backdrop) closeHelp();
+    });
     backdrop.appendChild(dialog);
     return backdrop;
   }
@@ -218,6 +218,9 @@
     lastFocused = document.activeElement;
     helpOverlay = buildHelp();
     document.body.appendChild(helpOverlay);
+    var dialog = helpOverlay.querySelector('[role="dialog"]');
+    dialog.tabIndex = -1;
+    dialog.focus();
   }
 
   function closeHelp() {

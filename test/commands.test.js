@@ -285,3 +285,37 @@ test("opening palette closes help and vice versa", () => {
   );
   assert.ok(document.querySelector('[role="dialog"]'));
 });
+
+test("help backdrop click closes, dialog click does not", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "?", { shiftKey: true });
+  var dialog = document.querySelector('[aria-label="Keyboard shortcuts"]');
+  dialog.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
+  assert.ok(document.querySelector('[aria-label="Keyboard shortcuts"]'));
+  var backdrop = document.querySelector(".help-backdrop");
+  backdrop.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
+  assert.equal(
+    document.querySelector('[aria-label="Keyboard shortcuts"]'),
+    null,
+  );
+});
+
+test("help dialog receives focus on open", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "?", { shiftKey: true });
+  var dialog = document.querySelector('[aria-label="Keyboard shortcuts"]');
+  assert.equal(document.activeElement, dialog);
+});
+
+test("ArrowDown wraps from last to first", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  var input = document.querySelector('[role="combobox"]');
+  pressKey(dom, "End");
+  assert.equal(input.getAttribute("aria-activedescendant"), "palette-opt-8");
+  pressKey(dom, "ArrowDown");
+  assert.equal(input.getAttribute("aria-activedescendant"), "palette-opt-0");
+});
