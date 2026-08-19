@@ -19,7 +19,7 @@ Personal portfolio site for Kenji Pinlac, built with Eleventy 3.
 - **No CSS framework**, no analytics, no CMS, no database
 - Fully usable with JavaScript disabled
 
-## Running locally
+## Running locally (But why?)
 
 ```bash
 npm install          # install deps
