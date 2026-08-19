@@ -67,6 +67,7 @@
 
   // --- Palette UI ---
   var palette = null;
+  var helpOverlay = null;
   var lastFocused = null;
   var activeIndex = 0;
   var filtered = commands.slice();
@@ -140,9 +141,13 @@
       list.appendChild(opt);
     }
 
-    palette.input.setAttribute("aria-activedescendant", "palette-opt-" + activeIndex);
+    palette.input.setAttribute(
+      "aria-activedescendant",
+      "palette-opt-" + activeIndex,
+    );
     var activeEl = document.getElementById("palette-opt-" + activeIndex);
-    if (activeEl && activeEl.scrollIntoView) activeEl.scrollIntoView({ block: "nearest" });
+    if (activeEl && activeEl.scrollIntoView)
+      activeEl.scrollIntoView({ block: "nearest" });
   }
 
   function open() {
@@ -168,10 +173,66 @@
     lastFocused = null;
   }
 
+  function buildHelp() {
+    var backdrop = document.createElement("div");
+    backdrop.className = "help-backdrop";
+
+    var dialog = document.createElement("div");
+    dialog.className = "help";
+    dialog.setAttribute("role", "dialog");
+    dialog.setAttribute("aria-modal", "true");
+    dialog.setAttribute("aria-label", "Keyboard shortcuts");
+
+    var title = document.createElement("h2");
+    title.className = "help-title";
+    title.textContent = "Keyboard shortcuts";
+
+    var rows = [
+      ["/ or Ctrl+K", "Open palette"],
+      ["Esc", "Close"],
+      ["\u2191/\u2193", "Move"],
+      ["Enter", "Run command"],
+      ["?", "Toggle this help"],
+    ];
+
+    for (var i = 0; i < rows.length; i++) {
+      var row = document.createElement("div");
+      row.className = "help-row";
+      var key = document.createElement("span");
+      key.className = "help-row-key";
+      key.textContent = rows[i][0];
+      var desc = document.createElement("span");
+      desc.textContent = rows[i][1];
+      row.appendChild(key);
+      row.appendChild(desc);
+      dialog.appendChild(row);
+    }
+
+    backdrop.addEventListener("click", closeHelp);
+    backdrop.appendChild(dialog);
+    return backdrop;
+  }
+
+  function openHelp() {
+    if (helpOverlay) return;
+    lastFocused = document.activeElement;
+    helpOverlay = buildHelp();
+    document.body.appendChild(helpOverlay);
+  }
+
+  function closeHelp() {
+    if (!helpOverlay) return;
+    helpOverlay.remove();
+    helpOverlay = null;
+    if (lastFocused && lastFocused.isConnected) {
+      lastFocused.focus();
+    }
+    lastFocused = null;
+  }
+
   function moveActive(delta) {
     if (filtered.length === 0) return;
-    activeIndex =
-      (activeIndex + delta + filtered.length) % filtered.length;
+    activeIndex = (activeIndex + delta + filtered.length) % filtered.length;
     renderList();
   }
 
@@ -197,8 +258,17 @@
     // Ctrl+K / Cmd+K — toggle palette (works from anywhere)
     if ((e.ctrlKey || e.metaKey) && e.key === "k") {
       e.preventDefault();
+      if (helpOverlay) closeHelp();
       if (palette) close();
       else open();
+      return;
+    }
+
+    // ? — toggle help (only when not in an input)
+    if (e.key === "?" && !isInput) {
+      e.preventDefault();
+      if (helpOverlay) closeHelp();
+      else openHelp();
       return;
     }
 
@@ -209,14 +279,19 @@
       return;
     }
 
-    // If palette is not open, no more keys to handle
-    if (!palette) return;
-
-    // Esc — close
+    // Esc — close help if open, otherwise close palette
     if (e.key === "Escape") {
+      if (helpOverlay) {
+        closeHelp();
+        return;
+      }
+      if (!palette) return;
       close();
       return;
     }
+
+    // If palette is not open, no more keys to handle
+    if (!palette) return;
 
     // Arrow keys — navigate
     if (e.key === "ArrowDown") {

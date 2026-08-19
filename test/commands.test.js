@@ -60,7 +60,10 @@ test("builds 9 commands: 4 nav + 5 actions", () => {
 test("nav labels match site.json", () => {
   const dom = makeDom();
   const labels = dom.window.__palette.commands.slice(0, 4).map((c) => c.label);
-  assert.equal(JSON.stringify(labels), JSON.stringify(["Home", "About", "Writeups", "Blog"]));
+  assert.equal(
+    JSON.stringify(labels),
+    JSON.stringify(["Home", "About", "Writeups", "Blog"]),
+  );
 });
 
 test("action labels match site.json", () => {
@@ -68,7 +71,13 @@ test("action labels match site.json", () => {
   const labels = dom.window.__palette.commands.slice(4).map((c) => c.label);
   assert.equal(
     JSON.stringify(labels),
-    JSON.stringify(["Toggle theme", "Copy page URL", "RSS feed", "Email", "GitHub"]),
+    JSON.stringify([
+      "Toggle theme",
+      "Copy page URL",
+      "RSS feed",
+      "Email",
+      "GitHub",
+    ]),
   );
 });
 
@@ -80,10 +89,10 @@ test("every command has a run function", () => {
 });
 
 test("no-ops when island is absent", () => {
-  const dom = new JSDOM(
-    `<body><button id="theme-toggle"></button></body>`,
-    { url: "https://example.test/", runScripts: "outside-only" },
-  );
+  const dom = new JSDOM(`<body><button id="theme-toggle"></button></body>`, {
+    url: "https://example.test/",
+    runScripts: "outside-only",
+  });
   dom.window.eval(COMMANDS_JS);
   assert.equal(dom.window.__palette, undefined);
 });
@@ -161,9 +170,7 @@ test("backdrop click closes palette", () => {
   pressKey(dom, "/");
   const backdrop = document.querySelector(".palette-backdrop");
   assert.ok(backdrop);
-  backdrop.dispatchEvent(
-    new dom.window.MouseEvent("click", { bubbles: true }),
-  );
+  backdrop.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
   assert.equal(document.querySelector('[role="dialog"]'), null);
 });
 
@@ -221,4 +228,60 @@ test("filter shows no-match row when nothing matches", () => {
   const empty = document.querySelector(".palette-option-empty");
   assert.ok(empty);
   assert.equal(empty.textContent, "No commands");
+});
+
+// --- Action side effects ---
+
+test("toggle-theme clicks #theme-toggle", () => {
+  const dom = makeDom();
+  let clicked = false;
+  dom.window.document
+    .getElementById("theme-toggle")
+    .addEventListener("click", () => {
+      clicked = true;
+    });
+  pressKey(dom, "/");
+  // Navigate to Toggle theme (index 4) via filter
+  const input = dom.window.document.querySelector('[role="combobox"]');
+  input.value = "Toggle theme";
+  input.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+  pressKey(dom, "Enter");
+  assert.ok(clicked);
+});
+
+// --- Help overlay ---
+
+test("? opens help overlay", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "?", { shiftKey: true });
+  const help = document.querySelector('[aria-label="Keyboard shortcuts"]');
+  assert.ok(help);
+  assert.equal(help.getAttribute("role"), "dialog");
+  assert.equal(help.getAttribute("aria-modal"), "true");
+});
+
+test("Esc closes help overlay", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "?", { shiftKey: true });
+  assert.ok(document.querySelector('[aria-label="Keyboard shortcuts"]'));
+  pressKey(dom, "Escape");
+  assert.equal(
+    document.querySelector('[aria-label="Keyboard shortcuts"]'),
+    null,
+  );
+});
+
+test("opening palette closes help and vice versa", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "?", { shiftKey: true });
+  assert.ok(document.querySelector('[aria-label="Keyboard shortcuts"]'));
+  pressKey(dom, "k", { ctrlKey: true });
+  assert.equal(
+    document.querySelector('[aria-label="Keyboard shortcuts"]'),
+    null,
+  );
+  assert.ok(document.querySelector('[role="dialog"]'));
 });
