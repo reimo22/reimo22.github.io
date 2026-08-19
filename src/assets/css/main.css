@@ -826,6 +826,10 @@ main blockquote > :last-child {
   color: var(--palette-expand-hint);
 }
 
+.palette-option[aria-selected="true"] .palette-expand-hint {
+  color: inherit;
+}
+
 /* When breadcrumb is visible, it takes the top rounding; input loses it. */
 .palette-expanded .palette-breadcrumb {
   border-radius: 0.5rem 0.5rem 0 0;

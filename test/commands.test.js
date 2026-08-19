@@ -604,3 +604,48 @@ test("help overlay lists expand and collapse keys", () => {
   assert.ok(keyTexts.indexOf("\u2192") !== -1, "should list right arrow");
   assert.ok(keyTexts.indexOf("\u2190") !== -1, "should list left arrow");
 });
+
+test("copy-url calls navigator.clipboard.writeText", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  let written = null;
+  dom.window.navigator.clipboard = {
+    writeText: function (url) {
+      written = url;
+      return Promise.resolve();
+    },
+  };
+  pressKey(dom, "/");
+  var input = document.querySelector('[role="combobox"]');
+  input.value = "Copy page URL";
+  input.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+  pressKey(dom, "Enter");
+  assert.equal(written, "https://example.test/");
+});
+
+// --- Accessible scoped list label ---
+
+test("listbox label changes to parent label on expand", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowRight");
+  var list = document.querySelector('[role="listbox"]');
+  assert.equal(list.getAttribute("aria-label"), "Blog");
+});
+
+test("listbox label resets to Commands on collapse", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowRight");
+  pressKey(dom, "ArrowLeft");
+  var list = document.querySelector('[role="listbox"]');
+  assert.equal(list.getAttribute("aria-label"), "Commands");
+});

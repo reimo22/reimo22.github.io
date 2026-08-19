@@ -128,6 +128,16 @@
     list.setAttribute("id", "palette-list");
     list.setAttribute("aria-label", "Commands");
 
+    list.addEventListener("mousedown", function (e) {
+      e.preventDefault();
+      var opt = e.target.closest(".palette-option");
+      if (!opt) return;
+      var idx = parseInt(opt.dataset.index, 10);
+      if (!filtered[idx]) return;
+      filtered[idx].run();
+      close();
+    });
+
     var breadcrumb = document.createElement("div");
     breadcrumb.className = "palette-breadcrumb";
     breadcrumb.setAttribute("aria-hidden", "true");
@@ -183,12 +193,6 @@
         opt.appendChild(hint);
       }
       opt.dataset.index = i;
-      opt.addEventListener("mousedown", function (e) {
-        e.preventDefault();
-        var idx = parseInt(this.dataset.index, 10);
-        filtered[idx].run();
-        close();
-      });
       list.appendChild(opt);
     }
 
@@ -238,6 +242,7 @@
       palette.breadcrumb.textContent = parentLabel;
       palette.breadcrumb.style.display = "block";
       palette.dialog.classList.add("palette-expanded");
+      palette.list.setAttribute("aria-label", parentLabel);
       renderList();
     }
   }
@@ -252,6 +257,7 @@
       palette.breadcrumb.textContent = "";
       palette.breadcrumb.style.display = "none";
       palette.dialog.classList.remove("palette-expanded");
+      palette.list.setAttribute("aria-label", "Commands");
       renderList();
     }
   }
