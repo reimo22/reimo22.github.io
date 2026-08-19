@@ -1147,3 +1147,122 @@ markdown links opened in the same tab with mangled attributes. AI diagnosed
 the markdown-it v15 API change and fixed it. Human approved the resume PDF
 opening in a new tab (the macro hardcodes the attributes, so the local PDF
 link also gets them — a deliberate simplification, not an oversight).
+
+## Phase 7 — Command palette (2026-08-19)
+
+Added a keyboard-driven command palette to every page — the last JS
+feature in the site's original scope.
+
+**Data model:** `site.json` gained an `actions` array alongside
+`nav`; Nunjucks renders both into a `<script type="application/json">
+` data island in `base.njk`. `commands.js` reads the island at load
+and builds a unified command list. Single source of truth, zero
+duplication between the `<nav>` DOM and the palette — a nav entry or
+site action added in `site.json` shows up in both places with no
+second source to keep in sync.
+
+**JS:** `commands.js` (~340 lines, vanilla IIFE, no deps, defer)
+follows the `theme.js`/`codecopy.js` pattern exactly. Opens on `/`
+or `Ctrl+K`, filter input with `role="combobox"`, `listbox`/`option`
+ARIA with `aria-activedescendant`, arrows/Home/End/Enter navigate,
+`Esc` closes and restores focus. Actions: toggle-theme clicks
+`#theme-toggle` (reuses theme.js logic), copy-url uses
+`navigator.clipboard` (no execCommand fallback — site is always
+HTTPS or localhost), mailto navigates same-tab, external links
+`window.open` with `noopener`. `?` opens a help overlay listing
+every shortcut. Single-overlay rule: opening one closes the other.
+
+**CSS:** Palette dialog + backdrop + help overlay as fixed-position
+layers. `.js`-gated footer hint; `(hover: none) and (pointer: coarse)`
+hides the hint (first `pointer: coarse` query on the site). Single
+`rgb(0 0 0 / 45%)` backdrop reads in both themes — no new token needed.
+Active option uses `--color-accent` background. All palette rows
+`min-height: 44px`.
+
+**Tests:** 24 jsdom tests in `test/commands.test.js`: list building
+(6), open/close/focus (5), ARIA (2), filter (2), keyboard nav (3),
+action side effects (1), help overlay (5). Two jsdom-specific
+workarounds in the test harness: `pressKey` constructs
+`KeyboardEvent`s via `new dom.window.KeyboardEvent(...)` rather than
+Node's global `KeyboardEvent` — events created in the wrong realm
+dispatch into jsdom but read as foreign objects, so `e.key` would
+silently come back `undefined` and every key test would pass
+vacuously. And `scrollIntoView({ block: "nearest" })` on the active
+option is guarded (`if (activeEl && activeEl.scrollIntoView)`) in
+`commands.js` itself, since jsdom doesn't implement it and would
+otherwise throw at every arrow press in the test runner.
+
+**What CI is expected to check (not yet pushed):** the lint job runs
+ESLint on `commands.js` and Prettier `--check` across `commands.js`,
+the test file, `base.njk`, and `site.json`; the test job runs the
+full `node:test` suite (60 tests across 7 files, up from 36 at the
+end of Phase 5.1); `html-validate` runs over `_site/` after build,
+where the data-island `<script type="application/json">` must parse
+cleanly; Lighthouse's a11y audit asserts the palette's
+`role="dialog"`/`aria-modal`/`combobox`/`listbox` markup scores 100.
+None of these touch the keyboard UX itself — that remains the human
+browser check on the PR. The local lint run (which mirrors CI's lint
+job) caught real issues before push: Task 5's palette CSS shipped
+with 20 stylelint violations (empty-line-before, legacy
+`rgba()`/alpha-value notation — all auto-fixable) and `commands.js`
+had a long single-line object literal Prettier wanted multi-line;
+`lint:fix` resolved both. Two planning docs and `CLAUDE.md` that
+previous commits had shipped unformatted were also caught and
+formatted in this PR.
+
+**What the AI drafted vs. human review:** The AI proposed a
+right-aligned type-hint column (`page`/`action`/`link`) in the
+design spec — flagged during self-review as unscoped YAGNI and
+removed before the spec was approved. The human also confirmed the
+"nav + site actions" scope (vs. nav-only as SPEC.md's literal
+wording) during the brainstorm, which shaped the entire data model.
+SPEC.md got a one-line amendment in this PR to match.
+
+**Descoped:** The design spec called for copy-url feedback — the active
+row's label flipping to "Copied" with a ~700ms delayed close on success,
+and "Copy failed" with the palette staying open on rejection. The
+implementation copies silently and closes immediately, same as all other
+commands. Implementing the feedback/delayed-close would require
+restructuring the shared `run() → close()` path for one command's UX;
+not worth the complexity for a 9-command palette. The spec was amended
+(strikethrough + descope note) in the same PR.
+
+**Whole-branch review caught three issues** before the human browser
+check: (1) the help overlay's backdrop click handler wasn't guarded, so
+clicking inside the dialog bubbled up and dismissed the overlay — fixed
+with an `e.target === backdrop` guard; (2) `openHelp` never moved focus
+into the dialog, leaving screen readers stranded on the trigger — fixed
+with `dialog.tabIndex = -1; dialog.focus()`; (3) a stale header comment
+still described the file as a skeleton. Three new tests cover the first
+two fixes plus an ArrowDown wrap-around assertion the original suite
+missed.
+
+### Phase 7.1 — Palette search + expandable Blog/Writeups
+
+**What changed:** The command palette's data island gains `posts` (blog
+collection) and `writeups` (merged `writeups-box` + `writeups-ctf`,
+newest-first) arrays via two new Nunjucks filters in `.eleventy.js`:
+`postsToCommands` (maps collection items to `{ label, url, date, tags }`,
+stripping Eleventy's automatic collection tags) and `mergeNewestFirst`
+(concatenates two collections, sorts by `data.date` descending). The Blog
+and Writeups nav entries are marked `expandable: true` with `children`
+arrays. Right-arrow on an expandable entry swaps the palette list to its
+children; left-arrow returns to root. The filter now matches against both
+`label` and `tags` (case-insensitive substring). A breadcrumb element
+(`.palette-breadcrumb`) shows the parent label when expanded.
+
+**Tests:** 77 jsdom tests in `test/commands.test.js` (up from 60): added
+expandable flag (3), expand/collapse navigation (3), scoped tag filtering
+(5), breadcrumb (3), expand hint (2), help overlay keys (1). The
+Enter-in-expanded test was adapted: jsdom does not update `location.href`
+on assignment (logs "Not implemented: navigation"), so the test verifies
+the palette closes after run instead of checking the URL directly.
+
+**What the AI drafted vs. human review:** The human chose scoped search
+(Option B — search only inside expanded Blog/Writeups) over global search
+(Option A — all posts visible at root level). This keeps the data island
+small and the `/` affordance focused on navigation.
+
+**What CI is expected to check (not yet pushed):** Same as Phase 7 — lint,
+test, build, html-validate, Lighthouse a11y. The new breadcrumb and
+expanded list markup must pass html-validate and Lighthouse's a11y audit.

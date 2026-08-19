@@ -26,6 +26,15 @@
     </script>
     <script src="/assets/js/theme.js" defer></script>
     <script src="/assets/js/codecopy.js" defer></script>
+    <script type="application/json" id="site-commands">
+      {{ {
+        nav: site.nav,
+        actions: site.actions,
+        posts: collections.blog | postsToCommands,
+        writeups: collections["writeups-box"] | mergeNewestFirst(collections["writeups-ctf"]) | postsToCommands
+      } | dump | safe }}
+    </script>
+    <script src="/assets/js/commands.js" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -73,6 +82,7 @@
         {{ icons.iconLink("mailto:kpinlac@keemail.me", "email", "Email") }}
         {{ icons.iconLink("https://github.com/reimo22", "github", "GitHub") }}
       </p>
+      <p class="palette-hint">press / for commands · ? for help</p>
     </footer>
   </body>
 </html>
