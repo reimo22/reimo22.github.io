@@ -184,10 +184,13 @@ shortcuts"`, plain rows, no listbox.
   `execCommand` fallback: the site is only ever served from GitHub Pages
   (HTTPS) or `localhost:8080`, both secure contexts where the Clipboard
   API is guaranteed — a fallback would be 15 lines duplicating
-  `codecopy.js` for an unreachable case. Feedback: the active row's label
+  `codecopy.js` for an unreachable case. ~~Feedback: the active row's label
   flips to "Copied", then the palette closes after ~700ms; on rejection
   the label shows "Copy failed" and the palette **stays open** so the
-  failure is visible, `Esc` releases.
+  failure is visible, `Esc` releases.~~ **Descoped**: copies silently and
+  closes immediately, same as all other commands. The feedback/delayed-close
+  flow would require restructuring the shared `run() → close()` path for
+  one command's UX; not worth the complexity for a 9-command palette.
 - **`RSS feed` / `GitHub`**: `window.open(url, "_blank", "noopener")`
   (Phase 6.2 convention for externals; the feed is same-origin but
   opening raw XML same-tab navigates away from the site).

@@ -1179,9 +1179,9 @@ hides the hint (first `pointer: coarse` query on the site). Single
 Active option uses `--color-accent` background. All palette rows
 `min-height: 44px`.
 
-**Tests:** 21 jsdom tests in `test/commands.test.js`: list building
-(6), open/close/focus (5), ARIA (2), filter (2), keyboard nav (2),
-action side effects (1), help overlay (3). Two jsdom-specific
+**Tests:** 24 jsdom tests in `test/commands.test.js`: list building
+(6), open/close/focus (5), ARIA (2), filter (2), keyboard nav (3),
+action side effects (1), help overlay (5). Two jsdom-specific
 workarounds in the test harness: `pressKey` constructs
 `KeyboardEvent`s via `new dom.window.KeyboardEvent(...)` rather than
 Node's global `KeyboardEvent` — events created in the wrong realm
@@ -1195,7 +1195,7 @@ otherwise throw at every arrow press in the test runner.
 **What CI is expected to check (not yet pushed):** the lint job runs
 ESLint on `commands.js` and Prettier `--check` across `commands.js`,
 the test file, `base.njk`, and `site.json`; the test job runs the
-full `node:test` suite (57 tests across 7 files, up from 36 at the
+full `node:test` suite (60 tests across 7 files, up from 36 at the
 end of Phase 5.1); `html-validate` runs over `_site/` after build,
 where the data-island `<script type="application/json">` must parse
 cleanly; Lighthouse's a11y audit asserts the palette's
@@ -1217,3 +1217,22 @@ removed before the spec was approved. The human also confirmed the
 "nav + site actions" scope (vs. nav-only as SPEC.md's literal
 wording) during the brainstorm, which shaped the entire data model.
 SPEC.md got a one-line amendment in this PR to match.
+
+**Descoped:** The design spec called for copy-url feedback — the active
+row's label flipping to "Copied" with a ~700ms delayed close on success,
+and "Copy failed" with the palette staying open on rejection. The
+implementation copies silently and closes immediately, same as all other
+commands. Implementing the feedback/delayed-close would require
+restructuring the shared `run() → close()` path for one command's UX;
+not worth the complexity for a 9-command palette. The spec was amended
+(strikethrough + descope note) in the same PR.
+
+**Whole-branch review caught three issues** before the human browser
+check: (1) the help overlay's backdrop click handler wasn't guarded, so
+clicking inside the dialog bubbled up and dismissed the overlay — fixed
+with an `e.target === backdrop` guard; (2) `openHelp` never moved focus
+into the dialog, leaving screen readers stranded on the trigger — fixed
+with `dialog.tabIndex = -1; dialog.focus()`; (3) a stale header comment
+still described the file as a skeleton. Three new tests cover the first
+two fixes plus an ArrowDown wrap-around assertion the original suite
+missed.
