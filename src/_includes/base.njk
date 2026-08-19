@@ -27,7 +27,12 @@
     <script src="/assets/js/theme.js" defer></script>
     <script src="/assets/js/codecopy.js" defer></script>
     <script type="application/json" id="site-commands">
-      {{ { nav: site.nav, actions: site.actions } | dump | safe }}
+      {{ {
+        nav: site.nav,
+        actions: site.actions,
+        posts: collections.blog | postsToCommands,
+        writeups: collections["writeups-box"] | mergeNewestFirst(collections["writeups-ctf"]) | postsToCommands
+      } | dump | safe }}
     </script>
     <script src="/assets/js/commands.js" defer></script>
   </head>

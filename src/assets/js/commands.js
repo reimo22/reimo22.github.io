@@ -15,18 +15,44 @@
 
   var commands = [];
   var i, item;
+  var posts = data.posts || [];
+  var writeups = data.writeups || [];
+
+  function buildChildren(items) {
+    var children = [];
+    for (var j = 0; j < items.length; j++) {
+      var child = items[j];
+      children.push({
+        label: child.label,
+        url: child.url,
+        date: child.date,
+        tags: child.tags || [],
+        run: (function (url) {
+          return function () {
+            location.href = url;
+          };
+        })(child.url),
+      });
+    }
+    return children;
+  }
 
   var nav = data.nav || [];
   for (i = 0; i < nav.length; i++) {
     item = nav[i];
-    commands.push({
+    var entry = {
       label: item.label,
       run: (function (url) {
         return function () {
           location.href = url;
         };
       })(item.url),
-    });
+    };
+    if (item.label === "Blog" || item.label === "Writeups") {
+      entry.expandable = true;
+      entry.children = buildChildren(item.label === "Blog" ? posts : writeups);
+    }
+    commands.push(entry);
   }
 
   var actions = data.actions || [];
@@ -69,6 +95,9 @@
   var lastFocused = null;
   var activeIndex = 0;
   var filtered = commands.slice();
+  var navRoot = commands.slice();
+  var currentList = navRoot;
+  var parentLabel = null;
 
   function buildPalette() {
     // Backdrop
@@ -99,13 +128,31 @@
     list.setAttribute("id", "palette-list");
     list.setAttribute("aria-label", "Commands");
 
+    var breadcrumb = document.createElement("div");
+    breadcrumb.className = "palette-breadcrumb";
+    breadcrumb.setAttribute("aria-hidden", "true");
+
+    var footer = document.createElement("div");
+    footer.className = "palette-footer";
+    footer.setAttribute("aria-hidden", "true");
+    footer.textContent =
+      "\u2191\u2193 navigate \u00b7 Enter select \u00b7 Esc dismiss";
+
+    dialog.appendChild(breadcrumb);
     dialog.appendChild(input);
     dialog.appendChild(list);
+    dialog.appendChild(footer);
 
     // Click backdrop to close
     backdrop.addEventListener("click", close);
 
-    return { backdrop: backdrop, dialog: dialog, input: input, list: list };
+    return {
+      backdrop: backdrop,
+      dialog: dialog,
+      input: input,
+      list: list,
+      breadcrumb: breadcrumb,
+    };
   }
 
   function renderList() {
@@ -129,6 +176,12 @@
       opt.id = "palette-opt-" + i;
       opt.setAttribute("aria-selected", i === activeIndex ? "true" : "false");
       opt.textContent = filtered[i].label;
+      if (filtered[i].expandable) {
+        var hint = document.createElement("span");
+        hint.className = "palette-expand-hint";
+        hint.textContent = " \u2192 to expand";
+        opt.appendChild(hint);
+      }
       opt.dataset.index = i;
       opt.addEventListener("mousedown", function (e) {
         e.preventDefault();
@@ -152,8 +205,11 @@
     if (palette) return;
     lastFocused = document.activeElement;
     palette = buildPalette();
-    filtered = commands.slice();
+    currentList = navRoot;
+    parentLabel = null;
+    filtered = currentList.slice();
     activeIndex = 0;
+    palette.breadcrumb.style.display = "none";
     document.body.appendChild(palette.backdrop);
     document.body.appendChild(palette.dialog);
     renderList();
@@ -169,6 +225,35 @@
       lastFocused.focus();
     }
     lastFocused = null;
+  }
+
+  function expandTo(cmd) {
+    if (!cmd || !cmd.expandable || !cmd.children) return;
+    currentList = cmd.children;
+    parentLabel = cmd.label;
+    filtered = currentList.slice();
+    activeIndex = 0;
+    if (palette) {
+      palette.input.value = "";
+      palette.breadcrumb.textContent = parentLabel;
+      palette.breadcrumb.style.display = "block";
+      palette.dialog.classList.add("palette-expanded");
+      renderList();
+    }
+  }
+
+  function collapseToRoot() {
+    currentList = navRoot;
+    parentLabel = null;
+    filtered = currentList.slice();
+    activeIndex = 0;
+    if (palette) {
+      palette.input.value = "";
+      palette.breadcrumb.textContent = "";
+      palette.breadcrumb.style.display = "none";
+      palette.dialog.classList.remove("palette-expanded");
+      renderList();
+    }
   }
 
   function buildHelp() {
@@ -189,6 +274,8 @@
       ["/ or Ctrl+K", "Open palette"],
       ["Esc", "Close"],
       ["\u2191/\u2193", "Move"],
+      ["\u2192", "Expand section"],
+      ["\u2190", "Back to root"],
       ["Enter", "Run command"],
       ["?", "Toggle this help"],
     ];
@@ -243,9 +330,19 @@
     if (!palette) return;
     var q = palette.input.value.toLowerCase();
     filtered = [];
-    for (var i = 0; i < commands.length; i++) {
-      if (commands[i].label.toLowerCase().indexOf(q) !== -1) {
-        filtered.push(commands[i]);
+    for (var i = 0; i < currentList.length; i++) {
+      var cmd = currentList[i];
+      if (cmd.label.toLowerCase().indexOf(q) !== -1) {
+        filtered.push(cmd);
+        continue;
+      }
+      if (cmd.tags) {
+        for (var t = 0; t < cmd.tags.length; t++) {
+          if (cmd.tags[t].toLowerCase().indexOf(q) !== -1) {
+            filtered.push(cmd);
+            break;
+          }
+        }
       }
     }
     activeIndex = 0;
@@ -320,6 +417,28 @@
       if (filtered.length > 0) {
         activeIndex = filtered.length - 1;
         renderList();
+      }
+      return;
+    }
+
+    // ArrowRight — expand if active item is expandable
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      if (
+        filtered.length > 0 &&
+        filtered[activeIndex] &&
+        filtered[activeIndex].expandable
+      ) {
+        expandTo(filtered[activeIndex]);
+      }
+      return;
+    }
+
+    // ArrowLeft — collapse to root if in expanded context
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      if (currentList !== navRoot) {
+        collapseToRoot();
       }
       return;
     }

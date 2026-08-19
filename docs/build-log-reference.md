@@ -1236,3 +1236,33 @@ with `dialog.tabIndex = -1; dialog.focus()`; (3) a stale header comment
 still described the file as a skeleton. Three new tests cover the first
 two fixes plus an ArrowDown wrap-around assertion the original suite
 missed.
+
+### Phase 7.1 — Palette search + expandable Blog/Writeups
+
+**What changed:** The command palette's data island gains `posts` (blog
+collection) and `writeups` (merged `writeups-box` + `writeups-ctf`,
+newest-first) arrays via two new Nunjucks filters in `.eleventy.js`:
+`postsToCommands` (maps collection items to `{ label, url, date, tags }`,
+stripping Eleventy's automatic collection tags) and `mergeNewestFirst`
+(concatenates two collections, sorts by `data.date` descending). The Blog
+and Writeups nav entries are marked `expandable: true` with `children`
+arrays. Right-arrow on an expandable entry swaps the palette list to its
+children; left-arrow returns to root. The filter now matches against both
+`label` and `tags` (case-insensitive substring). A breadcrumb element
+(`.palette-breadcrumb`) shows the parent label when expanded.
+
+**Tests:** 77 jsdom tests in `test/commands.test.js` (up from 60): added
+expandable flag (3), expand/collapse navigation (3), scoped tag filtering
+(5), breadcrumb (3), expand hint (2), help overlay keys (1). The
+Enter-in-expanded test was adapted: jsdom does not update `location.href`
+on assignment (logs "Not implemented: navigation"), so the test verifies
+the palette closes after run instead of checking the URL directly.
+
+**What the AI drafted vs. human review:** The human chose scoped search
+(Option B — search only inside expanded Blog/Writeups) over global search
+(Option A — all posts visible at root level). This keeps the data island
+small and the `/` affordance focused on navigation.
+
+**What CI is expected to check (not yet pushed):** Same as Phase 7 — lint,
+test, build, html-validate, Lighthouse a11y. The new breadcrumb and
+expanded list markup must pass html-validate and Lighthouse's a11y audit.

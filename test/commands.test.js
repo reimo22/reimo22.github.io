@@ -20,9 +20,39 @@ const ACTIONS = [
   { label: "GitHub", url: "https://github.com/test", external: true },
 ];
 
+const POSTS = [
+  {
+    label: "Building This Site",
+    url: "/blog/building-this-site/",
+    date: "2026-08-10",
+    tags: ["meta", "web"],
+  },
+  {
+    label: "Token Saving Tools",
+    url: "/blog/token-saving-tools/",
+    date: "2026-08-15",
+    tags: ["tools", "ai"],
+  },
+];
+
+const WRITEUPS = [
+  {
+    label: "Sequel",
+    url: "/writeups/sequel/",
+    date: "2026-08-05",
+    tags: ["linux", "sql"],
+  },
+  {
+    label: "Crocodile",
+    url: "/writeups/crocodile/",
+    date: "2026-08-01",
+    tags: ["windows"],
+  },
+];
+
 const PAGE_HTML = `
   <script type="application/json" id="site-commands">
-    ${JSON.stringify({ nav: NAV, actions: ACTIONS })}
+    ${JSON.stringify({ nav: NAV, actions: ACTIONS, posts: POSTS, writeups: WRITEUPS })}
   </script>
   <button id="theme-toggle" aria-label="Toggle theme"></button>
   <footer><p class="palette-hint" tabindex="-1">press / for commands</p></footer>
@@ -230,7 +260,210 @@ test("filter shows no-match row when nothing matches", () => {
   assert.equal(empty.textContent, "No commands");
 });
 
-// --- Action side effects ---
+// --- Expandable nav ---
+
+test("Blog and Writeups commands are expandable", () => {
+  const dom = makeDom();
+  var cmds = dom.window.__palette.commands;
+  var blog = cmds.find(function (c) {
+    return c.label === "Blog";
+  });
+  var writeups = cmds.find(function (c) {
+    return c.label === "Writeups";
+  });
+  assert.ok(blog.expandable, "Blog should be expandable");
+  assert.ok(writeups.expandable, "Writeups should be expandable");
+  assert.ok(Array.isArray(blog.children), "Blog should have children array");
+  assert.ok(
+    Array.isArray(writeups.children),
+    "Writeups should have children array",
+  );
+});
+
+test("Home and About are not expandable", () => {
+  const dom = makeDom();
+  var cmds = dom.window.__palette.commands;
+  var home = cmds.find(function (c) {
+    return c.label === "Home";
+  });
+  var about = cmds.find(function (c) {
+    return c.label === "About";
+  });
+  assert.equal(home.expandable, undefined);
+  assert.equal(about.expandable, undefined);
+});
+
+test("expandable items show an expand hint", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  var opts = document.querySelectorAll('[role="option"]');
+  var blogOpt = Array.from(opts).find(function (o) {
+    return o.textContent.indexOf("Blog") === 0;
+  });
+  var hint = blogOpt.querySelector(".palette-expand-hint");
+  assert.ok(hint, "Blog option should have expand hint");
+  assert.ok(
+    hint.textContent.indexOf("\u2192") !== -1,
+    "hint should contain right arrow",
+  );
+});
+
+test("non-expandable items have no expand hint", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  var opts = document.querySelectorAll('[role="option"]');
+  var homeOpt = Array.from(opts).find(function (o) {
+    return o.textContent.indexOf("Home") === 0;
+  });
+  assert.equal(homeOpt.querySelector(".palette-expand-hint"), null);
+});
+
+test("Blog children have label, url, date, tags", () => {
+  const dom = makeDom();
+  var cmds = dom.window.__palette.commands;
+  var blog = cmds.find(function (c) {
+    return c.label === "Blog";
+  });
+  assert.ok(blog.children.length > 0);
+  var child = blog.children[0];
+  assert.equal(typeof child.label, "string");
+  assert.equal(typeof child.url, "string");
+  assert.equal(typeof child.date, "string");
+  assert.ok(Array.isArray(child.tags));
+  assert.equal(typeof child.run, "function");
+});
+
+// --- Expand/collapse navigation ---
+
+test("Right-arrow on Blog expands to post list", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  var input = document.querySelector('[role="combobox"]');
+  // Navigate to Blog (index 3: Home=0, About=1, Writeups=2, Blog=3)
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  assert.equal(input.getAttribute("aria-activedescendant"), "palette-opt-3");
+  // Press Right to expand
+  pressKey(dom, "ArrowRight");
+  var opts = document.querySelectorAll('[role="option"]');
+  assert.ok(opts.length > 0);
+  assert.equal(opts[0].textContent, "Building This Site");
+});
+
+test("Left-arrow collapses back to root nav", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowRight");
+  assert.ok(document.querySelectorAll('[role="option"]').length > 0);
+  pressKey(dom, "ArrowLeft");
+  var opts = document.querySelectorAll('[role="option"]');
+  assert.equal(opts.length, 9); // 4 nav + 5 actions = 9 root commands
+  assert.equal(opts[0].textContent, "Home");
+});
+
+test("Right-arrow on non-expandable item does nothing", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  pressKey(dom, "ArrowRight");
+  var opts = document.querySelectorAll('[role="option"]');
+  assert.equal(opts.length, 9); // still root list
+});
+
+// --- Scoped filter ---
+
+test("filter in expanded context matches by title", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowRight");
+  var input = document.querySelector('[role="combobox"]');
+  input.value = "building";
+  input.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+  var opts = document.querySelectorAll('[role="option"]');
+  assert.equal(opts.length, 1);
+  assert.equal(opts[0].textContent, "Building This Site");
+});
+
+test("filter in expanded context matches by tag", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowRight");
+  var input = document.querySelector('[role="combobox"]');
+  input.value = "web";
+  input.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+  var opts = document.querySelectorAll('[role="option"]');
+  assert.equal(opts.length, 1);
+  assert.equal(opts[0].textContent, "Building This Site");
+});
+
+test("filter in expanded context shows no-match row", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowRight");
+  var input = document.querySelector('[role="combobox"]');
+  input.value = "zzzzz";
+  input.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+  var opts = document.querySelectorAll('[role="option"]');
+  assert.equal(opts.length, 0);
+  assert.ok(document.querySelector(".palette-option-empty"));
+});
+
+test("Enter in expanded context closes palette after calling run", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowRight");
+  assert.ok(
+    document.querySelector('[role="option"]'),
+    "should show child options",
+  );
+  pressKey(dom, "Enter");
+  assert.equal(
+    document.querySelector('[role="dialog"]'),
+    null,
+    "palette should close after run",
+  );
+});
+
+test("root filter still works after collapse", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowRight");
+  pressKey(dom, "ArrowLeft");
+  var input = document.querySelector('[role="combobox"]');
+  input.value = "github";
+  input.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+  var opts = document.querySelectorAll('[role="option"]');
+  assert.equal(opts.length, 1);
+  assert.equal(opts[0].textContent, "GitHub");
+});
 
 test("toggle-theme clicks #theme-toggle", () => {
   const dom = makeDom();
@@ -247,6 +480,46 @@ test("toggle-theme clicks #theme-toggle", () => {
   input.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
   pressKey(dom, "Enter");
   assert.ok(clicked);
+});
+
+// --- Breadcrumb ---
+
+test("breadcrumb shows parent label when expanded", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowRight");
+  var breadcrumb = document.querySelector(".palette-breadcrumb");
+  assert.ok(breadcrumb);
+  assert.equal(breadcrumb.textContent, "Blog");
+});
+
+test("breadcrumb hidden at root level", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  var breadcrumb = document.querySelector(".palette-breadcrumb");
+  assert.ok(breadcrumb, "breadcrumb element should exist");
+  assert.equal(breadcrumb.style.display, "none");
+});
+
+test("breadcrumb hides after collapse", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "/");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowDown");
+  pressKey(dom, "ArrowRight");
+  assert.ok(document.querySelector(".palette-breadcrumb"));
+  pressKey(dom, "ArrowLeft");
+  assert.equal(
+    document.querySelector(".palette-breadcrumb").style.display,
+    "none",
+  );
 });
 
 // --- Help overlay ---
@@ -318,4 +591,16 @@ test("ArrowDown wraps from last to first", () => {
   assert.equal(input.getAttribute("aria-activedescendant"), "palette-opt-8");
   pressKey(dom, "ArrowDown");
   assert.equal(input.getAttribute("aria-activedescendant"), "palette-opt-0");
+});
+
+test("help overlay lists expand and collapse keys", () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  pressKey(dom, "?", { shiftKey: true });
+  var keys = document.querySelectorAll(".help-row-key");
+  var keyTexts = Array.from(keys).map(function (k) {
+    return k.textContent;
+  });
+  assert.ok(keyTexts.indexOf("\u2192") !== -1, "should list right arrow");
+  assert.ok(keyTexts.indexOf("\u2190") !== -1, "should list left arrow");
 });

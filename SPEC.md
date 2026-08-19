@@ -115,6 +115,10 @@ A layer on top of the working link-based site, not a replacement for it.
 - Command list is built from the same `src/_data/site.json` as the
   real `<nav>`: page nav entries plus a site actions array (theme
   toggle, copy URL, RSS, email, GitHub).
+- Blog and Writeups nav entries are expandable: pressing Right-arrow on either
+  swaps the palette list to that section's posts/writeups (sorted newest-first),
+  with title/tag search scoped to that list. Left-arrow returns to the root
+  command list.
 - Discoverability: a persistent `press / for commands · ? for help` hint, plus a
   `?` shortcuts overlay.
 - **Hidden on touch-primary devices** — a keyboard-only affordance is dead

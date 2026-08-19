@@ -321,6 +321,25 @@ export default function (eleventyConfig) {
   eleventyConfig.addFilter("isoDate", isoDate);
   eleventyConfig.addFilter("rfc822Date", rfc822Date);
 
+  eleventyConfig.addFilter("postsToCommands", (items) =>
+    items.map((item) => ({
+      label: item.data.title,
+      url: item.url,
+      date: isoDate(item.data.date),
+      tags: (item.data.tags || []).filter(
+        (t) => t !== "post" && t !== "writeups-box" && t !== "writeups-ctf",
+      ),
+    })),
+  );
+
+  eleventyConfig.addFilter("mergeNewestFirst", (a, b) => {
+    var merged = (a || []).concat(b || []);
+    merged.sort(function (x, y) {
+      return new Date(y.data.date) - new Date(x.data.date);
+    });
+    return merged;
+  });
+
   // Two kinds of writeup, split on which frontmatter shape the item has.
   // Must be addCollection: eleventyComputed.tags never reaches a collection,
   // because Eleventy resolves collections from `tags` before computed data.

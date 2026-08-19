@@ -371,6 +371,17 @@ help`) + `?` overlay listing every shortcut
       only — everything reachable
 - [x] Append build-log entry
 
+## Phase 7.1 — Palette search + expandable nav
+
+- [x] Add `posts` + `writeups` to data island via `postsToCommands` filter
+- [x] Mark Blog/Writeups as expandable with children arrays
+- [x] Right-arrow expands, left-arrow collapses
+- [x] Scoped filter matches by title and tag in expanded context
+- [x] Breadcrumb indicator shows parent label when expanded
+- [x] Expand hint ("→ to expand") on expandable root items
+- [x] Help overlay lists expand/collapse keys
+- [x] `npm run lint` / `npm test` / `npm run build` / `npx html-validate` pass
+
 ## Cross-cutting verification (run at the end, and spot-checked per phase)
 
 - [ ] Write `README.md` — what the site is, tech stack, how to run locally
