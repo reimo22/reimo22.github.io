@@ -1,0 +1,22 @@
+# Kenji Pinlac
+
+> Personal portfolio and blog: HTB writeups, CTF challenges, and a build log.
+
+This site hosts writeups for retired HackTheBox machines and CTF event challenges, a blog about building this site, and a resume.
+
+## Sections
+
+- [/](https://reimo22.github.io/) — Home page with recent posts and writeups
+- [/about/](https://reimo22.github.io/about/) — Profile and resume
+- [/writeups/](https://reimo22.github.io/writeups/) — HackTheBox machines and CTF challenges
+- [/blog/](https://reimo22.github.io/blog/) — Blog posts including the site build log
+- [/feed.xml](https://reimo22.github.io/feed.xml) — RSS feed for blog posts
+- [/sitemap.xml](https://reimo22.github.io/sitemap.xml) — XML sitemap
+
+## Tech stack
+
+- Eleventy 3 (Node, static site generator)
+- Hand-written CSS with custom-property tokens (light / dark themes)
+- Plain JS: command palette, theme toggle, code-copy buttons
+- Node `node:test` + jsdom for unit/DOM tests
+- GitHub Actions CI (lint, html-validate, Lighthouse, lychee) → deploy to Pages

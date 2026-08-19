@@ -382,11 +382,22 @@ help`) + `?` overlay listing every shortcut
 - [x] Help overlay lists expand/collapse keys
 - [x] `npm run lint` / `npm test` / `npm run build` / `npx html-validate` pass
 
+## Phase 8 — Home page + site housekeeping
+
+- [ ] Surface 3 most-recent blog posts + 3 most-recent writeups on `/`
+- [ ] Create `src/404.njk` with permalink `/404.html` for GitHub Pages
+- [ ] Create `src/robots.txt` + `src/llms.txt` + `src/sitemap.njk`
+- [ ] Add passthrough copy for `.txt` files in `.eleventy.js`
+- [ ] Write `README.md` — what the site is, tech stack, how to run locally
+- [ ] `npm run lint`, `npm test`, `npm run build`, `npx html-validate _site`
+- [ ] Append build-log entry
+
 ## Cross-cutting verification (run at the end, and spot-checked per phase)
 
-- [ ] Write `README.md` — what the site is, tech stack, how to run locally
-- [ ] Create `robots.txt` — standard crawl directives
-- [ ] Create site-level `llms.txt` — structured metadata for AI agents (useful for scrapers to understand site content and navigation; value is limited for a static site but costs nothing)
+- [x] Write `README.md`
+- [x] Create `robots.txt`
+- [x] Create site-level `llms.txt`
+- [x] Create XML sitemap
 
 - [ ] `npx @11ty/eleventy --serve` full click-through, all writeups + images
 - [ ] Keyboard pass: `/`, `Ctrl+K`, `Esc`, arrows, `Enter`; confirm `/` still types a literal slash in real inputs

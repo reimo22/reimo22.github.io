@@ -1266,3 +1266,11 @@ small and the `/` affordance focused on navigation.
 **What CI is expected to check (not yet pushed):** Same as Phase 7 — lint,
 test, build, html-validate, Lighthouse a11y. The new breadcrumb and
 expanded list markup must pass html-validate and Lighthouse's a11y audit.
+
+### Phase 8 — Home page + site housekeeping
+
+**What changed:** The home page (`/`) was a static banner + one-line intro. It now surfaces the 3 most-recent blog posts and 3 most-recent writeups (boxes + CTF merged newest-first), each with a "see all" link to their index. New files: `src/404.njk` (permalink `/404.html`, picked up by GitHub Pages), `src/robots.txt` (with sitemap pointer), `src/llms.txt` (llmstxt.org format describing site sections), `src/sitemap.njk` (auto-generated XML from `collections.all`), and `README.md`. Passthrough copy for `.txt` files added to `.eleventy.js`.
+
+**No spec doc** for this phase — small enough that TASKS.md checkboxes + chat design approval sufficed, following the same pattern as Phase 4.2/4.3/6.1/6.2.
+
+**What CI expected to check:** Same four checkpoints as prior phases. The sitemap and 404 are static HTML/XML with no new dependencies.

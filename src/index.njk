@@ -31,4 +31,34 @@
 {% block content %}
   <h1>{{ site.title }}<span class="cursor" aria-hidden="true">_</span></h1>
   <p>Portfolio, HTB writeups, and build log.</p>
+
+  <section>
+    <h2>Recent posts</h2>
+    <ul>
+      {% for item in collections.blog %}
+        {% if loop.index <= 3 %}
+          <li>
+            <a href="{{ item.url }}">{{ item.data.title }}</a>
+            <span class="resume-meta">{{ item.data.date | isoDate }}</span>
+          </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+    <p><a href="/blog/">See all posts →</a></p>
+  </section>
+
+  <section>
+    <h2>Recent writeups</h2>
+    <ul>
+      {% for item in collections["writeups-box"] | mergeNewestFirst(collections["writeups-ctf"]) %}
+        {% if loop.index <= 3 %}
+          <li>
+            <a href="{{ item.url }}">{{ item.data.title }}</a>
+            <span class="resume-meta">{{ item.data.date | isoDate }}</span>
+          </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+    <p><a href="/writeups/">See all writeups →</a></p>
+  </section>
 {% endblock %}
