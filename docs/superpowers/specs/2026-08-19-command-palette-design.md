@@ -120,7 +120,7 @@ gated like the theme toggle: `.palette-hint { display: none }` +
   "Keyboard shortcuts", static rows: `/ or Ctrl+K — open palette`,
   `Esc — close`, `↑/↓ — move`, `Enter — run`, `? — help`.
 - **Touch hiding**: `@media (hover: none) and (pointer: coarse) {
-  .palette-hint { display: none } }` — CSS only, first `pointer: coarse`
+.palette-hint { display: none } }` — CSS only, first `pointer: coarse`
   query on the site.
 - **No motion at all**: no fade, blink, or type-on, so no
   `prefers-reduced-motion` gate is needed (SPEC's gate requirement is met
@@ -167,10 +167,10 @@ gated like the theme toggle: `.palette-hint { display: none }` +
 - **ARIA** (WAI-ARIA combobox + listbox, exactly what SPEC pins):
   dialog `role="dialog" aria-modal="true" aria-label="Command palette"`;
   input `role="combobox" aria-expanded="true" aria-controls=…
-  aria-activedescendant="palette-opt-{i}"`; list `role="listbox"
-  aria-label="Commands"`; rows `role="option"` with `aria-selected`. Help
+aria-activedescendant="palette-opt-{i}"`; list `role="listbox"
+aria-label="Commands"`; rows `role="option"` with `aria-selected`. Help
   overlay: `role="dialog" aria-modal="true" aria-label="Keyboard
-  shortcuts"`, plain rows, no listbox.
+shortcuts"`, plain rows, no listbox.
 - **Scroll-through**: the backdrop covers the viewport, so no body scroll
   lock is added. The browser check watches for background scrolling; if
   it appears, `overflow: hidden` on `<html>` while open is the fix.

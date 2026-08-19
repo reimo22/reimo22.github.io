@@ -37,26 +37,28 @@ island), CSS custom properties (two-theme tokens), `<script defer>`.
 
 ## File Structure
 
-| File | Action | Responsibility |
-|------|--------|----------------|
-| `src/_data/site.json` | Modify | Add `actions` array (5 entries) |
-| `src/_includes/base.njk` | Modify | JSON island, footer hint, script tag |
-| `src/assets/js/commands.js` | Create | Palette IIFE: list + UI + keys |
-| `src/assets/css/main.css` | Modify | Palette/dialog/help/hint CSS |
-| `test/commands.test.js` | Create | jsdom tests |
-| `SPEC.md` | Modify | One-line: nav + actions |
-| `TASKS.md` | Modify | Check off Phase 7 items |
-| `docs/build-log-reference.md` | Modify | Phase 7 entry |
+| File                          | Action | Responsibility                       |
+| ----------------------------- | ------ | ------------------------------------ |
+| `src/_data/site.json`         | Modify | Add `actions` array (5 entries)      |
+| `src/_includes/base.njk`      | Modify | JSON island, footer hint, script tag |
+| `src/assets/js/commands.js`   | Create | Palette IIFE: list + UI + keys       |
+| `src/assets/css/main.css`     | Modify | Palette/dialog/help/hint CSS         |
+| `test/commands.test.js`       | Create | jsdom tests                          |
+| `SPEC.md`                     | Modify | One-line: nav + actions              |
+| `TASKS.md`                    | Modify | Check off Phase 7 items              |
+| `docs/build-log-reference.md` | Modify | Phase 7 entry                        |
 
 ---
 
 ### Task 1: Data model + template markup
 
 **Files:**
+
 - Modify: `src/_data/site.json`
 - Modify: `src/_includes/base.njk`
 
 **Interfaces:**
+
 - Produces: JSON island, footer hint, script tag — consumed by
   `commands.js` in Task 2.
 
@@ -92,16 +94,16 @@ After the `codecopy.js` script tag in `<head>`, add the island
 and commands script:
 
 ```html
-    <script type="application/json" id="site-commands">
-      {{ { nav: site.nav, actions: site.actions } | dump | safe }}
-    </script>
-    <script src="/assets/js/commands.js" defer></script>
+<script type="application/json" id="site-commands">
+  {{ { nav: site.nav, actions: site.actions } | dump | safe }}
+</script>
+<script src="/assets/js/commands.js" defer></script>
 ```
 
 After the `.footer-contact` paragraph in `<footer>`, add:
 
 ```html
-      <p class="palette-hint">press / for commands · ? for help</p>
+<p class="palette-hint">press / for commands · ? for help</p>
 ```
 
 - [ ] **Step 3: Verify build renders the island**
@@ -121,10 +123,12 @@ git commit -m "feat: add command data island + hint markup for Phase 7"
 ### Task 2: commands.js + command list tests
 
 **Files:**
+
 - Create: `src/assets/js/commands.js`
 - Create: `test/commands.test.js`
 
 **Interfaces:**
+
 - Consumes: JSON island from Task 1.
 - Produces: `window.__palette.commands` — array of `{ label, run }`
   objects, consumed by palette UI (Task 3). Exposed on window solely
@@ -276,7 +280,11 @@ test("action labels match site.json", () => {
   const dom = makeDom();
   const labels = dom.window.__palette.commands.slice(4).map((c) => c.label);
   assert.deepEqual(labels, [
-    "Toggle theme", "Copy page URL", "RSS feed", "Email", "GitHub",
+    "Toggle theme",
+    "Copy page URL",
+    "RSS feed",
+    "Email",
+    "GitHub",
   ]);
 });
 
@@ -288,10 +296,10 @@ test("every command has a run function", () => {
 });
 
 test("no-ops when island is absent", () => {
-  const dom = new JSDOM(
-    `<body><button id="theme-toggle"></button></body>`,
-    { url: "https://example.test/", runScripts: "outside-only" },
-  );
+  const dom = new JSDOM(`<body><button id="theme-toggle"></button></body>`, {
+    url: "https://example.test/",
+    runScripts: "outside-only",
+  });
   dom.window.eval(COMMANDS_JS);
   assert.equal(dom.window.__palette, undefined);
 });
@@ -322,10 +330,12 @@ git commit -m "feat: commands.js builds nav + action list from data island"
 ### Task 3: Palette UI (open/close/filter/nav/ARIA)
 
 **Files:**
+
 - Modify: `src/assets/js/commands.js` (add DOM creation, keys, filter)
 - Modify: `test/commands.test.js` (append palette behavior tests)
 
 **Interfaces:**
+
 - Consumes: command list from Task 2.
 - Produces: dialog DOM (role=dialog, combobox, listbox/options),
   focus save/restore, filter, arrow/Home/End/Enter navigation.
@@ -400,9 +410,7 @@ test("backdrop click closes palette", () => {
   pressKey(dom, "/");
   const backdrop = document.querySelector(".palette-backdrop");
   assert.ok(backdrop);
-  backdrop.dispatchEvent(
-    new dom.window.MouseEvent("click", { bubbles: true }),
-  );
+  backdrop.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
   assert.equal(document.querySelector('[role="dialog"]'), null);
 });
 
@@ -700,10 +708,12 @@ git commit -m "feat: palette UI — open/close, filter, keyboard nav, ARIA"
 ### Task 4: Action side effects + help overlay
 
 **Files:**
+
 - Modify: `src/assets/js/commands.js` (add help overlay + ? key)
 - Modify: `test/commands.test.js` (append action + help tests)
 
 **Interfaces:**
+
 - Consumes: palette open/close from Task 3.
 - Produces: `?` opens help overlay; toggle-theme clicks button;
   copy-url asserts clipboard + feedback.
@@ -751,7 +761,10 @@ test("Esc closes help overlay", () => {
   pressKey(dom, "?", { shiftKey: true });
   assert.ok(document.querySelector('[aria-label="Keyboard shortcuts"]'));
   pressKey(dom, "Escape");
-  assert.equal(document.querySelector('[aria-label="Keyboard shortcuts"]'), null);
+  assert.equal(
+    document.querySelector('[aria-label="Keyboard shortcuts"]'),
+    null,
+  );
 });
 
 test("opening palette closes help and vice versa", () => {
@@ -760,7 +773,10 @@ test("opening palette closes help and vice versa", () => {
   pressKey(dom, "?", { shiftKey: true });
   assert.ok(document.querySelector('[aria-label="Keyboard shortcuts"]'));
   pressKey(dom, "k", { ctrlKey: true });
-  assert.equal(document.querySelector('[aria-label="Keyboard shortcuts"]'), null);
+  assert.equal(
+    document.querySelector('[aria-label="Keyboard shortcuts"]'),
+    null,
+  );
   assert.ok(document.querySelector('[role="dialog"]'));
 });
 ```
@@ -778,113 +794,113 @@ from anywhere, like Ctrl+K). And add the help build function.
 Add a `helpOverlay` variable at the top (near `var palette = null`):
 
 ```js
-  var helpOverlay = null;
+var helpOverlay = null;
 ```
 
 Add a `buildHelp` function:
 
 ```js
-  function buildHelp() {
-    var backdrop = document.createElement("div");
-    backdrop.className = "help-backdrop";
+function buildHelp() {
+  var backdrop = document.createElement("div");
+  backdrop.className = "help-backdrop";
 
-    var dialog = document.createElement("div");
-    dialog.className = "help";
-    dialog.setAttribute("role", "dialog");
-    dialog.setAttribute("aria-modal", "true");
-    dialog.setAttribute("aria-label", "Keyboard shortcuts");
+  var dialog = document.createElement("div");
+  dialog.className = "help";
+  dialog.setAttribute("role", "dialog");
+  dialog.setAttribute("aria-modal", "true");
+  dialog.setAttribute("aria-label", "Keyboard shortcuts");
 
-    var title = document.createElement("h2");
-    title.className = "help-title";
-    title.textContent = "Keyboard shortcuts";
+  var title = document.createElement("h2");
+  title.className = "help-title";
+  title.textContent = "Keyboard shortcuts";
 
-    var rows = [
-      ["/ or Ctrl+K", "Open palette"],
-      ["Esc", "Close"],
-      ["\u2191/\u2193", "Move"],
-      ["Enter", "Run command"],
-      ["?", "Toggle this help"],
-    ];
+  var rows = [
+    ["/ or Ctrl+K", "Open palette"],
+    ["Esc", "Close"],
+    ["\u2191/\u2193", "Move"],
+    ["Enter", "Run command"],
+    ["?", "Toggle this help"],
+  ];
 
-    for (var i = 0; i < rows.length; i++) {
-      var row = document.createElement("div");
-      row.className = "help-row";
-      var key = document.createElement("span");
-      key.className = "help-row-key";
-      key.textContent = rows[i][0];
-      var desc = document.createElement("span");
-      desc.textContent = rows[i][1];
-      row.appendChild(key);
-      row.appendChild(desc);
-      dialog.appendChild(row);
-    }
-
-    backdrop.addEventListener("click", closeHelp);
-    backdrop.appendChild(dialog);
-    return backdrop;
+  for (var i = 0; i < rows.length; i++) {
+    var row = document.createElement("div");
+    row.className = "help-row";
+    var key = document.createElement("span");
+    key.className = "help-row-key";
+    key.textContent = rows[i][0];
+    var desc = document.createElement("span");
+    desc.textContent = rows[i][1];
+    row.appendChild(key);
+    row.appendChild(desc);
+    dialog.appendChild(row);
   }
 
-  function openHelp() {
-    if (helpOverlay) return;
-    lastFocused = document.activeElement;
-    helpOverlay = buildHelp();
-    document.body.appendChild(helpOverlay);
-  }
+  backdrop.addEventListener("click", closeHelp);
+  backdrop.appendChild(dialog);
+  return backdrop;
+}
 
-  function closeHelp() {
-    if (!helpOverlay) return;
-    helpOverlay.remove();
-    helpOverlay = null;
-    if (lastFocused && lastFocused.isConnected) {
-      lastFocused.focus();
-    }
-    lastFocused = null;
+function openHelp() {
+  if (helpOverlay) return;
+  lastFocused = document.activeElement;
+  helpOverlay = buildHelp();
+  document.body.appendChild(helpOverlay);
+}
+
+function closeHelp() {
+  if (!helpOverlay) return;
+  helpOverlay.remove();
+  helpOverlay = null;
+  if (lastFocused && lastFocused.isConnected) {
+    lastFocused.focus();
   }
+  lastFocused = null;
+}
 ```
 
 In the keydown handler, add these blocks **before** the palette-only
 section (before `if (!palette) return;`):
 
 ```js
-    // Ctrl+K / Cmd+K — also close help if open
-    if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-      e.preventDefault();
-      if (helpOverlay) closeHelp();
-      if (palette) close();
-      else open();
-      return;
-    }
+// Ctrl+K / Cmd+K — also close help if open
+if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+  e.preventDefault();
+  if (helpOverlay) closeHelp();
+  if (palette) close();
+  else open();
+  return;
+}
 
-    // ? — toggle help (only when not in an input)
-    if (e.key === "?" && !isInput) {
-      e.preventDefault();
-      if (helpOverlay) closeHelp();
-      else openHelp();
-      return;
-    }
+// ? — toggle help (only when not in an input)
+if (e.key === "?" && !isInput) {
+  e.preventDefault();
+  if (helpOverlay) closeHelp();
+  else openHelp();
+  return;
+}
 ```
 
 In the Esc handler (inside the `if (!palette) return` section), also
 close help:
 
 ```js
-    if (e.key === "Escape") {
-      if (helpOverlay) closeHelp();
-      else close();
-      return;
-    }
+if (e.key === "Escape") {
+  if (helpOverlay) closeHelp();
+  else close();
+  return;
+}
 ```
 
 Update the exposed API:
 
 ```js
-  window.__palette = {
-    commands: commands,
-    open: open,
-    close: close,
-    openHelp: openHelp,
-    closeHelp: closeHelp,
-  };
+window.__palette = {
+  commands: commands,
+  open: open,
+  close: close,
+  openHelp: openHelp,
+  closeHelp: closeHelp,
+};
 ```
 
 - [ ] **Step 4: Run tests — all pass**
@@ -903,9 +919,11 @@ git commit -m "feat: help overlay + action side-effect tests"
 ### Task 5: CSS
 
 **Files:**
+
 - Modify: `src/assets/css/main.css`
 
 **Interfaces:**
+
 - Consumes: class names from Tasks 3-4 (.palette-hint,
   .palette-backdrop, .palette, .palette-input, .palette-list,
   .palette-option, .palette-option-empty, .help-backdrop, .help,
@@ -1053,6 +1071,7 @@ git commit -m "feat: palette + help overlay CSS"
 ### Task 6: Docs + final verification
 
 **Files:**
+
 - Modify: `SPEC.md` (one-line amendment)
 - Modify: `TASKS.md` (check off Phase 7)
 - Modify: `docs/build-log-reference.md` (Phase 7 entry)
@@ -1083,10 +1102,9 @@ adding notes for any deviations. The final section reads:
 - [x] Focus management: stashes activeElement on open, restores on
       close; only the filter input is focusable (aria-activedescendant
       pattern)
-- [x] `role="dialog"` + `aria-modal`, `combobox`/`listbox`/`option`
-      + `aria-activedescendant`
+- [x] `role="dialog"` + `aria-modal`, `combobox`/`listbox`/`option` + `aria-activedescendant`
 - [x] Discoverability hint in footer (`press / for commands · ? for
-      help`) + `?` overlay listing every shortcut
+help`) + `?` overlay listing every shortcut
 - [x] Hint hidden on touch-primary devices via CSS media query
       `(hover: none) and (pointer: coarse)`
 - [x] **JS-off pass**: disable JS, navigate entire site by click + Tab
@@ -1146,6 +1164,7 @@ SPEC.md got a one-line amendment in this PR to match.
 ```bash
 npm run lint && npm run build && npx html-validate _site
 ```
+
 Expected: all pass.
 
 - [ ] **Step 5: Commit**

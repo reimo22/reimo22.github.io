@@ -112,8 +112,9 @@ A layer on top of the working link-based site, not a replacement for it.
 - Focus moves into the palette on open, returns to the trigger element on close.
 - `role="dialog"` + `aria-modal`; results as a `listbox`/`option` pattern with
   `aria-activedescendant`.
-- Command list is built from the same nav data (`src/_data/site.json`) as the
-  real `<nav>`, so the two can't drift apart.
+- Command list is built from the same `src/_data/site.json` as the
+  real `<nav>`: page nav entries plus a site actions array (theme
+  toggle, copy URL, RSS, email, GitHub).
 - Discoverability: a persistent `press / for commands · ? for help` hint, plus a
   `?` shortcuts overlay.
 - **Hidden on touch-primary devices** — a keyboard-only affordance is dead

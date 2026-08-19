@@ -355,14 +355,21 @@ symlinks. A vault→repo sync script can follow as a separate concern.
 
 ## Phase 7 — Command palette
 
-- [ ] `src/assets/js/commands.js`: vanilla, no dependencies, built from `site.json`
-- [ ] `/` and `Ctrl+K` open (guard against firing while focus is in an input/textarea); `Esc` closes; arrow keys + `Enter` navigate
-- [ ] Focus management: moves in on open, returns to trigger on close
-- [ ] `role="dialog"` + `aria-modal`, `listbox`/`option` + `aria-activedescendant`
-- [ ] Discoverability hint (`press / for commands · ? for help`) + `?` overlay
-- [ ] Hide palette entry point on touch-primary devices
-- [ ] **JS-off pass**: disable JS, navigate entire site by click + Tab only — everything reachable
-- [ ] Append final build-log entry
+- [x] `src/assets/js/commands.js`: vanilla, no dependencies, built
+      from `site.json` nav + actions via JSON island
+- [x] `/` and `Ctrl+K` open (guard against firing while focus is in
+      an input/textarea); `Esc` closes; arrow keys + `Enter` navigate
+- [x] Focus management: stashes activeElement on open, restores on
+      close; only the filter input is focusable (aria-activedescendant
+      pattern)
+- [x] `role="dialog"` + `aria-modal`, `combobox`/`listbox`/`option` + `aria-activedescendant`
+- [x] Discoverability hint in footer (`press / for commands · ? for
+help`) + `?` overlay listing every shortcut
+- [x] Hint hidden on touch-primary devices via CSS media query
+      `(hover: none) and (pointer: coarse)`
+- [x] **JS-off pass**: disable JS, navigate entire site by click + Tab
+      only — everything reachable
+- [x] Append build-log entry
 
 ## Cross-cutting verification (run at the end, and spot-checked per phase)
 

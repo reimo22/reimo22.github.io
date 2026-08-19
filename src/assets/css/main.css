@@ -747,6 +747,7 @@ main blockquote > :last-child {
 .palette-hint {
   display: none;
 }
+
 .js .palette-hint {
   display: block;
   text-align: center;
@@ -754,6 +755,7 @@ main blockquote > :last-child {
   color: var(--color-muted);
   margin: 0.75rem 0 0;
 }
+
 @media (hover: none) and (pointer: coarse) {
   .palette-hint {
     display: none !important;
@@ -764,9 +766,10 @@ main blockquote > :last-child {
 .palette-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgb(0 0 0 / 45%);
   z-index: 100;
 }
+
 .palette {
   position: fixed;
   top: 18vh;
@@ -783,6 +786,7 @@ main blockquote > :last-child {
   overflow: hidden;
   font-family: var(--font-mono);
 }
+
 .palette-input {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -794,19 +798,23 @@ main blockquote > :last-child {
   font-size: 1rem;
   outline: none;
 }
+
 .palette-input::placeholder {
   color: var(--color-muted);
 }
+
 .palette-input:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: -2px;
 }
+
 .palette-list {
   margin: 0;
   padding: 0;
   overflow-y: auto;
   flex: 1;
 }
+
 .palette-option {
   padding: 0 1rem;
   min-height: 44px;
@@ -815,10 +823,12 @@ main blockquote > :last-child {
   color: var(--color-fg);
   cursor: default;
 }
+
 .palette-option[aria-selected="true"] {
   background: var(--color-accent);
   color: var(--color-bg);
 }
+
 .palette-option-empty {
   padding: 0 1rem;
   min-height: 44px;
@@ -831,9 +841,10 @@ main blockquote > :last-child {
 .help-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgb(0 0 0 / 45%);
   z-index: 100;
 }
+
 .help {
   position: fixed;
   top: 18vh;
@@ -847,17 +858,20 @@ main blockquote > :last-child {
   padding: 1.5rem;
   font-family: var(--font-mono);
 }
+
 .help-title {
   margin: 0 0 0.75rem;
   font-size: 1rem;
   color: var(--color-fg);
 }
+
 .help-row {
   display: flex;
   justify-content: space-between;
   padding: 0.375rem 0;
   color: var(--color-fg);
 }
+
 .help-row-key {
   color: var(--color-muted);
 }
