@@ -4,7 +4,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{% if title %}{{ title }} · {% endif %}{{ site.title }}</title>
+    <title>{{ pageTitle or ((title + ' · ') if title else '') + site.title }}</title>
+    <meta name="description" content="Systems, infrastructure, and security — HackTheBox writeups, homelab builds, and build logs." />
+    <meta property="og:title" content="{{ pageTitle or ((title + ' · ') if title else '') + site.title }}" />
+    <meta property="og:description" content="Systems, infrastructure, and security — HackTheBox writeups, homelab builds, and build logs." />
+    <meta property="og:image" content="/assets/img/og-banner.png" />
+    <meta property="og:type" content="website" />
     <link rel="stylesheet" href="/assets/css/main.css" />
     <!-- Must stay inline and blocking: a deferred or external script paints the
          wrong theme first and then corrects it, which is a visible flash. The
@@ -79,7 +84,7 @@
     <footer>
       <p class="footer-contact">
         &copy; {{ currentYear }} {{ site.title }} ·
-        {{ icons.iconLink("mailto:kpinlac@keemail.me", "email", "Email") }}
+        {{ icons.iconLink("mailto:kpinlac@proton.me", "email", "Email") }}
         {{ icons.iconLink("https://github.com/reimo22", "github", "GitHub") }}
       </p>
       <p class="palette-hint">press / for commands · ? for help</p>

@@ -80,7 +80,7 @@ Add the `actions` key after `nav`:
     { "label": "Toggle theme", "action": "toggle-theme" },
     { "label": "Copy page URL", "action": "copy-url" },
     { "label": "RSS feed", "url": "/feed.xml", "external": true },
-    { "label": "Email", "url": "mailto:kpinlac@keemail.me" },
+    { "label": "Email", "url": "mailto:kpinlac@proton.me" },
     { "label": "GitHub", "url": "https://github.com/reimo22", "external": true }
   ]
 }
