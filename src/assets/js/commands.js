@@ -467,12 +467,5 @@
     }
   });
 
-  // Expose open/close for help overlay (Task 4)
-  window.__palette = {
-    commands: commands,
-    open: open,
-    close: close,
-    openHelp: openHelp,
-    closeHelp: closeHelp,
-  };
+  window.__palette = { commands: commands };
 })();

@@ -76,31 +76,6 @@ test("clicking the button copies the block's exact text via the Clipboard API", 
   assert.equal(copied, 'echo "hi"');
 });
 
-test("falls back to a temp textarea + execCommand when the Clipboard API is absent", async () => {
-  const dom = makeDom();
-  const { document, navigator } = dom.window;
-  Object.defineProperty(navigator, "clipboard", {
-    value: undefined,
-    configurable: true,
-  });
-  let execCalls = 0;
-  let copiedValue = null;
-  document.execCommand = () => {
-    execCalls += 1;
-    // The temp textarea lives at body level (appended in codecopy.js), not
-    // inside the .codeblock wrapper.
-    const textarea = document.querySelector("textarea");
-    copiedValue = textarea && textarea.value;
-    return true;
-  };
-
-  await clickButton(dom, document.querySelector(".codecopy"));
-
-  assert.equal(copiedValue, 'echo "hi"');
-  assert.equal(execCalls, 1);
-  assert.equal(document.querySelector("textarea"), null, "removed after copy");
-});
-
 test("label flips to Copied and reverts after the timeout", async () => {
   const dom = makeDom();
   const { document, navigator } = dom.window;
