@@ -33,15 +33,15 @@ centered hero blobs. Genuinely static, fast, accessible, usable with JS off.
 Dark is the **default** regardless of OS preference; light is opt-in via the
 toggle, persisted in `localStorage` as `[data-theme="light"]`.
 
-| Token | Dark (`:root`) | Light (`[data-theme="light"]`) |
-| ----- | -------------- | ------------------------------ |
-| `--color-bg` | `#14111c` near-black lavender | `#f7f5f0` off-white |
-| `--color-fg` | `#e8e3f5` lavender-ish | `#201e1a` near-black |
-| `--color-muted` | `#b3aac9` | `#5a554a` |
-| `--color-accent` | `#c9a6ff` lavender | `#201e1a` |
-| `--color-border` | `#6d6494` | `#847c6e` |
-| `--code-bg` | `#1e1b2c` | `#efece5` |
-| `--palette-expand-hint` | `#8a7db8` | `#8a8478` |
+| Token                   | Dark (`:root`)                | Light (`[data-theme="light"]`) |
+| ----------------------- | ----------------------------- | ------------------------------ |
+| `--color-bg`            | `#14111c` near-black lavender | `#f7f5f0` off-white            |
+| `--color-fg`            | `#e8e3f5` lavender-ish        | `#201e1a` near-black           |
+| `--color-muted`         | `#b3aac9`                     | `#5a554a`                      |
+| `--color-accent`        | `#c9a6ff` lavender            | `#201e1a`                      |
+| `--color-border`        | `#6d6494`                     | `#847c6e`                      |
+| `--code-bg`             | `#1e1b2c`                     | `#efece5`                      |
+| `--palette-expand-hint` | `#8a7db8`                     | `#8a8478`                      |
 
 `color-scheme` is declared in both blocks so native UA widgets (scrollbars,
 form controls, focus rings) track page theme, not OS.
@@ -49,7 +49,7 @@ form controls, focus rings) track page theme, not OS.
 ## Typography
 
 - Font: `--font-mono` = `ui-monospace, "SFMono-Regular", "Menlo", "Consolas",
-  "Liberation Mono", monospace`.
+"Liberation Mono", monospace`.
 - Body: `line-height: 1.5`. Content column: `--content-max: 75ch`.
 
 ## Type / components
