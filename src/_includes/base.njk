@@ -83,9 +83,8 @@
     </main>
     <footer>
       <p class="footer-contact">
-        &copy; {{ currentYear }} {{ site.title }} ·
-        {{ icons.iconLink("mailto:kpinlac@proton.me", "email", "Email") }}
-        {{ icons.iconLink("https://github.com/reimo22", "github", "GitHub") }}
+        <span class="footer-copy">&copy; {{ currentYear }} {{ site.title }}</span>{{- icons.iconLink("mailto:kpinlac@proton.me", "email", "Email") -}}
+        {{- icons.iconLink("https://github.com/reimo22", "github", "GitHub") }}
       </p>
       <p class="palette-hint">press / for commands · ? for help</p>
     </footer>

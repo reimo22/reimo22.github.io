@@ -58,6 +58,9 @@ body {
   color: var(--color-fg);
   font-family: var(--font-mono);
   line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .skip-link {
@@ -145,6 +148,8 @@ main {
   padding: 1rem;
   max-width: var(--content-max);
   margin: 0 auto;
+  width: 100%;
+  flex: 1;
 }
 
 .resume-main {
@@ -156,6 +161,9 @@ footer {
   padding: 1rem;
   color: var(--color-muted);
   font-size: 0.875rem;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
 }
 
 .footer-contact {
@@ -163,6 +171,15 @@ footer {
   align-items: center;
   gap: 0.25rem;
   margin: 0;
+}
+
+/* Compensate the icon-link's 44px min-width inset: each link centers its 28px
+   art, so adjacent icons sit ~8px apart in box terms and read wider than the
+   text-to-icon gap. 0.75rem == 0.25rem gap + one 8px inset, making the art
+   rhythm uniform on both sides. Coupled to .icon-link min-width and .icon
+   size. */
+.footer-copy {
+  margin-right: 0.75rem;
 }
 
 .page h1 {
@@ -343,8 +360,8 @@ main blockquote > :last-child {
 }
 
 .icon {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
 }
 
 .icon-dark {
@@ -752,10 +769,8 @@ main blockquote > :last-child {
 
 .js .palette-hint {
   display: block;
-  text-align: center;
   font-size: 0.8125rem;
   color: var(--color-muted);
-  margin: 0.75rem 0 0;
 }
 
 @media (hover: none) and (pointer: coarse) {
