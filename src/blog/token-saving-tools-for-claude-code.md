@@ -37,6 +37,8 @@ I ran into some hiccups with Claude Code defaulting to 200k context, where you'd
 
 I haven't tried auto-routing, which uses semantic meaning to route requests to the cheapest capable model. It's promising, but my guess is it would break caching since you're routing between 3+ different models. So if you're looking into this, definitely enable session affinity (aka sticky routing).
 
+> Update (2026-09-08): the caching guess above is now measured. Direct single-provider access hits 87%+ cache rate. The adaptive router tanked it to 0–60%. Even pinning a single provider (Claude) through OmniRoute only reached 84%. Routers don't just add complexity — they structurally cost cache hits. Manual switching won.
+
 Another tool I discovered is **OmniRoute** — a model router like LiteLLM. It promises ~1.5B tokens for free by aggregating different free tiers from various services, via API keys, PATs, and OAuth. This was honestly a bit fishy, since it downright abuses TOS for many of those providers. But I figured that's not how I'd use it — more like a fallback between services I already pay for — so I pushed on.
 
 My use case was routing Claude Code through a cascade from Sonnet -> DS Flash (API) -> DS Flash (NanoGPT), with GPT Luna as fallback for vision. I've used `cache-optimized` as the routing strategy for this combo.
