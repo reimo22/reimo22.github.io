@@ -4,6 +4,7 @@ import fs from "node:fs";
 import {
   asciiShortcode,
   cactusStrip,
+  escapeHtml,
   moonAboveHorizon,
   starField,
 } from "../.eleventy.js";
@@ -142,4 +143,29 @@ test("starField reproduces the pad-repeat-cut pipeline exactly against the real 
   }
 
   assert.deepEqual(starField().split("\n"), padded);
+});
+
+test("banner art inputs contain no escapable characters — escapeHtml stays width-preserving", () => {
+  // The banner pipeline (tiling, horizon, occlusion) counts raw characters and
+  // assumes escapeHtml is the identity on everything it processes — if an art
+  // line held &, <, or >, escaping would inflate it and silently shear the
+  // geometry (a 1-char glyph becoming a 5-char entity). cactus is checked
+  // post-slice: its leftmost 15 columns do hold escapable characters, but they
+  // are cut before the strip exists. dino is exempt on purpose: it legitimately
+  // draws `<` (escaped on render) and no width arithmetic ever runs on it.
+  const files = ["cactus", "moon", "stars"];
+  for (const name of files) {
+    const lines = fs
+      .readFileSync(`src/assets/ascii/${name}.txt`, "utf8")
+      .replace(/\n$/, "")
+      .split("\n");
+    const widthInputs = name === "cactus" ? lines.map((l) => l.slice(15)) : lines;
+    for (const line of widthInputs) {
+      assert.equal(
+        escapeHtml(line),
+        line,
+        `${name}.txt line contains a character escapeHtml would inflate:\n${line}`,
+      );
+    }
+  }
 });
