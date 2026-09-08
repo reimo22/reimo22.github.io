@@ -159,7 +159,8 @@ test("banner art inputs contain no escapable characters — escapeHtml stays wid
       .readFileSync(`src/assets/ascii/${name}.txt`, "utf8")
       .replace(/\n$/, "")
       .split("\n");
-    const widthInputs = name === "cactus" ? lines.map((l) => l.slice(15)) : lines;
+    const widthInputs =
+      name === "cactus" ? lines.map((l) => l.slice(15)) : lines;
     for (const line of widthInputs) {
       assert.equal(
         escapeHtml(line),
