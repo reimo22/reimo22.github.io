@@ -408,3 +408,9 @@ help`) + `?` overlay listing every shortcut
       `LD_PRELOAD` handling as the Lighthouse script
 - Local Lighthouse bootstrap (one-time, per machine): `npx @puppeteer/browsers install chrome-headless-shell@stable`, point `CHROME_PATH` at the binary in `.claude/settings.local.json`, and always audit via the npm script — it clears `LD_PRELOAD` (hardened_malloc on secureblue crashes Chromium's allocator) and passes `--no-sandbox` (the shell can't set up its sandbox here)
 - [ ] Post-deploy check of `https://reimo22.github.io/` incl. writeup images
+
+## Future — Light theme warm tones
+
+- [ ] Explore warm accent palette for light theme: introduce oranges/browns
+      (e.g. `--color-accent`, `--code-bg`) to break the current off-white/monochrome.
+      Keep contrast ≥4.5:1; dark theme stays as-is
