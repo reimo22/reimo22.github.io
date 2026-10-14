@@ -1,5 +1,5 @@
 ---
-title: Context Management
+title: Context Management in Claude Code
 date: 2026-10-13
 tags: [blog, claude-code]
 status: evergreen
@@ -45,7 +45,7 @@ Handoffs are for switching sessions or deferring work to a future one. Where eac
 | Switching sessions or deferring work    | Handoff: the model writes the state of the work and the next step, so the next session starts from that instead of re-reading everything |
 | Changing models                         | A fresh session on the new model instead of the uncached rebuild                                                                         |
 
-Plan-level cost is a separate question, covered in [API vs Subscriptions](/blog/api-vs-subscriptions/).
+[Plan-level cost is a separate question](/blog/api-vs-subscriptions/).
 
 ## Don't feed the window
 
@@ -57,4 +57,4 @@ The same rule applies to me mid-session. When a task turns up something unrelate
 
 My reviewer never inherits the authoring context: a new session or a subagent, whichever is convenient. Ideally a different model too, since another model brings different bias and blindspots ([Arena on judge self-preference](https://arena.ai/blog/llm-judge-self-preference)). [Claude Code's best practices](https://code.claude.com/docs/en/best-practices#add-an-adversarial-review-step) call this an adversarial review step. The review traffic stays out of the authoring window too.
 
-For cutting the tokens that tool output brings in, see [Token-Saving Tools for Claude Code](/blog/token-saving-tools-for-claude-code/).
+The tokens that tool output brings in are [worth cutting too](/blog/token-saving-tools-for-claude-code/).
