@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Blocks the push when lint or tests fail. Mirrors the gates CI runs before deploy.
+set -euo pipefail
+
+npm run lint
+npm run test

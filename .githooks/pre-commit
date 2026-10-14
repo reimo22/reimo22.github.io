@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Blocks the commit when the lint suite fails. Same five tools CI's lint job runs.
+set -euo pipefail
+
+npm run lint
