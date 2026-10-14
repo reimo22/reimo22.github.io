@@ -8,6 +8,7 @@
     "build": "eleventy",
     "serve": "eleventy --serve",
     "test": "node --test \"test/**/*.test.js\"",
+    "prepare": "git config core.hooksPath .githooks",
     "lint:eslint": "eslint .",
     "lint:stylelint": "stylelint \"src/**/*.css\" --allow-empty-input",
     "lint:prettier": "prettier --check .",
