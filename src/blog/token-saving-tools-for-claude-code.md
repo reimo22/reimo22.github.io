@@ -5,49 +5,15 @@ tags: [blog, claude-code]
 status: evergreen
 ---
 
-TL;DR. I tried LiteLLM and OmniRoute but dropped both routers — too much complexity for a single-user setup. The compression engines are the real win. When to use each tool:
+TL;DR. The compression pipeline I measured cut ~13% of filtered tokens for me without touching which model I talk to. Take your picks and don't blindly adopt everything:
 
-- Use [LiteLLM](https://github.com/BerriAI/litellm) if you have a lot of API keys / subscriptions to manage and are serving multiple users — suitable for teams.
-- Use [OmniRoute](https://github.com/diegosouzapw/OmniRoute) if you're free or low budget and need to squeeze the most inference out of it. It's tedious registering for so many accounts, and it's borderline against TOS — consider [OpenCode](https://github.com/sst/opencode)'s free models instead.
 - [RTK](https://github.com/rtk-ai/rtk) for free token savings for shell outputs.
 - [Headroom](https://github.com/headroomlabs-ai/headroom) if you want to maximize token savings and don't mind some config.
+- [ponytail](https://github.com/DietrichGebert/ponytail) to curb overbuilding and scope creep.
 - [Caveman](https://github.com/juliusbrussee/caveman) if you don't mind the tone change.
+- [i-have-adhd](https://github.com/ayghri/i-have-adhd) for ADHD-readable output that skips the preamble and recap.
 
-> Want this high-efficiency setup? Pass <a href="/assets/token-saving-tools-for-claude-code--setup.txt" target="_blank" rel="noopener noreferrer">llms.txt</a> to Claude and it will handle the configuration and gotchas for you.
-
-For the past few days I've looked into various ways to optimize cost. I was initially looking to replace my Claude Pro subscription entirely with a cheaper subscription like OpenCode Go or PAYG API.
-
-But I quickly realized that vendor subscriptions are so heavily subsidized that even under moderate use, it far outprices API given the same model, Sonnet 5. Since picking the same model is moot, I also looked into replacing my workflow with cheaper models. Right now DS 0731 Flash and GPT 5.6 Luna are the best for cost/performance, according to [Artificial Analysis](https://artificialanalysis.ai/models/comparisons/deepseek-v4-flash-vs-gpt-5-6-luna).
-
-> Update (2026-08-17): DeepSeek's official API got hit with a major price hike plus peak-hour pricing — Flash's new peak rate is now roughly what Pro used to cost. Some providers (via OpenRouter/NanoGPT) still offer Flash near the old pricing. I also prefer running it on low reasoning effort since its GA release, else it overthinks, and I don't get much done. ([source](https://explainx.ai/blog/deepseek-v4-price-increase-live-gpt-5-6-comparison-august-2026))
-
-The premise: I have a Claude Pro subscription but my weekly usage inevitably runs out by day 5, leaving me dry for 2 days.
-
-I tried to find ways to seamlessly fallback from my Claude sub to APIs. I got keys for both [DeepSeek's API](https://platform.deepseek.com), and [NanoGPT](https://nano-gpt.com), a PAYG aggregator.
-
-You can manually wire them up via env vars, better yet create a function in bashrc with all the variables exported. Now I got `claude`, [`deepclaude`](https://api-docs.deepseek.com/quick_start/agent_integrations/claude_code/), [`nanocc`](https://docs.nano-gpt.com/integrations/claude-code), but I didn't wanna keep manually switching between them.
-
-![The deepclaude() bashrc function: exports ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN, and model overrides pointing Claude Code at DeepSeek's API, then execs claude](/assets/img/blog/token-saving-tools-for-claude-code--deepclaude.png)
-
-Hence I looked into **LiteLLM** — it's positioned as the one unified interface for all your API providers.
-
-My initial idea was to route Opus through my subscription and override Sonnet with DS Flash 0731 / GPT 5.6 Luna, which are cheaper. But, the way I configured it, it will charge me on API regardless of whether I've used up my subscription quota or not.
-
-I ran into some hiccups with Claude Code defaulting to 200k context, where you'd need to append `[1m]` to the model name, i.e. `claude-sonnet-5[1m]` to get the full 1M context.
-
-I haven't tried auto-routing, which uses semantic meaning to route requests to the cheapest capable model. It's promising, but my guess is it would break caching since you're routing between 3+ different models. So if you're looking into this, definitely enable session affinity (aka sticky routing).
-
-> Update (2026-09-08): the caching guess above is now measured. Direct single-provider access hits 87%+ cache rate. The adaptive router tanked it to 0–60%. Even pinning a single provider (Claude) through OmniRoute only reached 84%. Routers don't just add complexity — they structurally cost cache hits. Manual switching won.
-
-Another tool I discovered is **OmniRoute** — a model router like LiteLLM. It promises ~1.5B tokens for free by aggregating different free tiers from various services, via API keys, PATs, and OAuth. This was honestly a bit fishy, since it downright abuses TOS for many of those providers. But I figured that's not how I'd use it — more like a fallback between services I already pay for — so I pushed on.
-
-My use case was routing Claude Code through a cascade from Sonnet -> DS Flash (API) -> DS Flash (NanoGPT), with GPT Luna as fallback for vision. I've used `cache-optimized` as the routing strategy for this combo.
-
-I got some 503s after sending images to DeepSeek, which doesn't have vision support. That's why I added Luna to the end of the cascade.
-
-But my main gripe with OmniRoute is that websearch and webfetch don't work out of the box. It uses searXNG and DDG but quickly gets rate-limited, and webfetch (actually scraping the sites) doesn't work at all. Both work flawlessly when logged into Claude Code directly. OmniRoute supports adding search providers, but at this point it was running late and my patience had grown thin from tinkering all day.
-
-The biggest win, though, was that OmniRoute comes bundled with a lot of different compression engines. Most notable:
+I found the compression engines while [trying OmniRoute](/blog/llm-router-escapade-when-litellm-or-omniroute-is-worth-it/), a model router that bundles compression engines alongside model routing for fallbacks. Here's my picks:
 
 - **RTK (Rust Token Killer)** — a standalone CLI tool that compresses tool outputs like bash, grep, ls, git, etc. You can use hooks to enforce it on every command, or instruct your model via system prompt to use it selectively on large, repetitive outputs. OmniRoute bundles its own TypeScript reimplementation of it, and since OmniRoute already sits as a proxy in front of Claude Code, it automatically rewrites bash calls into RTK-shortened output — no hooks needed. Claude actually lauded it for being clean and concise.
 
@@ -63,28 +29,10 @@ Together, these tools cut ~13% of filtered tokens — 46.5M tokens saved across 
 
 ![OmniRoute's 30-day compression dashboard: 46,475,926 tokens saved across 3,555 requests, 13% average savings](/assets/img/blog/token-saving-tools-for-claude-code--compression-stats.png)
 
-Caching numbers: an 81.2% cache rate and 88.1% cache reuse ratio.
+The output side, as I run it now:
 
-![OmniRoute's cache dashboard: 81.2% cache rate, 88.1% cache reuse ratio, 205,776,507 cache read tokens, 12,328,602 cache write tokens](/assets/img/blog/token-saving-tools-for-claude-code--cache-overview.png)
+- **ponytail** — what I swapped Caveman for. Caveman strips the prose. Ponytail goes after the bigger waste: the model building what nobody asked for. It injects a YAGNI-first decision ladder every turn: skip, reuse, stdlib, native, dependency, one-liner, minimal impl. Its benchmark reports 53% less code and 45% fewer tokens against a no-skill baseline, without stripping validation or security.
 
-Broken down by provider, nanogpt's cache rate trails the rest despite a comparable cache reuse ratio — probably skewed from switching between many different models, whereas with the other providers I'd only ever run one or two of theirs.
+- **i-have-adhd** — a ruleset for ADHD-readable output loosely based on *The Adult ADHD Tool Kit*: lead with the next action, numbered steps, no preamble, no recap, no closers. Readability comes first. The skipped preamble and recap save tokens on the side.
 
-![Per-provider cache breakdown: nanogpt's cache rate sits at 63.5% against a 94.0% reuse ratio, well below claude, deepseek, and the opencode providers](/assets/img/blog/token-saving-tools-for-claude-code--cache-rate.png)
-
-The thing is, none of these token-saving engines require OmniRoute — I just discovered them through it, since they're bundled together. LiteLLM can apparently be integrated with Headroom too.
-
-> **The proxy tradeoff:** Any proxy that intercepts Claude Code's API traffic — OmniRoute, Headroom, Caveman's proxy — disables `/remote-control` and your Claude.ai MCP connectors (the ones you sign into via the webapp). The same goes for routing through external APIs like DeepSeek. Local MCP servers are unaffected. This isn't a bug; it's how API routing works. You can't have both at the same time.
->
-> If you rely on `/remote-control` or cloud connectors, skip the proxies entirely — Caveman's skill (output terseness) and RTK (shell output compression) work without intercepting traffic and still give you meaningful savings.
-
-My actual setup: RTK, Headroom, and Caveman's skill. No routers. A `cc` alias in `.bashrc` for when my subscription runs out. That's it — logging in keeps `/remote-control`, my MCP connectors, websearch/fetch, and setting an alias for an external provider is trivial when I need it.
-
-By this point I exhausted my DeepSeek API, leaving me with two providers. I basically went full circle from wanting seamless model switching to settling with a fallback `nanocc`, now called `cc`. `/exit`, `cc`, `/resume` does what I want with less overhead.
-
-## Update (2026-08-17)
-
-I gave OmniRoute a second chance. Registered for Firecrawl and Linkup. Then I instantly hit "Structurally heavy chat request capacity is busy; retry shortly," which meant I couldn't run two sessions simultaneously. Tracked it to a known [issue](https://github.com/diegosouzapw/OmniRoute/issues/10183).
-
-Downgraded to `omniroute@3.8.48` as the issue suggested, which landed me into a different mess: the downgrade broke `better-sqlite3` (an optional native dependency), it silently fell back to the `sql.js` WASM driver, which can't read WAL-mode databases, leaked memory on every probe, and eventually OOM'd the process, killing the Next.js dashboard with a 500. Had to manually rebuild the native binding in two separate `node_modules` copies (top-level and `dist/`) to get the service running again.
-
-So the conclusion stands. It's trivial to create a bash alias in `.bashrc` that points Claude Code at an external API, or just switch to OpenCode, which can connect all sorts of providers at once. And I don't have to risk my Claude account getting banned.
+What I use day to day: RTK, Headroom, ponytail, and i-have-adhd. No router required for any of it.
