@@ -28,7 +28,7 @@ Auto-routing uses semantic meaning to route requests to the cheapest capable mod
 
 I measured the cache side too. Direct single-provider access hits 87%+ cache rate. An adaptive router tanked it to 0–60%. Pinning a single provider (Claude) through OmniRoute reached 84%, which is low but biased: the fallback chain was still configured underneath, so some requests could still escape to another provider. Treat it as a floor rather than a clean measure of session affinity. The alternative wasn't 87% either, since once the subscription is exhausted it's routing or waiting for the reset. Routers don't just add complexity — they structurally cost cache hits. Manual switching won.
 
-Instance-wide, OmniRoute's caching numbers: an 81.2% cache rate and an 88.1% cache reuse ratio.
+Instance-wide across the whole trial, OmniRoute's caching numbers: an 81.2% cache rate and an 88.1% cache reuse ratio. The per-provider breakdown below is that same whole-trial history, so Claude's row there won't match the pinned experiment's 84%.
 
 ![OmniRoute's cache dashboard: 81.2% cache rate, 88.1% cache reuse ratio, 205,776,507 cache read tokens, 12,328,602 cache write tokens](/assets/img/blog/token-saving-tools-for-claude-code--cache-overview.png)
 

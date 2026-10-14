@@ -49,7 +49,7 @@ Handoffs are for switching sessions or deferring work to a future one. Where eac
 
 ## Don't feed the window
 
-Heavy workflow frameworks eat context for structure. I scrapped [obra/superpowers](https://github.com/obra/superpowers) over this. It split a small feature into an eight-step plan, it brainstormed when nothing needed brainstorming, my context and usage would be gone by step two, and I couldn't tell if it made a difference. My workflow is ship fast, break fast and iterate. As [Fabio Akita](https://www.akitaonrails.com/en/2026/09/17/talking-about-my-ai-skills/) puts it, more tools don't always lead to better outcomes.
+Heavy workflow frameworks eat context for structure. I scrapped [obra/superpowers](https://github.com/obra/superpowers) over this. It split a small feature into an eight-step plan, it brainstormed when nothing needed brainstorming, my context and usage would be gone by step two, and I couldn't tell if it made a difference. My workflow is ship fast, break fast and iterate. As [Fábio Akita](https://www.akitaonrails.com/en/2026/09/17/talking-about-my-ai-skills/) puts it, more tools don't always lead to better outcomes.
 
 The same rule applies to me mid-session. When a task turns up something unrelated, I park it in a note and come back to it after, so the window stays about one thing.
 
