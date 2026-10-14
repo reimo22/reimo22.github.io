@@ -33,6 +33,6 @@ The output side, as I run it now:
 
 - **ponytail** — what I swapped Caveman for. Caveman strips the prose. Ponytail goes after the bigger waste: the model building what nobody asked for. It injects a YAGNI-first decision ladder every turn: skip, reuse, stdlib, native, dependency, one-liner, minimal impl. Its benchmark reports 53% less code and 45% fewer tokens against a no-skill baseline, without stripping validation or security.
 
-- **i-have-adhd** — a ruleset for ADHD-readable output loosely based on *The Adult ADHD Tool Kit*: lead with the next action, numbered steps, no preamble, no recap, no closers. Readability comes first. The skipped preamble and recap save tokens on the side.
+- **i-have-adhd** — a ruleset for ADHD-readable output loosely based on _The Adult ADHD Tool Kit_: lead with the next action, numbered steps, no preamble, no recap, no closers. Readability comes first. The skipped preamble and recap save tokens on the side.
 
 What I use day to day: RTK, Headroom, ponytail, and i-have-adhd. No router required for any of it.
