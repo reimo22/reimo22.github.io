@@ -31,8 +31,10 @@ jobs:
             echo "writeups submodule already at upstream HEAD; nothing to do"
             exit 0
           fi
-          branch="chore/bump-writeups-$(date +%Y%m%d)"
+          branch="chore/bump-writeups-$(date +%Y%m%d)-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           git checkout -b "$branch"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/writeups/boxes .gitmodules
           git commit -m "chore(writeups): bump submodule to upstream HEAD"
           git push origin "$branch"

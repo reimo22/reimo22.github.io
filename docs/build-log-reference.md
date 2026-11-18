@@ -1274,3 +1274,24 @@ expanded list markup must pass html-validate and Lighthouse's a11y audit.
 **No spec doc** for this phase — small enough that TASKS.md checkboxes + chat design approval sufficed, following the same pattern as Phase 4.2/4.3/6.1/6.2.
 
 **What CI expected to check:** Same four checkpoints as prior phases. The sitemap and 404 are static HTML/XML with no new dependencies.
+
+### Fix — writeups bump workflow: missing commit identity
+
+**What changed:** The scheduled "Bump writeups submodule" workflow
+(`.github/workflows/bump-writeups.yml`) failed on 2026-11-16 with
+`fatal: empty ident name`. The first successful weekly runs all exited
+at the "already at upstream HEAD" guard, so the commit path had never
+executed; the first week upstream actually moved, `git commit` ran on a
+runner with no `user.name`/`user.email`. The step now configures the
+`github-actions[bot]` identity before committing. The branch name also
+carries `$GITHUB_RUN_ID` and `$GITHUB_RUN_ATTEMPT`, so neither a second
+run on the same day nor a re-run of the same run can collide with an
+already-pushed branch and fail the push. (GitHub keeps `GITHUB_RUN_ID`
+stable across re-runs and only increments `GITHUB_RUN_ATTEMPT`.)
+
+**What CI actually caught:** `fatal: empty ident name` → exit 128 (run
+43890602050). Nothing else in the workflow was exercised.
+
+**What the AI drafted vs. human review:** The AI diagnosed the run and
+drafted the identity fix; the human chose to also make the branch name
+retry-safe rather than ship the one-line minimum.
