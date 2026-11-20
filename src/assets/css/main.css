@@ -168,9 +168,11 @@ footer {
 
 .footer-contact {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem;
   margin: 0;
+  grid-column: 1;
 }
 
 /* Compensate the icon-link's 44px min-width inset: each link centers its 28px
@@ -180,6 +182,29 @@ footer {
    size. */
 .footer-copy {
   margin-right: 0.75rem;
+}
+
+.footer-rss {
+  display: flex;
+  margin: 0;
+  grid-column: 3;
+  justify-self: end;
+}
+
+/* Below ~40rem the three fixed tracks stop being useful, but stacking puts RSS
+   on a row of its own even when the row has room. Flex keeps contact and RSS on
+   one line with RSS pushed right; it only wraps under ~330px, where the
+   copyright plus three 44px icons genuinely stop fitting. */
+@media (width < 40rem) {
+  footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .footer-rss {
+    margin-left: auto;
+  }
 }
 
 .page h1 {

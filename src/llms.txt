@@ -1,15 +1,15 @@
 # Kenji Pinlac
 
-> Personal portfolio and blog: HTB writeups, CTF challenges, and a build log.
+> Personal portfolio and blog: HTB writeups, CTF challenges, builds, and musings.
 
-This site hosts writeups for retired HackTheBox machines and CTF event challenges, and a blog about building this site.
+This site hosts writeups for retired HackTheBox machines and CTF event challenges, and a blog of builds, musings, and notes on building this site.
 
 ## Sections
 
 - [/](https://reimo22.github.io/) — Home page with recent posts and writeups
 - [/about/](https://reimo22.github.io/about/) — Profile and projects
 - [/writeups/](https://reimo22.github.io/writeups/) — HackTheBox machines and CTF challenges
-- [/blog/](https://reimo22.github.io/blog/) — Blog posts including the site build log
+- [/blog/](https://reimo22.github.io/blog/) — Builds, musings, and posts about building this site
 - [/feed.xml](https://reimo22.github.io/feed.xml) — RSS feed for blog posts
 - [/sitemap.xml](https://reimo22.github.io/sitemap.xml) — XML sitemap
 
