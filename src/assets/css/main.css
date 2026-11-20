@@ -168,9 +168,11 @@ footer {
 
 .footer-contact {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem;
   margin: 0;
+  grid-column: 1;
 }
 
 /* Compensate the icon-link's 44px min-width inset: each link centers its 28px
@@ -185,7 +187,26 @@ footer {
 .footer-rss {
   display: flex;
   margin: 0;
+  grid-column: 3;
   justify-self: end;
+}
+
+/* Below ~40rem the three fixed tracks can no longer fit: the copyright, three
+   contact icons and the RSS cell overflow 320px, and a `display: none`
+   palette hint leaves RSS auto-placed in the middle track. Stack instead. */
+@media (width < 40rem) {
+  footer {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-contact,
+  .footer-rss {
+    grid-column: 1;
+  }
+
+  .footer-rss {
+    justify-self: end;
+  }
 }
 
 .page h1 {
