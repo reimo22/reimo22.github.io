@@ -1295,3 +1295,23 @@ stable across re-runs and only increments `GITHUB_RUN_ATTEMPT`.)
 **What the AI drafted vs. human review:** The AI diagnosed the run and
 drafted the identity fix; the human chose to also make the branch name
 retry-safe rather than ship the one-line minimum.
+
+### Trim — About page: profile and projects only, PDF dropped
+
+**What changed:** `/about/` had grown into a full HTML resume — experience,
+education, certifications, skills — plus a "Download PDF" link to
+`/about/Kenji_Pinlac_Resume.pdf`. The page is now the profile paragraphs and
+the two project entries, with the email and GitHub icons in the header. The
+PDF is deleted from `src/about/`, so the URL stops resolving instead of
+staying reachable; the shared footer's mailto contact is unchanged.
+`SPEC.md`, `README.md`, and `src/llms.txt` no longer advertise a resume.
+
+**What CI actually caught:** Not yet pushed; local checks were clean:
+`npm run lint`, `npm run test` (80 pass), `npm run build`, and
+`npx html-validate _site` (exit 0).
+
+**What the AI drafted vs. human review:** The human asked for the trim
+because the site read as too personal, and picked "profile and projects"
+as the surviving sections. The AI raised the PDF as a separate question —
+unlink only, or delete the file — and the human chose deletion so the old
+URL 404s.

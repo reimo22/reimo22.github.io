@@ -5,7 +5,7 @@ Personal portfolio site for Kenji Pinlac, built with Eleventy 3.
 ## What's here
 
 - **Home** (`/`) — landing page with recent blog posts and HTB writeups
-- **About** (`/about/`) — profile, resume, and contact
+- **About** (`/about/`) — profile, projects, and contact
 - **Writeups** (`/writeups/`) — retired HackTheBox machines and CTF challenges, pulled from [`htb-writeups`](https://github.com/reimo22/htb-writeups) at build time via git submodule
 - **Blog** (`/blog/`) — posts about building this site and other topics
 - **RSS** (`/feed.xml`) — blog feed
