@@ -203,10 +203,6 @@ footer {
   .footer-rss {
     grid-column: 1;
   }
-
-  .footer-rss {
-    justify-self: end;
-  }
 }
 
 .page h1 {
