@@ -1315,3 +1315,32 @@ because the site read as too personal, and picked "profile and projects"
 as the surviving sections. The AI raised the PDF as a separate question —
 unlink only, or delete the file — and the human chose deletion so the old
 URL 404s.
+
+### About rewrite — new profile, HTB and RSS icons, footer layout
+
+**What changed:** `/about/` lost "Luis" from the name and swapped the two
+generic profile paragraphs for the owner's own account of starting with rooted
+phones and custom ROMs and moving into Linux, a homelab, Hack The Box, and LLM
+agents. A Hack The Box icon link joined email and GitHub in the header. The
+footer gained the same HTB link plus an RSS link, both drawn at the existing
+96×96 icon geometry; RSS sits in its own right-aligned grid cell on wide
+screens. Below 40rem the footer switches to a wrapping flex row so RSS keeps
+its place at the end of the contact row instead of dropping to a line of its
+own, which is also what keeps the 320px reflow rule intact with a third icon.
+`icon-link.njk` gained an `external` flag (default true) so the same-origin
+feed link no longer inherits `target="_blank"` from the external-link macro.
+The blog intro now describes the blog as builds and musings rather than a build
+log only, and `src/llms.txt` matches.
+
+**What CI actually caught:** nothing yet — local lint, build, html-validate and
+80 tests pass. An independent review found two blocking layout defects before
+push: RSS auto-placed into the middle grid track whenever the palette hint was
+hidden (touch/no-JS), and the three-icon footer pushing min-content past 320px.
+Both were fixed by explicit grid placement plus the wrapping narrow layout, and
+a second review at the new head cleared them.
+
+**What the AI drafted vs. human review:** the AI wrote the icon geometry, the
+footer layout, and the macro flag. The human wrote the profile copy, rejected
+the first split of the footer (RSS on its own row on mobile was wrong), supplied
+the HTB icon art and a replacement light variant, and cut an em dash and a
+redundant sentence from the blog intro.
