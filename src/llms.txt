@@ -2,12 +2,12 @@
 
 > Personal portfolio and blog: HTB writeups, CTF challenges, and a build log.
 
-This site hosts writeups for retired HackTheBox machines and CTF event challenges, a blog about building this site, and a resume.
+This site hosts writeups for retired HackTheBox machines and CTF event challenges, and a blog about building this site.
 
 ## Sections
 
 - [/](https://reimo22.github.io/) — Home page with recent posts and writeups
-- [/about/](https://reimo22.github.io/about/) — Profile and resume
+- [/about/](https://reimo22.github.io/about/) — Profile and projects
 - [/writeups/](https://reimo22.github.io/writeups/) — HackTheBox machines and CTF challenges
 - [/blog/](https://reimo22.github.io/blog/) — Blog posts including the site build log
 - [/feed.xml](https://reimo22.github.io/feed.xml) — RSS feed for blog posts

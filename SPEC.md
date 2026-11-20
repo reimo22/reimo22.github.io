@@ -5,7 +5,7 @@ Status: approved 2026-08-09. Source design doc:
 
 ## Purpose
 
-A personal portfolio site: who I am, what I've built, HTB writeups, and a resume —
+A personal portfolio site: who I am, what I've built, and HTB writeups —
 fast, accessible, and genuinely static. Built with a trimmed-down version of the
 [Chris Titus AI-assisted dev workflow](https://christitus.com/my-ai-workflow/):
 spec and task list agreed before code, real CI checkpoints, human review of every
@@ -29,7 +29,7 @@ multi-phase roadmap docs, PM/PR-readiness bots — overkill for a solo static si
 | Path                        | Content                                                                                                                                                                                                                   |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/`                         | Home — ASCII banner, short intro, entry points to the other sections                                                                                                                                                      |
-| `/about/`                   | Combined profile and HTML resume; the shared footer contains the mailto contact, and the page links to the committed PDF at `/about/Kenji_Pinlac_Resume.pdf`                                                              |
+| `/about/`                   | Profile and selected projects, with the contact icons at the top of the page and the shared footer's mailto contact; no PDF is published                                                                                  |
 | `/resume/`                  | Meta-refresh stub to `/about/`, for old links and bookmarks                                                                                                                                                               |
 | `/writeups/`                | Index of HTB writeups, split into two sections — retired boxes (box, OS, difficulty, technique) and CTF challenges (event, category, difficulty, technique) — pulled at build time from `github.com/reimo22/htb-writeups` |
 | `/writeups/<box>/`          | One page per writeup, rendered from that repo's `README.md`                                                                                                                                                               |
