@@ -191,17 +191,19 @@ footer {
   justify-self: end;
 }
 
-/* Below ~40rem the three fixed tracks can no longer fit: the copyright, three
-   contact icons and the RSS cell overflow 320px, and a `display: none`
-   palette hint leaves RSS auto-placed in the middle track. Stack instead. */
+/* Below ~40rem the three fixed tracks stop being useful, but stacking puts RSS
+   on a row of its own even when the row has room. Flex keeps contact and RSS on
+   one line with RSS pushed right; it only wraps under ~330px, where the
+   copyright plus three 44px icons genuinely stop fitting. */
 @media (width < 40rem) {
   footer {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
   }
 
-  .footer-contact,
   .footer-rss {
-    grid-column: 1;
+    margin-left: auto;
   }
 }
 
