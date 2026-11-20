@@ -12,6 +12,15 @@
     { "label": "Copy page URL", "action": "copy-url" },
     { "label": "RSS feed", "url": "/feed.xml", "external": true },
     { "label": "Email", "url": "mailto:kpinlac@proton.me" },
-    { "label": "GitHub", "url": "https://github.com/reimo22", "external": true }
+    {
+      "label": "GitHub",
+      "url": "https://github.com/reimo22",
+      "external": true
+    },
+    {
+      "label": "Hack The Box",
+      "url": "https://profile.hackthebox.com/profile/019cdc01-2c06-706f-afef-ac3f7e3c47a1",
+      "external": true
+    }
   ]
 }

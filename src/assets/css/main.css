@@ -346,6 +346,11 @@ main blockquote > :last-child {
   color: var(--color-muted);
 }
 
+.htb-idle {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
 .resume-contact {
   display: flex;
   gap: 0.5rem;

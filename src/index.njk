@@ -34,4 +34,9 @@ pageTitle: reimo22 · systems & security
 {% block content %}
   <h1>{{ site.title }}<span class="cursor" aria-hidden="true">_</span></h1>
   <p>Portfolio, HTB writeups, and build log.</p>
+  {% if htb and htb.updatedAt %}
+    <p class="htb-idle" id="htb-idle" data-last-played="{{ htb.updatedAt }}">
+      Last HTB activity: {{ htb.updatedAt }}
+    </p>
+  {% endif %}
 {% endblock %}
